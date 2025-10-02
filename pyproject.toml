@@ -1,0 +1,18 @@
+[project]
+name = "hackathon"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[all]>=0.118.0",
+    "google-adk>=1.15.1",
+    "pydantic>=2.11.9",
+    "uvicorn>=0.37.0",
+]
+
+[dependency-groups]
+dev = [
+    "dotenv>=0.9.9",
+    "tqdm>=4.67.1",
+]
