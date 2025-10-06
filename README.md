@@ -19,3 +19,11 @@ Documentation ADK: https://google.github.io/adk-docs/
 - Email : https://github.com/Shy2593666979/mcp-server-email
 
 - Drive : 
+
+# Technos
+
+- UV : package manager
+- ADK : framework agentic
+- Pydantic pour les classes avec BaseModel
+- Firestore : BDD Mongo
+- (Cloud SQL BDD User ?) 
