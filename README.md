@@ -26,4 +26,6 @@ Documentation ADK: https://google.github.io/adk-docs/
 - ADK : framework agentic
 - Pydantic pour les classes avec BaseModel
 - Firestore : BDD Mongo
-- (Cloud SQL BDD User ?) 
+- (Cloud SQL BDD User ?)
+- OAuth Google ?
+- Backend Django ?
