@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "hackathon-backend"
 version = "0.1.0"
@@ -8,10 +12,19 @@ dependencies = [
     "fastapi[all]>=0.118.0",
     "google-adk>=1.15.1",
     "pydantic>=2.11.9",
+    "pydantic-settings>=2.11.0",
+    "uvicorn>=0.37.0",
 ]
 
-[dependency-groups]
-dev = [
+[tool.uv]
+dev-dependencies = [
     "dotenv>=0.9.9",
     "tqdm>=4.67.1",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[project.scripts]
+dev  = "src.app.main:dev_server"
+prod = "src.app.main:prod_server"
