@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from src.app.config import settings
-from src.app.api import api_router
+from src.app import settings
 import uvicorn
+from src.app.api import health_router, chat_router,api_router
 
 def create_app() -> FastAPI:
     app = FastAPI(
