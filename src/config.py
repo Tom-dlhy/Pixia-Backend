@@ -1,13 +1,38 @@
-import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-GOOGLE_API_KEY=os.getenv("GOOGLE_API_KEY")
-if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY environment variable is not set.")
 
-GEMINI_MODEL_2_5_FLASH=os.getenv("GEMINI_MODEL_2_5_FLASH")
-if not GEMINI_MODEL_2_5_FLASH:
-    raise ValueError("GEMINI_MODEL_2_5_FLASH environment variable is not set.")
+class AppSettings(BaseSettings):
+    """Configuration de l'application."""
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
+    )
+    
+    APP_NAME: str
+    ENV: str
+    HOST: str
+    PORT: int
+    DEBUG: bool
 
-GEMINI_MODEL_2_5_FLASH_LIVE=os.getenv("GEMINI_MODEL_2_5_FLASH_LIVE")
-if not GEMINI_MODEL_2_5_FLASH_LIVE:
-    raise ValueError("GEMINI_MODEL_2_5_FLASH_LIVE environment variable is not set.")
+
+class GeminiSettings(BaseSettings):
+    """Configuration pour Google Generative AI."""
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
+    )
+    
+    GOOGLE_API_KEY: str
+    GEMINI_MODEL_2_5_FLASH: str
+    GEMINI_MODEL_2_5_FLASH_LIVE: str
+
+
+# Instances des settings
+app_settings = AppSettings()
+gemini_settings = GeminiSettings()
