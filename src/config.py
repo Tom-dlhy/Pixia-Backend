@@ -30,9 +30,10 @@ class GeminiSettings(BaseSettings):
     
     GOOGLE_API_KEY: str
     GEMINI_MODEL_2_5_FLASH: str
+    GEMINI_MODEL_2_5_FLASH_LITE: str
     GEMINI_MODEL_2_5_FLASH_LIVE: str
 
 
 # Instances des settings
-app_settings = AppSettings()
-gemini_settings = GeminiSettings()
+app_settings = AppSettings() # type: ignore
+gemini_settings = GeminiSettings() # type: ignore
