@@ -12,13 +12,13 @@ logging.basicConfig(level=logging.INFO)
 client = genai.Client(api_key=gemini_settings.GOOGLE_API_KEY)
 
 
-class Answer(BaseModel):
+class QCMAnswer(BaseModel):
     text: Annotated[str, StringConstraints(min_length=1,max_length=300)] # type: ignore
     is_correct: bool = Field(..., description="True si la réponse est correcte")
 
-class Question(BaseModel):
+class QCMQuestion(BaseModel):
     question: Annotated[str, StringConstraints(min_length=3, max_length=300)]
-    answers: List[Answer] = Field(
+    answers: List[QCMAnswer] = Field(
         ..., 
         min_length=2, 
         max_length=5,
@@ -32,19 +32,53 @@ class Question(BaseModel):
 
 class QCM(BaseModel):
     type: Annotated[str, StringConstraints(pattern="^qcm$", strip_whitespace=True)]
-    questions: List[Question] = Field(..., min_length=1,max_length=10)
+    topic: Annotated[str, StringConstraints(min_length=3, max_length=200)] = Field(
+        ...,
+        description="Titre du bloc de questions"
+    )
+    questions: List[QCMQuestion] = Field(..., min_length=1,max_length=10)
 
 
 
 
-SYS_PROMPT_QCM = """Tu es un assistant spécialisé dans la création de questionnaires à choix multiples (QCM). 
-Tu dois générer des QCMs basés sur les instructions données. Respecte le schéma imposé et le thème.
+SYS_PROMPT_QCM = """
+Tu es un assistant pédagogique spécialisé dans la création de QCMs éducatifs clairs et variés.
+
+Ta mission :
+Génère un questionnaire à choix multiples (QCM) à partir du sujet donné dans le prompt, en respectant le schéma fourni.
+
+Règles :
+1. Le topic doit être un titre court, clair et directement lié à la question principale du QCM.
+2. Varie les types de questions :
+   - Questions de définition (expliquer un concept)
+   - Questions d’application (résoudre un petit problème)
+   - Questions d’interprétation (analyser une situation ou un graphique)
+   - Questions de comparaison (identifier la bonne relation entre deux notions)
+   - Questions de logique ou de piège (choix subtiles mais toujours justes)
+3. Alterne entre :
+   - Une seule bonne réponse
+   - Plusieurs bonnes réponses (multi_answers = true)
+4. Les propositions incorrectes doivent être plausibles mais fausses, pas absurdes.
+5. L’explication doit être concise et pédagogique : pourquoi la ou les bonnes réponses sont correctes.
+6. Évite les répétitions dans la structure des questions.
+7. Reste adapté au niveau indiqué (ex : Collège, Lycée, Université).
+
+Exemple :
+Topic : Les lois de Newton
+→ Bonne diversité :
+  - QCM 1 : Identifier la loi correspondant à une situation donnée.
+  - QCM 2 : Choisir la formule correcte illustrant la deuxième loi.
+  - QCM 3 : Vrai ou faux : "Un objet immobile ne subit aucune force".
 """
 
 
-
 def generate_qcm(prompt: str):
-
+    """Génère un QCM basé sur la description de l'exercice fournie.
+    Args:
+        prompt (str): Description détaillée du sujet des exercices à générer.
+    Returns:
+        dict: Dictionnaire représentant le QCM généré.
+    """
 
     start_time = time.time()
     response = client.models.generate_content(

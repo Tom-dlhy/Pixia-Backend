@@ -1,0 +1,7 @@
+from .exercises_prompt import SYSTEM_PROMPT_PLANNER, SYSTEM_PROMPT_OPEN, SYSTEM_PROMPT_QCM
+
+__all__ = [
+    "SYSTEM_PROMPT_OPEN",
+    "SYSTEM_PROMPT_QCM",
+    "SYSTEM_PROMPT_PLANNER"
+]
