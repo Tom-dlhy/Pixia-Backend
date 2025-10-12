@@ -1,0 +1,318 @@
+{
+  "id": "fa8a55a2-283c-4f29-a91f-0a0fb7b353cf",
+  "exercises": [
+    {
+      "id": "49a50c2c-1e25-439f-93f5-c2e74e546b51",
+      "type": "qcm",
+      "topic": "Nombres Complexes : Partie Réelle et Imaginaire",
+      "questions": [
+        {
+          "id": "75517fbf-1f06-4cf7-a785-15b2b084a799",
+          "question": "Dans l'expression d'un nombre complexe $z = a + ib$, où $a$ et $b$ sont des nombres réels, quelle est la partie réelle de $z$ ?",
+          "answers": [
+            {
+              "id": "a224045f-2a30-49e7-9208-59c040ff5787",
+              "text": "$a$",
+              "is_correct": true
+            },
+            {
+              "id": "a35b5aff-58f2-49e3-8874-9efdd509d960",
+              "text": "$b$",
+              "is_correct": false
+            },
+            {
+              "id": "9131be6d-0c49-458b-99ec-37afcd0948a4",
+              "text": "$ib$",
+              "is_correct": false
+            },
+            {
+              "id": "f376b044-c81e-4e05-8643-1573731917bd",
+              "text": "$a+ib$",
+              "is_correct": false
+            }
+          ],
+          "explanation": "La partie réelle d'un nombre complexe $z = a + ib$ est le terme qui ne contient pas l'unité imaginaire $i$. C'est donc $a$.",
+          "multi_answers": false
+        },
+        {
+          "id": "8d055d22-9cb7-48cc-af14-650b0c5b5172",
+          "question": "Pour le nombre complexe $z = 3 - 4i$, quelle affirmation est correcte ?",
+          "answers": [
+            {
+              "id": "7cc89c8d-cf16-4c98-806a-888ae72e33a4",
+              "text": "La partie réelle est 3 et la partie imaginaire est -4.",
+              "is_correct": true
+            },
+            {
+              "id": "755a7bb2-b365-45c9-8260-cc56fcf3c228",
+              "text": "La partie réelle est 3 et la partie imaginaire est 4.",
+              "is_correct": false
+            },
+            {
+              "id": "6db55b63-5cc9-4aeb-af7d-b80a68122602",
+              "text": "La partie réelle est -4 et la partie imaginaire est 3.",
+              "is_correct": false
+            },
+            {
+              "id": "0074b0b7-de2d-4d62-a42c-78400ff13be4",
+              "text": "La partie réelle est $3i$ et la partie imaginaire est -4.",
+              "is_correct": false
+            }
+          ],
+          "explanation": "Un nombre complexe s'écrit sous la forme $a + ib$. Pour $z = 3 - 4i$, on a $a=3$ et $b=-4$. Donc la partie réelle est 3 et la partie imaginaire est -4.",
+          "multi_answers": false
+        },
+        {
+          "id": "4428ca58-c489-413e-9fcf-6465d0498ee8",
+          "question": "Soit le nombre complexe $z = 5i$. Quelles sont les propriétés de ce nombre ?",
+          "answers": [
+            {
+              "id": "067f51a5-8322-4216-8812-f6dcc8a6cc7a",
+              "text": "Sa partie réelle est 0.",
+              "is_correct": true
+            },
+            {
+              "id": "bf461f85-914a-483a-a0c5-ba2326f3c946",
+              "text": "Sa partie imaginaire est 5.",
+              "is_correct": true
+            },
+            {
+              "id": "6ef6c608-6af4-486b-a130-ff5d6d751aaa",
+              "text": "Sa partie réelle est 5.",
+              "is_correct": false
+            },
+            {
+              "id": "e1a451fa-2066-4704-a8ea-55b6b0e6a47c",
+              "text": "Sa partie imaginaire est $5i$.",
+              "is_correct": false
+            }
+          ],
+          "explanation": "Le nombre $z=5i$ peut s'écrire $0 + 5i$. Ainsi, sa partie réelle ($a$) est 0 et sa partie imaginaire ($b$) est 5.",
+          "multi_answers": true
+        },
+        {
+          "id": "9308cca8-e617-4591-8271-1366f7bd13e7",
+          "question": "On considère le nombre complexe $z = -1 - i$. Quelle est sa partie imaginaire ?",
+          "answers": [
+            {
+              "id": "97c310d3-195f-4864-8fdd-72a955545542",
+              "text": "-1",
+              "is_correct": true
+            },
+            {
+              "id": "52824048-bed1-45fc-9f31-69d9481f9664",
+              "text": "1",
+              "is_correct": false
+            },
+            {
+              "id": "81ae2d27-daf0-4890-993c-91169024b76a",
+              "text": "$i$",
+              "is_correct": false
+            },
+            {
+              "id": "257fabe0-3be8-4407-b9c9-a11ea52adea6",
+              "text": "-i",
+              "is_correct": false
+            }
+          ],
+          "explanation": "Pour $z = -1 - i$, la partie réelle ($a$) est -1 et la partie imaginaire ($b$) est -1 (car $z = -1 + (-1)i$).",
+          "multi_answers": false
+        },
+        {
+          "id": "5deb8ac2-e9f6-4615-a881-40888202cb8a",
+          "question": "Si $z = x$ est un nombre réel, quelle est la valeur de sa partie imaginaire ?",
+          "answers": [
+            {
+              "id": "11fd6a07-ec69-444c-86b3-70afa9820a75",
+              "text": "0",
+              "is_correct": true
+            },
+            {
+              "id": "69887fa4-ca0c-4ee4-b141-aa5e291c5ac0",
+              "text": "$x$",
+              "is_correct": false
+            },
+            {
+              "id": "a3bdbbe9-3edd-4969-998b-d08e94c1da8d",
+              "text": "1",
+              "is_correct": false
+            },
+            {
+              "id": "534e806c-2291-481d-9495-0f129c7fdf0c",
+              "text": "Non définie",
+              "is_correct": false
+            }
+          ],
+          "explanation": "Un nombre réel $x$ peut être vu comme un nombre complexe de la forme $x + 0i$. Sa partie réelle est $x$ et sa partie imaginaire est 0.",
+          "multi_answers": false
+        }
+      ]
+    },
+    {
+      "id": "52af3d42-88a8-4337-8bad-59583286eb70",
+      "type": "open",
+      "topic": "Résolution d'équations du second degré dans C",
+      "questions": [
+        {
+          "id": "1d8e8f7c-48e0-4100-a91b-4bd1ceb73c91",
+          "question": "Considérons l'équation du second degré $az^2 + bz + c = 0$, où $a, b, c$ sont des coefficients réels et $a \\neq 0$. Expliquez la méthode générale pour trouver les solutions $z$ dans l'ensemble des nombres complexes $\\mathbb{C}$, en détaillant le rôle du discriminant $\\Delta = b^2 - 4ac$.",
+          "answers": "",
+          "explanation": "L'équation du second degré $az^2 + bz + c = 0$ avec $a, b, c \\in \\mathbb{R}$ et $a \\neq 0$ peut avoir ses solutions dans $\\mathbb{R}$ ou dans $\\mathbb{C}$. Le discriminant $\\Delta = b^2 - 4ac$ est la clé pour déterminer la nature des solutions.\\\n\\\\\n1.  **Si $\\Delta > 0$**: L'équation admet deux solutions réelles distinctes : $z_1 = \\frac{-b - \\sqrt{\\Delta}}{2a}$ et $z_2 = \\frac{-b + \\sqrt{\\Delta}}{2a}$. Ces solutions sont aussi des nombres complexes (avec une partie imaginaire nulle).\\\n2.  **Si $\\Delta = 0$**: L'équation admet une unique solution réelle double : $z_0 = \\frac{-b}{2a}$. Cette solution est également un nombre complexe.\\\n3.  **Si $\\Delta < 0$**: L'équation n'a pas de solutions réelles. Elle admet deux solutions complexes conjuguées. On écrit $\\Delta = -(-\\Delta)$ où $-\\Delta > 0$. Les solutions sont alors : $z_1 = \\frac{-b - i\\sqrt{-\\Delta}}{2a}$ et $z_2 = \\frac{-b + i\\sqrt{-\\Delta}}{2a}$. On peut aussi écrire $z_{1,2} = \\frac{-b \\pm i\\sqrt{|\\Delta|}}{2a}$ ou encore $z_{1,2} = \\frac{-b}{2a} \\pm i\\frac{\\sqrt{|\\Delta|}}{2a}$. La partie réelle est $-\\frac{b}{2a}$ et la partie imaginaire est $\\pm \\frac{\\sqrt{|\\Delta|}}{2a}$. Ces deux solutions sont complexes conjuguées l'une de l'autre."
+        },
+        {
+          "id": "2b5a88be-873a-44c0-9d6f-2340229e37a5",
+          "question": "Résolvez l'équation $z^2 - 2z + 5 = 0$ dans $\\mathbb{C}$. Détaillez chaque étape de votre raisonnement.",
+          "answers": "",
+          "explanation": "Pour résoudre l'équation $z^2 - 2z + 5 = 0$, nous identifions les coefficients : $a=1$, $b=-2$, et $c=5$. Ce sont des coefficients réels.\\\n\\\\\nCalculons le discriminant $\\Delta$ :\\n$\\Delta = b^2 - 4ac = (-2)^2 - 4(1)(5) = 4 - 20 = -16$.\\\n\\\\\nComme $\\Delta < 0$, l'équation admet deux solutions complexes conjuguées.\\\nNous avons $\\Delta = -16$, donc $-\\Delta = 16$ et $\\sqrt{-\\Delta} = \\sqrt{16} = 4$.\\\n\\\\\nLes solutions sont données par la formule $z = \\frac{-b \\pm i\\sqrt{-\\Delta}}{2a}$ :\\n$z = \\frac{-(-2) \\pm i\\sqrt{16}}{2(1)} = \\frac{2 \\pm i4}{2}$.\\\n\\\\\nEn simplifiant, nous obtenons les deux solutions :\\n$z_1 = \\frac{2 - 4i}{2} = 1 - 2i$\n$z_2 = \\frac{2 + 4i}{2} = 1 + 2i$\n\\\\\nLes solutions de l'équation $z^2 - 2z + 5 = 0$ dans $\\mathbb{C}$ sont donc $1 - 2i$ et $1 + 2i$."
+        }
+      ]
+    },
+    {
+      "id": "0f2ada35-46b1-4682-91ea-09245979a0cb",
+      "type": "qcm",
+      "topic": "Forme Exponentielle des Nombres Complexes",
+      "questions": [
+        {
+          "id": "6fe1a2d4-e3ea-4e9e-821b-7fae77eb26eb",
+          "question": "Quel est le nombre complexe $z$ dont le module est 2 et l'argument est $\\frac{\\pi}{3}$ ?",
+          "answers": [
+            {
+              "id": "6a85504b-9886-42ae-bf99-8db6b7d3157c",
+              "text": "$2 \\left( \\cos\\left(\\frac{\\pi}{3}\\right) + i \\sin\\left(\\frac{\\pi}{3}\\right) \\right)$",
+              "is_correct": true
+            },
+            {
+              "id": "0a1005cf-9823-4147-ac67-90b7e639fa82",
+              "text": "$2 \\left( \\cos\\left(\\frac{\\pi}{6}\\right) + i \\sin\\left(\\frac{\\pi}{6}\\right) \\right)$",
+              "is_correct": false
+            },
+            {
+              "id": "270df9da-cfc1-4095-8d73-fdcba79a5dfb",
+              "text": "$\\frac{\\pi}{3} \\left( \\cos(2) + i \\sin(2) \\right)$",
+              "is_correct": false
+            },
+            {
+              "id": "c1b9e186-a96f-4255-83cf-dd5b5aab07d6",
+              "text": "$2 + i \\frac{\\pi}{3}$",
+              "is_correct": false
+            }
+          ],
+          "explanation": "La forme trigonométrique d'un nombre complexe $z$ de module $r$ et d'argument $\\theta$ est $z = r(\\cos(\\theta) + i \\sin(\\theta))$. Ici, $r=2$ et $\\theta=\\frac{\\pi}{3}$.",
+          "multi_answers": false
+        },
+        {
+          "id": "0cd11188-e411-4733-a278-e403f1fcc3c6",
+          "question": "Parmi les affirmations suivantes, lesquelles sont correctes concernant la forme exponentielle $z = re^{i\\theta}$ d'un nombre complexe $z$ ?",
+          "answers": [
+            {
+              "id": "7ea7cd62-5357-4d7e-87c1-f6abd5ce6295",
+              "text": "$r$ est le module du nombre complexe.",
+              "is_correct": true
+            },
+            {
+              "id": "cab9a0cf-45ea-46f3-821c-44930c6cccba",
+              "text": "$\\theta$ est le module du nombre complexe.",
+              "is_correct": false
+            },
+            {
+              "id": "93a05b6e-994f-4bdf-8dfa-29f5308920a4",
+              "text": "$\\theta$ est un argument du nombre complexe.",
+              "is_correct": true
+            },
+            {
+              "id": "e4353527-f4fd-47fc-bff0-bee009675a05",
+              "text": "$e^{i\\theta}$ est égal à $\\cos(\\theta) - i \\sin(\\theta)$.",
+              "is_correct": false
+            }
+          ],
+          "explanation": "Dans la forme exponentielle $z = re^{i\\theta}$, $r$ représente le module du nombre complexe ($r \\ge 0$) et $\\theta$ représente un de ses arguments. La relation $e^{i\\theta} = \\cos(\\theta) + i \\sin(\\theta)$ est connue sous le nom d'identité d'Euler.",
+          "multi_answers": true
+        },
+        {
+          "id": "4f2a8c19-bc13-4250-a813-3ff80e6a79ad",
+          "question": "Quelle est la forme exponentielle du nombre complexe $z = 1 + i$ ?",
+          "answers": [
+            {
+              "id": "d4564775-b686-4d40-8fb3-bce5fe8d8f69",
+              "text": "$z = \\sqrt{2}e^{i\\frac{\\pi}{4}}$",
+              "is_correct": true
+            },
+            {
+              "id": "cc81bdf1-11fb-4fda-aa9e-bce56982a7aa",
+              "text": "$z = 2e^{i\\frac{\\pi}{4}}$",
+              "is_correct": false
+            },
+            {
+              "id": "68276b0d-7d8a-46b2-99e6-366bda89f4de",
+              "text": "$z = \\sqrt{2}e^{i\\frac{\\pi}{2}}$",
+              "is_correct": false
+            },
+            {
+              "id": "7cf78d74-4814-431e-bb21-5fdd2e3edfa7",
+              "text": "$z = e^{i\\frac{\\pi}{4}}$",
+              "is_correct": false
+            }
+          ],
+          "explanation": "Le module de $z = 1+i$ est $|z| = \\sqrt{1^2 + 1^2} = \\sqrt{2}$. L'argument $\\theta$ vérifie $\\cos(\\theta) = \\frac{1}{\\sqrt{2}}$ et $\\sin(\\theta) = \\frac{1}{\\sqrt{2}}$. Donc, $\\theta = \\frac{\\pi}{4}$ (à $2\\pi$ près). La forme exponentielle est donc $z = \\sqrt{2}e^{i\\frac{\\pi}{4}}$.",
+          "multi_answers": false
+        },
+        {
+          "id": "904ada96-fa3f-4234-a95c-d89ff8c182bf",
+          "question": "Si $z_1 = 3e^{i\\frac{\\pi}{6}}$ et $z_2 = 2e^{i\\frac{\\pi}{3}}$, quel est le produit $z_1 z_2$ sous forme exponentielle ?",
+          "answers": [
+            {
+              "id": "f6c791a4-64e9-43ed-a98b-5040bd2bb460",
+              "text": "$z_1 z_2 = 6e^{i\\frac{\\pi}{2}}$",
+              "is_correct": true
+            },
+            {
+              "id": "7d6edaa9-8f47-4aaf-8884-9190b12424ad",
+              "text": "$z_1 z_2 = 5e^{i\\frac{\\pi}{2}}$",
+              "is_correct": false
+            },
+            {
+              "id": "9a735c5e-0ff0-4a4c-aa6c-176a29aa2343",
+              "text": "$z_1 z_2 = 6e^{i\\frac{\\pi}{9}}$",
+              "is_correct": false
+            },
+            {
+              "id": "95fb121d-cf91-4ef6-a10e-aa6f4aee9878",
+              "text": "$z_1 z_2 = 6e^{i\\frac{5\\pi}{18}}$",
+              "is_correct": false
+            }
+          ],
+          "explanation": "Pour multiplier deux nombres complexes sous forme exponentielle, on multiplie leurs modules et on additionne leurs arguments. Ainsi, $z_1 z_2 = (3 \\times 2) e^{i(\\frac{\\pi}{6} + \\frac{\\pi}{3})} = 6 e^{i(\\frac{\\pi}{6} + \\frac{2\\pi}{6})} = 6 e^{i\\frac{3\\pi}{6}} = 6 e^{i\\frac{\\pi}{2}}$.",
+          "multi_answers": false
+        },
+        {
+          "id": "7d86f12f-326d-42bf-b143-84160d19e623",
+          "question": "Laquelle de ces égalités est une conséquence directe de l'identité d'Euler ?",
+          "answers": [
+            {
+              "id": "d80f5262-13fc-42f6-940d-5540de0db660",
+              "text": "$e^{i\\pi} = -1$",
+              "is_correct": true
+            },
+            {
+              "id": "66321f5d-b63a-4101-a55b-b093bd7ffd3c",
+              "text": "$e^{i\\pi/2} = 1$",
+              "is_correct": false
+            },
+            {
+              "id": "3aa9321a-8fd5-4f32-a29a-2c7d14731857",
+              "text": "$e^{i0} = i$",
+              "is_correct": false
+            },
+            {
+              "id": "63b876c6-f029-4f66-b947-a7c944e3ec60",
+              "text": "$e^{i2\\pi} = 0$",
+              "is_correct": false
+            }
+          ],
+          "explanation": "L'identité d'Euler stipule que $e^{i\\theta} = \\cos(\\theta) + i \\sin(\\theta)$. En posant $\\theta = \\pi$, on obtient $e^{i\\pi} = \\cos(\\pi) + i \\sin(\\pi) = -1 + i(0) = -1$. Les autres égalités sont fausses.",
+          "multi_answers": false
+        }
+      ]
+    }
+  ]
+}
