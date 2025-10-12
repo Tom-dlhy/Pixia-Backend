@@ -7,13 +7,18 @@ from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO)
 
-def generate_plain(prompt: str) -> Open:
+def generate_plain(prompt: str, difficulty: str) -> Open:
     """Génère des questions à réponse ouverte basées sur la description de l'exercice fournie.
+
     Args:
         prompt (str): Description détaillée du sujet des exercices à générer.
+        difficulty (str): Niveau de difficulté de l'exercice.
+
     Returns:
         dict: Dictionnaire représentant les questions générées.
     """
+
+    prompt = f"Description: {prompt}\nDifficulté: {difficulty}"
 
     response = gemini_settings.CLIENT.models.generate_content(
         model=gemini_settings.GEMINI_MODEL_2_5_FLASH_LITE,
@@ -35,15 +40,18 @@ def generate_plain(prompt: str) -> Open:
 
     return data
 
-def generate_qcm(prompt: str) -> QCM:
+def generate_qcm(prompt: str, difficulty: str) -> QCM:
     """Génère un QCM basé sur la description de l'exercice fournie.
 
     Args:
         prompt (str): Description détaillée du sujet des exercices à générer.
+        difficulty (str): Niveau de difficulté de l'exercice.
 
     Returns:
         dict: Dictionnaire représentant le QCM généré.
     """
+
+    prompt = f"Description: {prompt}\nDifficulté: {difficulty}"
 
     response = gemini_settings.CLIENT.models.generate_content(
         model=gemini_settings.GEMINI_MODEL_2_5_FLASH_LITE,
@@ -98,15 +106,15 @@ def planner(
 
     return data
 
-async def generate_for_topic(item: ExercicePlanItem) -> ExerciseOutput:
+async def generate_for_topic(item: ExercicePlanItem, difficulty: str) -> ExerciseOutput:
     """Génère un exercice (QCM ou Open) pour un sujet donné."""
     try:
         if item.type == "qcm":
             logging.info(f"Génération du QCM : {item.topic}")
-            result = await asyncio.to_thread(generate_qcm, item.topic)
+            result = await asyncio.to_thread(generate_qcm, item.topic, difficulty)
         else:
             logging.info(f"Génération du Open : {item.topic}")
-            result = await asyncio.to_thread(generate_plain, item.topic)
+            result = await asyncio.to_thread(generate_plain, item.topic, difficulty)
         return result
     except Exception as e:
         logging.error(f"Erreur lors de la génération de {item.topic} : {e}")

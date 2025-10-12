@@ -25,7 +25,7 @@ async def generate_exercises(synthesis: ExerciseSynthesis) -> ExerciseOutput:
         return plan_json
     
     # Création des tâches pour tous les exercices du plan
-    tasks = [generate_for_topic(ex) for ex in plan.exercises]
+    tasks = [generate_for_topic(ex, synthesis.difficulty) for ex in plan.exercises]
 
     # Exécution en parallèle
     results = await asyncio.gather(*tasks)
