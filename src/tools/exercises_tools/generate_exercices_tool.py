@@ -1,13 +1,13 @@
 from src.utils import planner, generate_for_topic, assign_uuids_to_output
-from src.models import ExercisePlan, ExerciseOutput
+from src.models import ExercisePlan, ExerciseOutput, ExerciseSynthesis
 from typing import Union
 import asyncio, logging, json
 
 logging.basicConfig(level=logging.INFO)
 
-async def generate_exercises(description: str, difficulty: str, number_of_exercises: int, exercise_type: str) -> ExerciseOutput:
-    plan_json = planner(description, difficulty, number_of_exercises, exercise_type)
-    
+async def generate_exercises(synthesis: ExerciseSynthesis) -> ExerciseOutput:
+    plan_json = planner(synthesis.description, synthesis.difficulty, synthesis.number_of_exercises, synthesis.exercise_type)
+
     # Validation du plan
     try:
         if isinstance(plan_json, ExercisePlan):
