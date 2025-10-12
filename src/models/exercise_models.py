@@ -61,9 +61,7 @@ class QCM(BaseModel):
 ################################################################
 
 class ExercicePlanItem(BaseModel):
-    type: Annotated[
-        str, StringConstraints(pattern="^(qcm|open)$", strip_whitespace=True)
-    ]
+    type: Literal["qcm", "open"]
     topic: Annotated[str, StringConstraints(min_length=3, max_length=200)]
 
 
@@ -92,7 +90,7 @@ class ExerciseSynthesis(BaseModel):
     number_of_exercises: Annotated[int, Field(ge=1, le=20)] = Field(
         ..., description="Nombre d'exercices à générer (entre 1 et 20)."
     )
-    exercise_type: Annotated[str, StringConstraints(pattern="^(qcm|open|both)$")] = (
+    exercise_type: Literal["qcm", "open", "both"] = (
         Field(..., description="Type d'exercice à générer : qcm / open / both")
     )
 

@@ -5,9 +5,9 @@ if __name__ == "__main__":
     import asyncio
     import json
 
-    description = "Les bases de la physique"
-    difficulty = "college 4e"
-    number_of_exercises = 2
+    description = "Les bases des nombres complexes"
+    difficulty = "Licence 1"
+    number_of_exercises = 3
     exercise_type = "both"  # Options: "qcm", "open", "both"
 
     synthesis = ExerciseSynthesis(

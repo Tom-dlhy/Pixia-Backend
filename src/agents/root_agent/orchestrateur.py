@@ -3,10 +3,17 @@ import asyncio
 from google.adk.agents import LlmAgent
 from google.genai import types
 from google.adk.runners import InMemoryRunner
-
+from google.adk.tools import ToolContext
 from src.config import gemini_settings
 from src.tools.exercises_tools.generate_exercices_tool import generate_exercises
 from src.models.exercise_models import ExerciseOutput
+from google.adk.tools import FunctionTool
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+
+APP_NAME="Hackathon-App"
+USER_ID="user1234"
+SESSION_ID="1234"
 
 
 exercise_generation_agent = LlmAgent(
@@ -25,6 +32,7 @@ exercise_generation_agent = LlmAgent(
     - Si le tool renvoie du JSON, tu dois simplement le répéter tel quel.
     """,
     tools=[generate_exercises],
+    
 )
 
 exercise_precision_agent = LlmAgent(
@@ -52,6 +60,7 @@ exercise_precision_agent = LlmAgent(
     - "Quel type d'exercices préférez-vous ? (qcm, open, ou les deux)"
 
     À chaque fois que tu demande des clarifications, demande toutes les informations manquantes en une seule fois de manière fluide et naturelle.
+    Ne fait pas de récapitulatif avant d'appeler le sub_agent, dès que tu as toutes les informations, appelle le sub_agent DIRECTEMENT.
     """,
     sub_agents=[exercise_generation_agent],
 )
@@ -60,19 +69,42 @@ exercise_precision_agent = LlmAgent(
 root_agent = LlmAgent(
     name="RootAgent",
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
-    include_contents="none",
     instruction="Orchestre les demandes d'exercice via l'agent `exercise_precision_agent`.",
     sub_agents=[exercise_precision_agent]
 )
 
 # ------- Exemple d'exécution -------
 
+
+
+# Session and Runner
+async def setup_session_and_runner():
+    session_service = InMemorySessionService() # Pour le dev uniquement
+    session = await session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID)
+    runner = Runner(agent=root_agent, app_name=APP_NAME, session_service=session_service)
+    return session, runner
+
+# Agent Interaction
+async def call_agent_async(query):
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+    session, runner = await setup_session_and_runner()
+    events = runner.run_async(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
+
+    async for event in events:
+        if event.is_final_response():
+            final_response = event.content.parts[0].text
+            print("Agent Response: ", final_response)
+
+# If running this code as a standalone Python script, you'll need to use asyncio.run() or manage the event loop.
+await call_agent_async("this is urgent, i cant login")
+
+
 async def main():
-    runner = InMemoryRunner()  # ou le runner que tu utilises
+    runner = InMemoryRunner(app_name="hackathon-app", agent=root_agent)
     content = types.Content(role="user", parts=[
         types.Part(text="Je veux des exercices de physique sur les forces")
     ])
-    result = await runner.run(root_agent, content)
+    result = await runner.run(runner, content)
     print("== Résultat final state ==")
     print(result.session.state)
 

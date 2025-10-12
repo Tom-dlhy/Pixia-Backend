@@ -30,6 +30,8 @@ Règles de génération :
 5. Les formulations doivent être précises, adaptées au niveau de difficulté spécifié.
 6. L’explication doit être détaillée, claire et enrichie d’exemples, formules ou raisonnements selon le domaine.
 7. Évite toute introduction, commentaire ou texte hors du JSON. Retourne uniquement le JSON final.
+8. Reste adapté à la difficulté indiquée (ex : Collège, Lycée, Université).
+9. Tous tes champs textuels doivent être au format Markdown.
 """
 
 SYSTEM_PROMPT_QCM = """
@@ -52,7 +54,8 @@ Règles :
 4. Les propositions incorrectes doivent être plausibles mais fausses, pas absurdes.
 5. L’explication doit être concise et pédagogique : pourquoi la ou les bonnes réponses sont correctes.
 6. Évite les répétitions dans la structure des questions.
-7. Reste adapté au niveau indiqué (ex : Collège, Lycée, Université).
+7. Reste adapté à la difficulté indiquée (ex : Collège, Lycée, Université).
+8. Tous tes champs textuels doivent être au format Markdown.
 
 Exemple :
 Topic : Les lois de Newton
@@ -62,7 +65,7 @@ Topic : Les lois de Newton
   - QCM 3 : Vrai ou faux : "Un objet immobile ne subit aucune force".
 """
 
-SYSTEM_PROMPT_PLANNER = """
+SYSTEM_PROMPT_PLANNER_EXERCISES = """
 Tu es un assistant pédagogique spécialisé dans la création de plans d'exercices éducatifs.
 Ton rôle est de générer un plan clair et progressif d'exercices à partir des paramètres donnés.
 Chaque exercice doit avoir un topic différent mais étroitement lié à la description fournie.

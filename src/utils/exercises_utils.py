@@ -1,6 +1,6 @@
 from src.config import gemini_settings
 from src.models import Open, QCM, QCM, ExercisePlan, ExercicePlanItem, ExerciseOutput, ExerciseSynthesis
-from src.prompts import SYSTEM_PROMPT_OPEN, SYSTEM_PROMPT_QCM, SYSTEM_PROMPT_PLANNER
+from src.prompts import SYSTEM_PROMPT_OPEN, SYSTEM_PROMPT_QCM, SYSTEM_PROMPT_PLANNER_EXERCISES
 import logging, asyncio, uuid
 from typing import Any
 from pydantic import BaseModel
@@ -72,7 +72,7 @@ def generate_qcm(prompt: str, difficulty: str) -> QCM:
 
     return data
 
-def planner(synthesis: ExerciseSynthesis) -> ExercisePlan:
+def planner_exercises(synthesis: ExerciseSynthesis) -> ExercisePlan:
     """
     Génère un plan d'exercice basé sur la description, la difficulté, le nombre d'exercices et le type d'exercice.
 
@@ -91,7 +91,7 @@ def planner(synthesis: ExerciseSynthesis) -> ExercisePlan:
         model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
         contents=f"Description: {synthesis.description}\nDifficulté: {synthesis.difficulty}\nNombre d'exercices: {synthesis.number_of_exercises}\nType d'exercice: {synthesis.exercise_type}",
         config={
-            "system_instruction": SYSTEM_PROMPT_PLANNER,
+            "system_instruction": SYSTEM_PROMPT_PLANNER_EXERCISES,
             "response_mime_type": "application/json",
             "response_schema": ExercisePlan,
         },

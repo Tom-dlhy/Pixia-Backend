@@ -48,7 +48,7 @@ class ClassifiedPlan(BaseModel):
     open: list[ExercicePlanItem] = Field(default_factory=list)
 
 
-SYSTEM_PROMPT_PLANNER = """
+SYSTEM_PROMPT_PLANNER_EXERCISES = """
 Tu es un assistant pédagogique spécialisé dans la création de plans d'exercices éducatifs.
 Ton rôle est de générer un plan clair et progressif d'exercices à partir des paramètres donnés.
 Chaque exercice doit avoir un topic différent mais étroitement lié à la description fournie.
@@ -69,7 +69,7 @@ Description : Les fonctions affines
 """
 
 
-def planner(
+def planner_exercises(
     description: str, difficulty: str, number_of_exercises: int, exercise_type: str
 ):
     """
@@ -91,7 +91,7 @@ def planner(
         model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
         contents=f"Description: {description}\nDifficulté: {difficulty}\nNombre d'exercices: {number_of_exercises}\nType d'exercice: {exercise_type}",
         config={
-            "system_instruction": SYSTEM_PROMPT_PLANNER,
+            "system_instruction": SYSTEM_PROMPT_PLANNER_EXERCISES,
             "response_mime_type": "application/json",
             "response_schema": ExercisePlan,
         },
@@ -121,7 +121,7 @@ def classify_exercises_type(exercise_plan: ExercisePlan) -> ClassifiedPlan:
 async def pipeline(
     description: str, difficulty: str, number_of_exercises: int, exercise_type: str
 ):
-    plan_json = planner(description, difficulty, number_of_exercises, exercise_type)
+    plan_json = planner_exercises(description, difficulty, number_of_exercises, exercise_type)
 
     # Validation du plan
     try:
