@@ -1,4 +1,5 @@
 from src.tools.exercises_tools import generate_exercises
+from src.models import ExerciseSynthesis
 
 if __name__ == "__main__":
     import asyncio
@@ -9,8 +10,15 @@ if __name__ == "__main__":
     number_of_exercises = 2
     exercise_type = "both"  # Options: "qcm", "open", "both"
 
+    synthesis = ExerciseSynthesis(
+        description=description,
+        difficulty=difficulty,
+        number_of_exercises=number_of_exercises,
+        exercise_type=exercise_type
+    )
+
     exercises = asyncio.run(
-        generate_exercises(description, difficulty, number_of_exercises, exercise_type)
+        generate_exercises(synthesis)
     )
 
     print("\n=== ✅ Exercices finaux générés ===\n")
