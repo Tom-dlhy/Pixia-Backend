@@ -5,6 +5,7 @@ import logging
 from src.models.exercise_models import ExercisePlan, ExerciseOutput, ExerciseSynthesis
 from src.utils import assign_uuids_to_output, generate_for_topic, planner_exercises
 
+
 logging.basicConfig(level=logging.INFO)
 
 
