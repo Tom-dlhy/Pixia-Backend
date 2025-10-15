@@ -40,5 +40,5 @@ class GeminiSettings(BaseSettings):
         self.CLIENT = genai.Client(api_key=self.GOOGLE_API_KEY)
 
 # Instances des settings
-app_settings = AppSettings()
+app_settings = AppSettings() # type: ignore
 gemini_settings = GeminiSettings() 
