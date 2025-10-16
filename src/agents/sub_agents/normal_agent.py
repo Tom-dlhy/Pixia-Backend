@@ -1,0 +1,20 @@
+from google.adk.agents import LlmAgent
+from google.adk.tools import google_search  
+from src.config import gemini_settings
+from src.tools.normal_tools import construire_prompt_systeme_agent_normal
+
+# IMPORTANT :
+# - L'accès Internet passe par le tool `google_search`. A voir avec Tom et Gab si c'est la meilleure solution
+
+
+agent_normal = LlmAgent(
+    name="NormalAgent",
+    model=gemini_settings.GEMINI_MODEL_2_5_FLASH,  # ou _FLASH_LITE selon perf/coût
+    description="Agent généraliste pour discuter et expliquer des notions sans générer d'exercices ni de cours.",
+    instruction=construire_prompt_systeme_agent_normal(
+        sujet="Général", 
+        niveau="débutant",
+        objectifs=["Expliquer clairement", "Donner des exemples simples"]
+    ),
+    tools=[google_search],  
+)
