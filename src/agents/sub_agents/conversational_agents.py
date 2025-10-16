@@ -22,5 +22,14 @@ conversation_precision_agent = LlmAgent(
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH_LITE,
     description="Agent permetant de définir la conversation qui aura lieu.",
     instruction=AGENT_PROMPT_ConversationPrecisionAgent,
-    tools=[speech_conversation_agent, textual_conversation_agent],
+    sub_agents=[speech_conversation_agent, textual_conversation_agent],
+    output_key="precision_response",
+    # output_key="precision_response.role_agent,precision_response.topic,precision_response.type",
 )
+
+# precision_reponse=
+# {
+#     role: "assistant",
+#     topic: "interviewer",
+#     type: "speech",
+# }
