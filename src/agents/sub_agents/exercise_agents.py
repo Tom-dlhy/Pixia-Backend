@@ -8,13 +8,15 @@ exercise_generation_agent = LlmAgent(
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH_LITE,
     description="Agent spécialisé dans la génération d'exercices.",
     instruction=AGENT_PROMPT_ExerciseGenerationAgent,
-    tools=[generate_exercises]
+    tools=[generate_exercises],
+    disallow_transfer_to_parent=True, # Quand l'agent finit ça tâche renvoie automatiquement vers le parent.
 )
 
 exercise_precision_agent = LlmAgent(
     name="ExercisePrecisionAgent",
-    model=gemini_settings.GEMINI_MODEL_2_5_FLASH_LITE,
+    model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
     description="Agent spécialisé dans la génération d'exercices.",
     instruction=AGENT_PROMPT_ExercisePrecisionAgent,
     sub_agents=[exercise_generation_agent],
+    disallow_transfer_to_parent=True,
 )
