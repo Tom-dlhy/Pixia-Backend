@@ -105,6 +105,7 @@ async def chat(req: ChatRequest):
                             if _validate_exercise_output(tool_resp):
                                 final_response = _validate_exercise_output(tool_resp)
                                 logger.info(f"✅ ExerciseOutput validé pour la session {session_id}")
+                                author = event.author
 
     except Exception as e:
         logger.exception("❌ Erreur pendant l'exécution du runner ADK")
@@ -118,6 +119,6 @@ async def chat(req: ChatRequest):
     # === Étape 4 : construction de la réponse ===
     return build_chat_response(
         chat_id=session_id,  # TODO : renommer chat_id → session_id dans le DTO
-        agent_used=author or "root_agent",  # Fallback si l’auteur n’est pas défini
+        agent_used=author or "unknown",  # Fallback si l’auteur n’est pas défini
         raw_answer=final_response
     )

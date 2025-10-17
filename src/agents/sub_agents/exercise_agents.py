@@ -5,7 +5,7 @@ from src.tools.exercises_tools import generate_exercises
 
 
 exercise_agent = LlmAgent(
-    name="ExercisePrecisionAgent",
+    name="ExerciseAgent",
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
     description="Agent spécialisé dans la génération d'exercices.",
     instruction=AGENT_PROMPT_ExerciseAgent,
