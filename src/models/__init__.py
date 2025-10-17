@@ -8,6 +8,14 @@ from .exercise_models import (
     ExerciseOutput,
 )
 
+from .cours_models import (
+    CourseSynthesis,
+    CoursePlan,
+    ChaptersPlanItem,
+    Chapter,
+    CoursOutput,
+)
+
 
 __all__ = [
     "QCM",
@@ -17,4 +25,9 @@ __all__ = [
     "ClassifiedPlan",
     "ExerciseSynthesis",
     "ExerciseOutput",
+    "CourseSynthesis",
+    "CoursePlan",
+    "ChaptersPlanItem",
+    "Chapter",
+    "CoursOutput",
 ]
