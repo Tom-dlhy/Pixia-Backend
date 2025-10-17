@@ -1,6 +1,5 @@
-from __future__ import annotations
-import os, io, re, base64, hashlib
-from typing import Optional, Tuple
+import os, io, re, base64, hashlib, textwrap
+from typing import Optional, Tuple, List
 
 try:
     from pypdf import PdfReader
@@ -8,9 +7,11 @@ try:
 except Exception:
     _PYPDF = False
 
-    PDF_MAGIC = b"%PDF-"
+PDF_MAGIC = b"%PDF-"
+_SAFE_NAME_RE = re.compile(r"[^a-zA-Z0-9._-]+")
 
-# ---------- Helpers basiques ----------
+
+# --- Vérifications basiques ---
 def is_pdf_ext(nom: str) -> bool:
     return nom.lower().endswith(".pdf")
 
@@ -20,37 +21,22 @@ def is_pdf_content_type(ct: Optional[str]) -> bool:
 def starts_with_pdf_magic(b: bytes) -> bool:
     return len(b) >= len(PDF_MAGIC) and b[:len(PDF_MAGIC)] == PDF_MAGIC
 
+
+# --- Utilitaires fichiers / sécurité ---
 def sha256_hex(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
-
-def count_pages(b: bytes) -> Optional[int]:
-    if not _PYPDF:
-        return None
-    try:
-        return len(PdfReader(io.BytesIO(b)).pages)
-    except Exception:
-        return None
 
 def ensure_dir(path: str):
     os.makedirs(path, exist_ok=True)
 
-# ---------- Sécurité nom de fichier ----------
-_SAFE_NAME_RE = re.compile(r"[^a-zA-Z0-9._-]+")
 def sanitize_filename(nom: str) -> str:
-    """
-    Retire les chemins, épure les caractères suspects.
-    Conserve uniquement [a-zA-Z0-9._-], remplace le reste par '_'.
-    """
-    nom = os.path.basename(nom)
-    # garde l'extension d’origine si .pdf sinon on force .pdf plus bas
-    return _SAFE_NAME_RE.sub("_", nom)
+    """Retire les chemins et caractères spéciaux non sûrs."""
+    return _SAFE_NAME_RE.sub("_", os.path.basename(nom))
 
-# ---------- Décodage base64 avec garde-fous ----------
+
+# --- Gestion Base64 ---
 def decode_b64_to_bytes(b64: str, size_limit_mib: int = 50) -> Tuple[bool, Optional[bytes], str]:
-    """
-    Décode du base64 en bytes + limite de taille (MiB).
-    Retourne (ok, bytes|None, message).
-    """
+    """Décode du base64 avec vérification et limite de taille."""
     try:
         raw = base64.b64decode(b64, validate=True)
     except Exception:
@@ -61,12 +47,10 @@ def decode_b64_to_bytes(b64: str, size_limit_mib: int = 50) -> Tuple[bool, Optio
         return False, None, f"Le fichier dépasse {size_limit_mib} MiB."
     return True, raw, "OK"
 
-# ---------- Écriture avec anti-collision ----------
+
+# --- Écriture avec anti-collision ---
 def write_unique(path_dir: str, desired_name: str, content: bytes) -> str:
-    """
-    Écrit le fichier dans path_dir. Si le nom existe déjà, suffixe avec 8 hex du sha256.
-    Retourne le chemin absolu écrit.
-    """
+    """Écrit le fichier et ajoute un suffixe hash si un fichier du même nom existe."""
     ensure_dir(path_dir)
     chemin = os.path.join(path_dir, desired_name)
     if os.path.exists(chemin):
@@ -76,3 +60,43 @@ def write_unique(path_dir: str, desired_name: str, content: bytes) -> str:
     with open(chemin, "wb") as f:
         f.write(content)
     return os.path.abspath(chemin)
+
+
+# --- Lecture PDF / extraction texte ---
+def count_pages(b: bytes) -> Optional[int]:
+    if not _PYPDF:
+        return None
+    try:
+        return len(PdfReader(io.BytesIO(b)).pages)
+    except Exception:
+        return None
+
+def extract_text_from_pdf_bytes(b: bytes) -> str:
+    """Extrait tout le texte du PDF (naïf mais efficace)."""
+    if not _PYPDF:
+        return ""
+    try:
+        reader = PdfReader(io.BytesIO(b))
+        textes = [page.extract_text() or "" for page in reader.pages]
+        return "\n".join(textes).strip()
+    except Exception:
+        return ""
+
+
+# --- Découpage du texte en chunks ---
+def chunk_text(s: str, max_chars: int = 6000, max_chunks: int = 5) -> List[str]:
+    """Découpe un texte en morceaux exploitables par le LLM."""
+    if not s:
+        return []
+    chunks = textwrap.wrap(s, width=max_chars, break_long_words=False, break_on_hyphens=False)
+    if len(chunks) > max_chunks:
+        chunks = chunks[:max_chunks]
+    return chunks
+
+
+# --- Dossiers de session ---
+def session_upload_dir(session_id: str) -> str:
+    return os.path.join("data", "sessions", sanitize_filename(session_id), "uploads")
+
+def session_text_dir(session_id: str) -> str:
+    return os.path.join("data", "sessions", sanitize_filename(session_id), "texts")
