@@ -106,3 +106,13 @@ class ExerciseOutput(BaseModel):
             Field(discriminator="type")
         ]
     ] = Field(..., min_length=1, description="Liste des exercices générés.")
+
+
+def _validate_exercise_output(data: dict | str) -> ExerciseOutput | None:
+    """Valide et parse les données en tant qu'ExerciseOutput."""
+    if isinstance(data, dict):
+        return ExerciseOutput.model_validate(data)
+    elif isinstance(data, str):
+        return ExerciseOutput.model_validate_json(data)
+    else:
+        return None

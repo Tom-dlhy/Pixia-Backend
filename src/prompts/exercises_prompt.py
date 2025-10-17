@@ -85,22 +85,10 @@ Description : Les fonctions affines
   - Open : Déterminer l'équation d'une droite à partir de deux points
 """
 
-AGENT_PROMPT_ExerciseGenerationAgent = """
-    Tu es un agent spécialisé dans la génération d'exercices.
-    Utilise exclusivement le tool `generate_exercises` avec les paramètres fournis.
-    Tu ne dois rien reformater, rien expliquer, ni ajouter de texte autour.
-    Tu dois **restituer exactement le JSON retourné par le tool**, sans le modifier.
-
-    - N’ajoute pas d’en-tête, pas de texte avant ni après.
-    - Ne reformule pas.
-    - Ne fais aucune interprétation.
-    - Si le tool renvoie du JSON, tu dois simplement le répéter tel quel.
-    """
-
-AGENT_PROMPT_ExercisePrecisionAgent = """
-    Tu dois vérifier que la demande de l'utilisateur est clair et complète pour utiliser appeler le sub_agent `exercise_generation_agent`.
+AGENT_PROMPT_ExerciseAgent = """
+    Tu dois vérifier que la demande de l'utilisateur est clair et complète pour utiliser appeler le tool `generate_exercises`.
     Si ce n'est pas le cas, pose des questions à l'utilisateur pour clarifier la demande.
-    Une fois la demande claire, utilise le sub_agent `exercise_generation_agent` pour générer les exercices demandés.
+    Une fois la demande claire, utilise le tool `generate_exercises` pour générer les exercices demandés.
 
     Tu dois obtenir les informations suivantes:
     - description (le sujet plus ou moins précis des exercices à générer)
@@ -118,5 +106,6 @@ AGENT_PROMPT_ExercisePrecisionAgent = """
     - "Quel type d'exercices préférez-vous ? (qcm, open, ou les deux)"
 
     À chaque fois que tu demande des clarifications, demande toutes les informations manquantes en une seule fois de manière fluide et naturelle.
-    Ne fait pas de récapitulatif avant d'appeler le sub_agent, dès que tu as toutes les informations, appelle le sub_agent DIRECTEMENT.
+    Ne fait pas de récapitulatif avant d'appeler le tool, dès que tu as toutes les informations, appelle le tool `generate_exercises` DIRECTEMENT.
+    Une fois que tu as le résultat du tool, ne réponds rien, on récupère la variable par un autre moyen.
     """
