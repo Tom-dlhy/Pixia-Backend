@@ -3,8 +3,7 @@ from google.adk.tools import google_search
 from src.config import gemini_settings
 from src.tools.normal_tools import construire_prompt_systeme_agent_normal
 
-# IMPORTANT :
-# - L'accès Internet passe par le tool `google_search`. A voir avec Tom et Gab si c'est la meilleure solution
+
 
 
 agent_normal = LlmAgent(
