@@ -1,18 +1,28 @@
+# ...existing code...
 FROM python:3.12-slim
 
-# uv (si vous l’utilisez)
-RUN pip install --no-cache-dir uv
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Dépendances
-COPY pyproject.toml uv.lock* ./
-RUN uv sync --frozen --no-install-project
+# installer uv avant, mettre à jour pip
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir uv
 
-# Code
+# Copier requirements d'abord pour utiliser le cache Docker
+COPY requirements.txt ./ 
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copier le reste du code
 COPY . .
 
-EXPOSE 8000
+# Vérifier adk (si l'exécutable est disponible après l'installation)
+RUN adk --version || true
 
-# Dev: hot reload (à utiliser avec un volume monté)
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Exposer le port sur lequel le container écoute (aligné avec CMD)
+EXPOSE 8080
+
+# WORKDIR /app/src/agents
+CMD ["uv", "run","dev", "--port=8080", "--host=0.0.0.0"]
+
+# ...existing code...
