@@ -37,18 +37,9 @@ class CoursePlan(BaseModel):
 ### Modèles Pydantic pour un Chapitre ####
 ##########################################
 
-class ChapterSchema(BaseModel):
-    description: str = Field(..., description="Description du schéma à générer")
-    svg_base64: str = Field(..., description="Schéma Mermaid SVG encodé en base64")
-
-
 class Chapter(BaseModel):
     title: str = Field(..., description="Titre du chapitre.")
     content: str = Field(..., description="Contenu détaillé du chapitre.")
-    schemas: Optional[ChapterSchema] = Field(
-        None,
-        description="Schémas Mermaid SVG encodés en base64 pour illustrer le chapitre.",
-    )
 
 
 ################################################

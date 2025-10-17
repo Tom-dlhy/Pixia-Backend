@@ -1,5 +1,5 @@
 from src.config import gemini_settings
-from src.models import CoursePlan, CourseSynthesis, ChaptersPlanItem, Chapter, CoursOutput
+from src.models import CoursePlan, CourseSynthesis, ChaptersPlanItem, Chapter
 from src.prompts import SYSTEM_PROMPT_PLANNER_COURS, SYSTEM_PROMPT_GENERATE_CHAPTER
 import logging, asyncio
 
@@ -75,8 +75,8 @@ async def generate_for_chapter(item: ChaptersPlanItem, difficulty: str, ) -> Cha
     """Génère un chapitre pour un sujet donné."""
     try:
         logging.info(f"Génération du chapitre : {item.title}")
-        result = await asyncio.to_thread(generate_chapter, item.title, item.content, difficulty)
-        return result
+        chapter = await asyncio.to_thread(generate_chapter, item.title, item.content, difficulty)
+        return chapter
     except Exception as e:
         logging.error(f"Erreur lors de la génération de {item.title} : {e}")
         return None

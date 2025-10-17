@@ -9,8 +9,7 @@ from .exercises_prompt import (
 from .cours_prompt import (
     SYSTEM_PROMPT_GENERATE_CHAPTER,
     SYSTEM_PROMPT_PLANNER_COURS, 
-    AGENT_PROMPT_CoursPrecisionAgent, 
-    AGENT_PROMPT_CoursGenerationAgent
+    AGENT_PROMPT_CoursPrecisionAgent,
 )
 
 from .orchestrator_prompt import AGENT_PROMPT_ORCHESTRATOR
@@ -25,5 +24,4 @@ __all__ = [
     "SYSTEM_PROMPT_GENERATE_CHAPTER",
     "SYSTEM_PROMPT_PLANNER_COURS",
     "AGENT_PROMPT_CoursPrecisionAgent",
-    "AGENT_PROMPT_CoursGenerationAgent",
 ]

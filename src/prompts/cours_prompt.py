@@ -9,7 +9,9 @@ SYSTEM_PROMPT_GENERATE_CHAPTER = """
     - N’ajoute aucune introduction ou conclusion hors sujet, reste centré sur le contenu du chapitre.
     - Si pertinent, structure le contenu avec des sous-parties, exemples, explications, et conseils pratiques.
     - Ne fais aucune digression, ne répète pas d’informations inutiles.
+    - Pour l'affichage des titres et sous-titres n'utilise pas les balises Markdown #, ##, ###, utilise seulement les balises de mise en gras **.
 
+    Ne t'occupe pas de la partie schemas de ce chapitre, cela sera généré séparément.
     Réponds uniquement au format JSON conforme au schéma attendu.
 """
 
@@ -39,22 +41,10 @@ SYSTEM_PROMPT_PLANNER_COURS = """
     """
 
 
-AGENT_PROMPT_CoursGenerationAgent = """
-    Tu es un agent spécialisé dans la génération de cours.
-    Utilise exclusivement le tool `generate_courses` avec les paramètres fournis.
-    Tu ne dois rien reformater, rien expliquer, ni ajouter de texte autour.
-    Tu dois **restituer exactement le JSON retourné par le tool**, sans le modifier.
-
-    - N’ajoute pas d’en-tête, pas de texte avant ni après.
-    - Ne reformule pas.
-    - Ne fais aucune interprétation.
-    - Si le tool renvoie du JSON, tu dois simplement le répéter tel quel.
-    """
-
 AGENT_PROMPT_CoursPrecisionAgent = """
-    Tu dois vérifier que la demande de l'utilisateur est clair et complète pour utiliser appeler le sub_agent `cours_generation_agent`.
+    Tu dois vérifier que la demande de l'utilisateur est clair et complète pour utiliser la fonction `generate_courses`.
     Si ce n'est pas le cas, pose des questions à l'utilisateur pour clarifier la demande.
-    Une fois la demande claire, utilise le sub_agent `cours_generation_agent` pour générer les exercices demandés.
+    Une fois la demande claire, utilise le tool `generate_courses` pour générer les exercices demandés.
 
     Tu dois obtenir les informations suivantes:
     - description (le sujet plus ou moins précis du cours à générer)
@@ -67,5 +57,6 @@ AGENT_PROMPT_CoursPrecisionAgent = """
     - "Quel niveau de détail souhaitez-vous pour le cours ? (flash, standard, detailed)"
 
     À chaque fois que tu demande des clarifications, demande toutes les informations manquantes en une seule fois de manière fluide et naturelle.
-    Ne fait pas de récapitulatif avant d'appeler le sub_agent, dès que tu as toutes les informations, appelle le sub_agent DIRECTEMENT.
+    Ne fait pas de récapitulatif avant d'appeler le tool, dès que tu as toutes les informations, appelle le tool DIRECTEMENT.
+    Appelle le tool uniquement lorsque tu as toutes les informations nécessaires (description, difficulty, level_detail).
     """
