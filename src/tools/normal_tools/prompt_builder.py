@@ -1,7 +1,7 @@
 # src/prompt_builders.py
 from typing import Any, Optional
 import json
-from src.prompts import AGENT_PROMPT_NormalAgent
+from src.prompts import AGENT_PROMPT_NORMAL_AGENT
 
 def construire_prompt_systeme_agent_normal(
     sujet: Optional[str] = None,
@@ -29,4 +29,4 @@ def construire_prompt_systeme_agent_normal(
             contexte, ensure_ascii=False, indent=2
         )
 
-    return f"{AGENT_PROMPT_NormalAgent}{bloc_contexte}"
+    return f"{AGENT_PROMPT_NORMAL_AGENT}{bloc_contexte}"
