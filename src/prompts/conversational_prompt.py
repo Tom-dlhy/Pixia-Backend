@@ -36,3 +36,6 @@ Voici des exemples de demande de clarification:
 À chaque fois que tu demande des clarifications, demande toutes les informations manquantes en une seule fois de manière fluide et naturelle.
 Ne fait pas de récapitulatif avant d'appeler le sub_agent, dès que tu as toutes les informations, appelle le sub_agent DIRECTEMENT.
 """
+
+AGENT_PROMPT_ConversationAgentSpeechPresentation = """
+"""

@@ -32,7 +32,7 @@ class GeminiSettings(BaseSettings):
     GEMINI_MODEL_2_5_FLASH: str
     GEMINI_MODEL_2_5_FLASH_LITE: str
     GEMINI_MODEL_2_5_FLASH_LIVE: str
-    GEMINI_MODEL_2_5_REALTIME: str
+    GEMINI_MODEL_REALTIME: str
 
 
 
