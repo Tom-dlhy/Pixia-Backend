@@ -51,7 +51,7 @@ class ChatResponse(BaseModel):
 def build_chat_response(
     chat_id: str,
     agent_used: str,
-    raw_answer: str | dict,
+    raw_answer: ExerciseOutput,
 ) -> ChatResponse:
     """Construit un ChatResponse à partir de la réponse brute de l'agent."""
 
