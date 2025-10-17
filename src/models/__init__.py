@@ -6,6 +6,7 @@ from .exercise_models import (
     ClassifiedPlan,
     ExerciseSynthesis,
     ExerciseOutput,
+    _validate_exercise_output
 )
 
 from .cours_models import (
@@ -26,6 +27,7 @@ __all__ = [
     "ClassifiedPlan",
     "ExerciseSynthesis",
     "ExerciseOutput",
+    "_validate_exercise_output",
     "CourseSynthesis",
     "CoursePlan",
     "ChaptersPlanItem",
