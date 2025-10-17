@@ -3,4 +3,6 @@ AGENT_PROMPT_ORCHESTRATOR="""
 
     Tu dois rediriger les requêtes des utilisateurs vers les sous-agents appropriés en fonction de la nature de la demande.
     N'oublie pas de d'envoyer aux sous agents les informations contextuelles nécessaires pour qu'ils puissent répondre efficacement.
+
+    Si on te dit d'être un copilote, tu rediriges systématiquement vers le sub_agent copilote_exercice_agent.
     """

@@ -7,18 +7,18 @@ from typing import Annotated, List, Union, Optional, Literal
 
 class OpenQuestion(BaseModel):
     id: Optional[str] = Field(None, description="Identifiant unique de la question")
-    question: Annotated[str, StringConstraints(min_length=3, max_length=1000)]
+    question: Annotated[str, StringConstraints(max_length=1000)]
     answers: str = Field(
         "",
         description="Champ réservé pour la réponse de l'utilisateur, à laisser vide.",
     )
-    explanation: Annotated[str, StringConstraints(min_length=3, max_length=2000)]
+    explanation: Annotated[str, StringConstraints(max_length=2000)]
 
 
 class Open(BaseModel):
     id: Optional[str] = Field(None, description="Identifiant unique du bloc de questions")
     type: Literal["open"] = Field("open", description="Toujours 'open'")
-    topic: Annotated[str, StringConstraints(min_length=3, max_length=1000)] = Field(
+    topic: Annotated[str, StringConstraints(max_length=1000)] = Field(
         ..., 
         description="Titre du bloc de questions"
     )
@@ -62,11 +62,11 @@ class QCM(BaseModel):
 
 class ExercicePlanItem(BaseModel):
     type: Literal["qcm", "open"]
-    topic: Annotated[str, StringConstraints(min_length=3, max_length=200)]
+    topic: Annotated[str, StringConstraints(max_length=200)]
 
 
 class ExercisePlan(BaseModel):
-    difficulty: Annotated[str, StringConstraints(min_length=3, max_length=100)]
+    difficulty: Annotated[str, StringConstraints(max_length=100)]
     exercises: list[ExercicePlanItem] = Field(
         ..., min_length=1, max_length=20, description="Liste des exercices à générer."
     )
@@ -81,10 +81,10 @@ class ClassifiedPlan(BaseModel):
 ############################################################################
 
 class ExerciseSynthesis(BaseModel):
-    description: Annotated[str, StringConstraints(min_length=10, max_length=500)] = (
+    description: Annotated[str, StringConstraints(max_length=500)] = (
         Field(..., description="Description détaillé du sujet des exercices à générer.")
     )
-    difficulty: Annotated[str, StringConstraints(min_length=3, max_length=100)] = Field(
+    difficulty: Annotated[str, StringConstraints(max_length=100)] = Field(
         ..., description="Niveau de difficulté de l'exercice"
     )
     number_of_exercises: Annotated[int, Field(ge=1, le=20)] = Field(
