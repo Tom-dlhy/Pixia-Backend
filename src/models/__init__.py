@@ -14,6 +14,7 @@ from .cours_models import (
     ChaptersPlanItem,
     Chapter,
     CoursOutput,
+    Chapter_Schema,
 )
 
 
@@ -30,4 +31,5 @@ __all__ = [
     "ChaptersPlanItem",
     "Chapter",
     "CoursOutput",
+    "Chapter_Schema",
 ]

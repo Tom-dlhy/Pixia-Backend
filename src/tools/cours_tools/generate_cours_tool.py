@@ -32,8 +32,14 @@ async def generate_courses(course_synthesis: CourseSynthesis) -> dict:
     # Création des tâches pour tous les exercices du plan
     tasks = [generate_for_chapter(chapter, course_synthesis.difficulty) for chapter in plan.chapters]
 
-    # Exécution en parallèle
-    results = await asyncio.gather(*tasks)
+    # Ré-exécuter les chapitres en batch de 2 en parallèle
+    results = []
+    batch_size = 2
+    for i in range(0, len(plan.chapters), batch_size):
+        batch = plan.chapters[i:i + batch_size]
+        batch_tasks = [generate_for_chapter(ch, course_synthesis.difficulty) for ch in batch]
+        batch_results = await asyncio.gather(*batch_tasks)
+        results.extend(batch_results)
 
     # Filtrage des résultats valides
     generated_cours = [r for r in results if r is not None]

@@ -9,5 +9,6 @@ cours_precision_agent = LlmAgent(
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
     description="Agent spécialisé dans la génération de cours.",
     instruction=AGENT_PROMPT_CoursPrecisionAgent,
-    tools=[generate_courses]
+    tools=[generate_courses],
+    disallow_transfer_to_parent=True,
 )

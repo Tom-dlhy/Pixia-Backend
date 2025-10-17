@@ -1,7 +1,10 @@
 from src.config import gemini_settings
-from src.models import CoursePlan, CourseSynthesis, ChaptersPlanItem, Chapter
-from src.prompts import SYSTEM_PROMPT_PLANNER_COURS, SYSTEM_PROMPT_GENERATE_CHAPTER
+from src.models import CoursePlan, CourseSynthesis, ChaptersPlanItem, Chapter, Chapter_Schema
+from src.prompts import SYSTEM_PROMPT_PLANNER_COURS, SYSTEM_PROMPT_GENERATE_CHAPTER, SYSTEM_PROMPT_GENERATE_IMAGE_CHAPTER
 import logging, asyncio
+import base64
+import uuid
+from google.genai import types
 
 logging.basicConfig(level=logging.INFO)
 
@@ -37,6 +40,43 @@ def generate_chapter(title: str, content: str, difficulty: str) -> Chapter:
         logging.error(f"Erreur parsing {err}")
 
     return data
+
+
+def generate_schema_for_chapter(chapter: Chapter) -> Chapter_Schema:
+    """Génère une image schématique pour un chapitre donné.
+
+    Args:
+        chapter (Chapter): Chapitre pour lequel générer le schéma.
+
+    Returns:
+        dict: Dictionnaire représentant le schéma généré.
+    """
+
+    response = gemini_settings.CLIENT.models.generate_content(
+        model=gemini_settings.GEMINI_MODEL_2_5_FLASH_IMAGE,
+        contents=SYSTEM_PROMPT_GENERATE_IMAGE_CHAPTER + "\n" + chapter.content,
+        config=types.GenerateContentConfig(
+            response_modalities=['Image'],
+            image_config=types.ImageConfig(
+                aspect_ratio="16:9",
+            )
+        )
+    )
+    
+    uuid_schema = str(uuid.uuid4())
+    for part in response.candidates[0].content.parts:
+        if part.text is not None:
+            print(part.text)
+        elif part.inline_data is not None:
+            with open(f"{uuid_schema}_generated_image.png", "wb") as f:
+                f.write(part.inline_data.data)
+            print(f"Image enregistrée sous '{uuid_schema}_generated_image.png'")
+
+            return Chapter_Schema(
+                id_schema=uuid_schema,
+                id_chapter=chapter.id_chapter,
+                img_base64=base64.b64encode(part.inline_data.data).decode('utf-8')
+            )
 
 
 def planner_cours(synthesis: CourseSynthesis) -> CoursePlan:
@@ -75,7 +115,14 @@ async def generate_for_chapter(item: ChaptersPlanItem, difficulty: str, ) -> Cha
     """Génère un chapitre pour un sujet donné."""
     try:
         logging.info(f"Génération du chapitre : {item.title}")
+
         chapter = await asyncio.to_thread(generate_chapter, item.title, item.content, difficulty)
+        if hasattr(chapter, "id_chapter") and getattr(chapter, "id_chapter") in (None, ""):
+            setattr(chapter, "id_chapter", str(uuid.uuid4()))
+
+        Chapter_Schema = await asyncio.to_thread(generate_schema_for_chapter, chapter)
+        setattr(chapter, "id_schema", Chapter_Schema.id_schema)
+
         return chapter
     except Exception as e:
         logging.error(f"Erreur lors de la génération de {item.title} : {e}")

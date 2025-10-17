@@ -37,14 +37,21 @@ class CoursePlan(BaseModel):
 ### Modèles Pydantic pour un Chapitre ####
 ##########################################
 
+class Chapter_Schema(BaseModel):
+    id_schema: Optional[str] = Field(None, description="Identifiant unique du schéma")
+    id_chapter: Optional[str] = Field(None, description="Identifiant unique du chapitre associé")
+    img_base64: str = Field(None, description="Image du schéma encodée en base64")
+
 class Chapter(BaseModel):
+    id_chapter: Optional[str] = Field(None, description="Identifiant unique du chapitre")
+    id_schema: Optional[str] = Field(None, description="Identifiant unique du schéma associé au chapitre")
     title: str = Field(..., description="Titre du chapitre.")
     content: str = Field(..., description="Contenu détaillé du chapitre.")
 
 
-################################################
-### Modèles Pydantic pour l'Output du Cours ####
-################################################
+###############################################
+### Modèle Pydantic pour l'Output du Cours ####
+###############################################
 
 class CoursOutput(BaseModel):
     id: Optional[str] = Field(None, description="Identifiant unique de la sortie de cours")
