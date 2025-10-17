@@ -373,7 +373,7 @@ python-multipart==0.0.20
     # via
     #   fastapi
     #   mcp
-pywin32==311
+pywin32==311; sys_platform == "win32"
     # via mcp
 pyyaml==6.0.3
     # via

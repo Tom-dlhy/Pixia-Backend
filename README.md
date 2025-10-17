@@ -23,6 +23,15 @@ uv sync
 uv run dev
 ```
 
+### Build et Run le Conteneur 
+```bash
+docker build -t hackathon-backend:latest .
+docker run --rm -it -p 8080:8080 --env-file .env --name hackathon-backend hackathon-backend:latest
+```
+
+### Utiliser cette URL une fois le conteneur run
+http://localhost:8080/
+
 Endpoints disponibles :
 🏠 Root : http://localhost:8000/
 📚 Documentation Swagger : http://localhost:8000/docs

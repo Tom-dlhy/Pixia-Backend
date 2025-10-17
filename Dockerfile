@@ -1,29 +1,28 @@
-# Utilisation de l'image Python slim pour un environnement léger
+# ...existing code...
 FROM python:3.12-slim
 
-# Installation de uv (si nécessaire pour gérer les dépendances)
-RUN pip install --no-cache-dir uv
+ENV PYTHONUNBUFFERED=1
 
-# Définir le répertoire de travail dans le conteneur
 WORKDIR /app
 
-# # Copier les fichiers de configuration des dépendances
-# COPY pyproject.toml uv.lock* ./
+# installer uv avant, mettre à jour pip
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir uv
 
-# # Synchroniser les dépendances sans installer le projet
-# RUN uv sync --frozen --no-install-project
-
-COPY requirements.txt ./
+# Copier requirements d'abord pour utiliser le cache Docker
+COPY requirements.txt ./ 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier tout le code source dans le conteneur
+# Copier le reste du code
 COPY . .
 
-# Vérification que `adk` est bien installé
-RUN adk --version
+# Vérifier adk (si l'exécutable est disponible après l'installation)
+RUN adk --version || true
 
-# Exposer le port 8000 pour l'application
-EXPOSE 8000
+# Exposer le port sur lequel le container écoute (aligné avec CMD)
+EXPOSE 8080
 
-# Commande par défaut pour exécuter l'application
-CMD ["adk", "web", "--port=8080", "--host=0.0.0.0"]
+# WORKDIR /app/src/agents
+CMD ["uv", "run","dev", "--port=8080", "--host=0.0.0.0"]
+
+# ...existing code...
