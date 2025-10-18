@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from google import genai
 import logging
 from urllib.parse import quote_plus
+import base64
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class DatabaseSettings(BaseSettings):
     DB_PASSWORD_SQL: str
     DB_NAME_SQL: str
     DB_HOST_SQL: str
-    DB_PORT_SQL: int = 5432 
+    DB_PORT_SQL: int = 5432
 
     @property
     def dsn(self) -> str:
@@ -65,7 +66,30 @@ class DatabaseSettings(BaseSettings):
         return dsn
 
 
+class OAuthSettings(BaseSettings):
+    """Configuration OAuth pour l'authentification."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",
+    )
+
+    OIDC_GOOGLE_CLIENT_ID: str
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    GOOGLE_CLIENT_SECRET_B64: str
+
+
+    @property
+    def GOOGLE_CLIENT_SECRET(self) -> str:
+        """Retourne le client_secret décodé depuis Base64."""
+        return base64.b64decode(self.GOOGLE_CLIENT_SECRET_B64).decode()
+    
 # Instances des settings
 app_settings = AppSettings()  # type: ignore
 gemini_settings = GeminiSettings()
 database_settings = DatabaseSettings()
+oauth_settings = OAuthSettings()
