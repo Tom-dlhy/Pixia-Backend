@@ -54,7 +54,7 @@ def generate_schema_for_chapter(chapter: Chapter) -> Chapter_Schema:
 
     response = gemini_settings.CLIENT.models.generate_content(
         model=gemini_settings.GEMINI_MODEL_2_5_FLASH_IMAGE,
-        contents=SYSTEM_PROMPT_GENERATE_IMAGE_CHAPTER + "\n" + chapter.content,
+        contents=SYSTEM_PROMPT_GENERATE_IMAGE_CHAPTER + "\n" + chapter.schema_description,
         config=types.GenerateContentConfig(
             response_modalities=['Image'],
             image_config=types.ImageConfig(
