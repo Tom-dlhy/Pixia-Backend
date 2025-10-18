@@ -210,4 +210,4 @@ credentials/*
 
 # Tous les dossiers qui commencent par test
 test*/
-.DS_STORE/
+**/.DS_Store
