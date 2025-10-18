@@ -4,6 +4,14 @@ from .exercises_prompt import (
     SYSTEM_PROMPT_QCM,
     AGENT_PROMPT_ExerciseAgent,
 )
+
+from .cours_prompt import (
+    SYSTEM_PROMPT_GENERATE_CHAPTER,
+    SYSTEM_PROMPT_GENERATE_IMAGE_CHAPTER,
+    SYSTEM_PROMPT_PLANNER_COURS, 
+    AGENT_PROMPT_CoursPrecisionAgent,
+)
+
 from .orchestrator_prompt import AGENT_PROMPT_ORCHESTRATOR
 from .normal_agent_prompt import AGENT_PROMPT_NORMAL_AGENT
 from .copilote_prompt import (
@@ -25,4 +33,8 @@ __all__ = [
     "AGENT_PROMPT_CopiloteCourseAgent_base",
     "AGENT_PROMPT_CopiloteDeepCourseAgent_base",
     "AGENT_PROMPT_NORMAL_AGENT",
+    "SYSTEM_PROMPT_GENERATE_CHAPTER",
+    "SYSTEM_PROMPT_GENERATE_IMAGE_CHAPTER",
+    "SYSTEM_PROMPT_PLANNER_COURS",
+    "AGENT_PROMPT_CoursPrecisionAgent",
 ]
