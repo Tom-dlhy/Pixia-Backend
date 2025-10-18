@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import logging
-
+import os
+import asyncio
 from src.config import app_settings
 from src.utils import create_db_pool
 from src.app.api import api_router
@@ -41,12 +42,31 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router, prefix="/api")
 
+    # @app.on_event("startup")
+    # async def on_startup():
+    #     """Initialise les ressources au démarrage de l'application."""
+    #     logger.info("Starting FastAPI application...")
+    #     app.state.db_pool = await create_db_pool()
+    #     logger.info("Database pool initialized and ready.")
+
+
     @app.on_event("startup")
     async def on_startup():
-        """Initialise les ressources au démarrage de l'application."""
         logger.info("Starting FastAPI application...")
-        app.state.db_pool = await create_db_pool()
-        logger.info("Database pool initialized and ready.")
+
+        if os.getenv("SKIP_DB_INIT", "false").lower() == "true":
+            app.state.db_pool = None
+            logger.warning("DB init skipped (SKIP_DB_INIT=true).")
+            return
+
+        try:
+            timeout = int(os.getenv("DB_CONNECT_TIMEOUT", "5"))
+            app.state.db_pool = await asyncio.wait_for(create_db_pool(), timeout=timeout)
+            logger.info("Database pool initialized and ready.")
+        except Exception as e:
+            logger.exception("DB init failed; starting without DB.")
+            app.state.db_pool = None
+
 
     @app.on_event("shutdown")
     async def on_shutdown():
