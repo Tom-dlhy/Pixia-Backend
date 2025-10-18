@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import logging
 
@@ -21,6 +22,14 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
         openapi_url="/openapi.json",
     )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:3000"], 
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
 
     @app.get("/", tags=["Root"])
     async def root():

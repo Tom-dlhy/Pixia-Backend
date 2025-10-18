@@ -107,6 +107,9 @@ class ExerciseOutput(BaseModel):
         ]
     ] = Field(..., min_length=1, description="Liste des exercices générés.")
 
+##################################################
+### Fonction de validation de l'ExerciseOutput ###
+##################################################
 
 def _validate_exercise_output(data: dict | str) -> ExerciseOutput | None:
     """Valide et parse les données en tant qu'ExerciseOutput."""
