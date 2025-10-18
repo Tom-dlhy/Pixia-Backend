@@ -16,7 +16,8 @@ def is_pdf_ext(nom: str) -> bool:
     return nom.lower().endswith(".pdf")
 
 def is_pdf_content_type(ct: Optional[str]) -> bool:
-    return (ct or "").lower() == "application/pdf"
+    ct = (ct or "").lower().split(";")[0].strip()
+    return ct == "application/pdf"
 
 def starts_with_pdf_magic(b: bytes) -> bool:
     return len(b) >= len(PDF_MAGIC) and b[:len(PDF_MAGIC)] == PDF_MAGIC

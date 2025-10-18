@@ -8,7 +8,10 @@ from .exercise_models import (
     ExerciseOutput,
     _validate_exercise_output
 )
-
+from .import_fichier_model import (
+    EntreeRecevoirEtLirePDF,
+    SortieRecevoirEtLirePDF
+)
 
 __all__ = [
     "QCM",
@@ -18,5 +21,7 @@ __all__ = [
     "ClassifiedPlan",
     "ExerciseSynthesis",
     "ExerciseOutput",
-    "_validate_exercise_output"
+    "_validate_exercise_output",
+    "EntreeRecevoirEtLirePDF",
+    "SortieRecevoirEtLirePDF"
 ]
