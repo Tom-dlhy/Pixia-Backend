@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from src.dto import ChatResponse, ChatRequest, build_chat_response
 from src.config import database_settings, app_settings
 from src.agents.root_agent import root_agent
-from src.models import ExerciseOutput, _validate_exercise_output
+from src.models import _validate_exercise_output, _validate_course_output
 
 from typing import List, Optional, Union
 from google.adk.sessions import Session
@@ -106,6 +106,13 @@ async def chat(req: ChatRequest):
                                 final_response = _validate_exercise_output(tool_resp)
                                 logger.info(f"✅ ExerciseOutput validé pour la session {session_id}")
                                 author = event.author
+
+                        elif tool_name == "generate_courses":
+                            logging.info("✅ Tool 'generate_courses' détecté")
+                            if _validate_course_output(tool_resp):
+                                final_response = _validate_course_output(tool_resp)
+                            logger.info(f"✅ Réponse de 'generate_courses' reçue pour la session {session_id}")
+                            author = event.author
 
     except Exception as e:
         logger.exception("❌ Erreur pendant l'exécution du runner ADK")

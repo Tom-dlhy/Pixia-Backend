@@ -6,6 +6,7 @@ from typing import Literal, List, Optional
 ### Modèle Pydantic pour la Synthèse de Cours ####
 ##################################################
 
+
 class CourseSynthesis(BaseModel):
     description: str = Field(
         ..., description="Description détaillée du sujet du cours à générer."
@@ -19,6 +20,7 @@ class CourseSynthesis(BaseModel):
 #############################################################
 ### Modèles Pydantic pour la Génération du Plan du Cours ####
 #############################################################
+
 
 class ChaptersPlanItem(BaseModel):
     title: str = Field(..., description="Titre du chapitre généré.")
@@ -37,23 +39,54 @@ class CoursePlan(BaseModel):
 ### Modèles Pydantic pour un Chapitre ####
 ##########################################
 
+
 class Chapter_Schema(BaseModel):
     id_schema: Optional[str] = Field(None, description="Identifiant unique du schéma")
-    id_chapter: Optional[str] = Field(None, description="Identifiant unique du chapitre associé")
+    id_chapter: Optional[str] = Field(
+        None, description="Identifiant unique du chapitre associé"
+    )
     img_base64: str = Field(None, description="Image du schéma encodée en base64")
 
+
 class Chapter(BaseModel):
-    id_chapter: Optional[str] = Field(None, description="Identifiant unique du chapitre")
-    id_schema: Optional[str] = Field(None, description="Identifiant unique du schéma associé au chapitre")
+    id_chapter: Optional[str] = Field(
+        None, description="Identifiant unique du chapitre"
+    )
+    id_schema: Optional[str] = Field(
+        None, description="Identifiant unique du schéma associé au chapitre"
+    )
     title: str = Field(..., description="Titre du chapitre.")
     content: str = Field(..., description="Contenu détaillé du chapitre.")
+    schema_description: Optional[str] = Field(
+        None,
+        description="Description précise du contenu du schéma associé au chapitre.",
+    )
 
 
 ###############################################
 ### Modèle Pydantic pour l'Output du Cours ####
 ###############################################
 
-class CoursOutput(BaseModel):
-    id: Optional[str] = Field(None, description="Identifiant unique de la sortie de cours")
+
+class CourseOutput(BaseModel):
+    id: Optional[str] = Field(
+        None, description="Identifiant unique de la sortie de cours"
+    )
     title: str = Field(..., description="Titre du cours généré.")
-    chapters: List[Chapter] = Field(..., min_length=1, description="Liste des chapitres générés.")
+    chapters: List[Chapter] = Field(
+        ..., min_length=1, description="Liste des chapitres générés."
+    )
+
+################################################
+### Fonction de validation de l'CourseOutput ###
+################################################
+
+
+def _validate_course_output(data: dict | str) -> CourseOutput | None:
+    """Valide et parse les données en tant que CourseOutput."""
+    if isinstance(data, dict):
+        return CourseOutput.model_validate(data)
+    elif isinstance(data, str):
+        return CourseOutput.model_validate_json(data)
+    else:
+        return None
