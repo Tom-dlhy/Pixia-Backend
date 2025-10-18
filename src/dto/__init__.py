@@ -1,3 +1,13 @@
 from .chat import ChatRequest, ChatResponse, AgentAnswer, build_chat_response
+from .fetchallchats import FetchAllChatsRequest, FetchAllChatsResponse, DisplaySessionsMain
 
-__all__ = ["ChatRequest", "ChatResponse", "AgentAnswer", "build_chat_response"]
+
+__all__ = [
+    "ChatRequest", 
+    "ChatResponse",
+    "AgentAnswer",
+    "build_chat_response",
+    "FetchAllChatsRequest",
+    "FetchAllChatsResponse",
+    "DisplaySessionsMain"
+]

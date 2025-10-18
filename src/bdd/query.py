@@ -1,0 +1,49 @@
+from sqlalchemy import text
+
+CLEAR_ALL_TABLES = text("""
+DO $$
+DECLARE
+    tabname text;
+BEGIN
+    FOR tabname IN
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'public'
+    LOOP
+        EXECUTE format('TRUNCATE TABLE public.%I RESTART IDENTITY CASCADE;', tabname);
+    END LOOP;
+END $$;
+""")
+
+
+DROP_ALL_TABLES = text("""
+DO $$
+DECLARE
+    tabname text;
+BEGIN
+    FOR tabname IN
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'public'
+    LOOP
+        EXECUTE format('DROP TABLE IF EXISTS public.%I CASCADE;', tabname);
+    END LOOP;
+END $$;
+""")
+
+CHECK_TABLES = text("""
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+ORDER BY table_name;
+""")
+
+FETCH_ALL_CHATS = text("""
+SELECT s.id AS session_id,
+    st.title,
+    s.update_time
+FROM sessions s
+LEFT JOIN session_titles st ON s.id = st.session_id
+WHERE s.user_id = :user_id AND st.is_deepcourse = FALSE
+ORDER BY s.update_time DESC
+""")
