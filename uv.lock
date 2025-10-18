@@ -1074,12 +1074,9 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-<<<<<<< HEAD
     { name = "pypdf" },
-=======
     { name = "python-jose" },
     { name = "requests" },
->>>>>>> origin/develop
     { name = "sqlalchemy" },
     { name = "uvicorn" },
 ]
