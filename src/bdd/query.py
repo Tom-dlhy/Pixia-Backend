@@ -63,3 +63,20 @@ STORE_BASIC_DOCUMENT = text("""
 INSERT INTO public.document (id, google_sub, session_id, chapter_id, document_type, contenu, created_at, updated_at)
 VALUES (:id, :google_sub, :session_id, :chapter_id, :document_type, :contenu, :created_at, :updated_at)
 """)
+
+RENAME_CHAT = text("""
+UPDATE session_titles
+SET title = :title
+WHERE session_id = :session_id
+""")
+
+DELETE_CHAT = text("""
+DELETE FROM sessions
+WHERE id = :session_id
+""")
+
+RENAME_CHAPTER = text("""
+UPDATE chapters
+SET title = :title
+WHERE id = :chapter_id
+""")

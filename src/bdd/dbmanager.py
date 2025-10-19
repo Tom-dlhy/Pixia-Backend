@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy import text, create_engine
 from google.adk.sessions import DatabaseSessionService
 from src.bdd.schema_sql import Base
-from src.bdd.query import CHECK_TABLES, CLEAR_ALL_TABLES, DROP_ALL_TABLES, FETCH_ALL_CHATS, RENAME_SESSION, CREATE_SESSION_TITLE, STORE_BASIC_DOCUMENT
+from src.bdd.query import CHECK_TABLES, CLEAR_ALL_TABLES, DROP_ALL_TABLES, FETCH_ALL_CHATS, RENAME_SESSION, CREATE_SESSION_TITLE, STORE_BASIC_DOCUMENT, RENAME_CHAT, DELETE_CHAT, RENAME_CHAPTER
 from src.config import database_settings
 from typing import Literal,Union
 from src.models import ExerciseOutput, CourseOutput
@@ -151,7 +151,31 @@ class DBManager:
                 {"id": document_id, "google_sub": sub, "session_id": session_id, "chapter_id": chapter_id, "document_type": type, "contenu": contenu_json, "created_at": created_at, "updated_at": updated_at}
             )
 
+    async def rename_chat(self, session_id: str, title: str):
+        """Renomme une session de chat donnée."""
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                RENAME_CHAT,
+                {"title": title, "session_id": session_id}
+            )
+
+    async def delete_chat(self, session_id: str):
+        """Supprime une session de chat donnée."""
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                DELETE_CHAT,
+                {"session_id": session_id}
+            )
         
+    async def rename_chapter(self, chapter_id: str, title: str):
+        """Renomme un chapitre donné."""
+        # Implémentation fictive (à adapter selon le schéma réel)
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                RENAME_CHAPTER,
+                {"title": title, "chapter_id": chapter_id}
+            )
+    
 
 
 # =========================================================
