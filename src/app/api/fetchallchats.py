@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from src.dto import FetchAllChatsRequest, FetchAllChatsResponse, DisplaySessionsMain
-from src.bdd.dbmanager import DBManager
+from src.bdd import DBManager
 
 router = APIRouter(prefix="/fetchallchats", tags=["FetchAllChats"])
 

@@ -47,3 +47,14 @@ LEFT JOIN session_titles st ON s.id = st.session_id
 WHERE s.user_id = :user_id AND st.is_deepcourse = FALSE
 ORDER BY s.update_time DESC
 """)
+
+RENAME_SESSION = text("""
+UPDATE session_titles
+SET title = :title
+WHERE session_id = :session_id
+""")
+
+CREATE_SESSION_TITLE = text("""
+INSERT INTO session_titles (session_id, title, is_deepcourse)
+VALUES (:session_id, :title, :is_deepcourse)
+""")

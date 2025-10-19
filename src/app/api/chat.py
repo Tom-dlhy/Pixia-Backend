@@ -3,6 +3,8 @@ from src.dto import ChatResponse, ChatRequest, build_chat_response
 from src.config import database_settings, app_settings
 from src.agents.root_agent import root_agent
 from src.models import _validate_exercise_output, _validate_course_output
+from src.utils import generate_title_from_messages
+from src.bdd import DBManager
 
 from typing import List, Optional, Union
 from google.adk.sessions import Session
@@ -34,9 +36,11 @@ async def chat(req: ChatRequest):
     message: str = req.message
     session_id: Optional[str] = req.session_id  # None si nouvelle conversation
     files = req.files or []  # support fichiers futur
+    title: Optional[str]  = None  # support titre futur
 
     final_response: Optional[Union[str, dict, list]] = None
     author: Optional[str] = None
+    bdd_manager = DBManager()
 
     # === Étape 1 : création ou récupération de session ===
     try:
@@ -47,6 +51,16 @@ async def chat(req: ChatRequest):
                 user_id=user_id
             )
             session_id = session.id
+            title = await generate_title_from_messages(message)
+            # TODO : gérer le cas où c'est un deep course et passer is_deepcourse=True
+            if isinstance(title, str):
+                await bdd_manager.create_session_title(session_id, title)
+            else:
+                logger.warning("⚠️ Le titre généré n'est pas une chaîne de caractères valide.")
+            
+
+            
+
         else:
             logger.info(f"🔄 Chargement de la session existante {session_id} pour {user_id}")
             session = await session_service.get_session(

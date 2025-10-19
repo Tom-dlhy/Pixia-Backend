@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy import text, create_engine
 from google.adk.sessions import DatabaseSessionService
 from src.bdd.schema_sql import Base
-from src.bdd.query import CHECK_TABLES, CLEAR_ALL_TABLES, DROP_ALL_TABLES, FETCH_ALL_CHATS
+from src.bdd.query import CHECK_TABLES, CLEAR_ALL_TABLES, DROP_ALL_TABLES, FETCH_ALL_CHATS, RENAME_SESSION, CREATE_SESSION_TITLE
 from src.config import database_settings
 
 
@@ -108,6 +108,24 @@ class DBManager:
             result = await conn.execute(FETCH_ALL_CHATS, {"user_id": user_id})
             sessions = [dict(row._mapping) for row in result.fetchall()]
         return sessions
+    
+    async def rename_session(self, title:str, session_id:str):
+        """Renomme une session de chat donnée."""
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                RENAME_SESSION,
+                {"title": title, "session_id": session_id}
+            )
+    
+    async def create_session_title(self, session_id:str, title:str, is_deepcourse:bool=False):
+        """Crée un titre de session."""
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                CREATE_SESSION_TITLE,
+                {"session_id": session_id, "title": title, "is_deepcourse": is_deepcourse}
+            )
+
+        
 
 
 # =========================================================
