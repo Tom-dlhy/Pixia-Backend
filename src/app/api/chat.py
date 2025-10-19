@@ -5,6 +5,7 @@ from src.agents.root_agent import root_agent
 from src.models import _validate_exercise_output, _validate_course_output
 from src.utils import generate_title_from_messages
 from src.bdd import DBManager
+from src.models import ExerciseOutput, CourseOutput
 
 from typing import List, Optional, Union
 from google.adk.sessions import Session
@@ -118,15 +119,24 @@ async def chat(req: ChatRequest):
                             logging.info("✅ Tool 'generate_exercises' détecté")
                             if _validate_exercise_output(tool_resp):
                                 final_response = _validate_exercise_output(tool_resp)
-                                logger.info(f"✅ ExerciseOutput validé pour la session {session_id}")
+                                if isinstance(final_response, ExerciseOutput):
+                                    logger.info(f"✅ ExerciseOutput validé pour la session {session_id}")
+                                    await bdd_manager.store_basic_document(content=final_response, session_id=session_id, sub=user_id)
                                 author = event.author
+                                
+
+                        # elif tool_name == "generate_deepcourse": TODO
+
+                                
 
                         elif tool_name == "generate_courses":
                             logging.info("✅ Tool 'generate_courses' détecté")
                             if _validate_course_output(tool_resp):
                                 final_response = _validate_course_output(tool_resp)
-                            logger.info(f"✅ Réponse de 'generate_courses' reçue pour la session {session_id}")
-                            author = event.author
+                                if isinstance(final_response, CourseOutput):
+                                    logger.info(f"✅ CourseOutput validé pour la session {session_id}")
+                                    await bdd_manager.store_basic_document(content=final_response, session_id=session_id, sub=user_id)
+                                author = event.author
 
     except Exception as e:
         logger.exception("❌ Erreur pendant l'exécution du runner ADK")

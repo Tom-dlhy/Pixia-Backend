@@ -58,3 +58,8 @@ CREATE_SESSION_TITLE = text("""
 INSERT INTO session_titles (session_id, title, is_deepcourse)
 VALUES (:session_id, :title, :is_deepcourse)
 """)
+
+STORE_BASIC_DOCUMENT = text("""
+INSERT INTO public.document (id, google_sub, session_id, chapter_id, document_type, contenu, created_at, updated_at)
+VALUES (:id, :google_sub, :session_id, :chapter_id, :document_type, :contenu, :created_at, :updated_at)
+""")

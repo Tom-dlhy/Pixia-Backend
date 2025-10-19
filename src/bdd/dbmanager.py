@@ -2,8 +2,13 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy import text, create_engine
 from google.adk.sessions import DatabaseSessionService
 from src.bdd.schema_sql import Base
-from src.bdd.query import CHECK_TABLES, CLEAR_ALL_TABLES, DROP_ALL_TABLES, FETCH_ALL_CHATS, RENAME_SESSION, CREATE_SESSION_TITLE
+from src.bdd.query import CHECK_TABLES, CLEAR_ALL_TABLES, DROP_ALL_TABLES, FETCH_ALL_CHATS, RENAME_SESSION, CREATE_SESSION_TITLE, STORE_BASIC_DOCUMENT
 from src.config import database_settings
+from typing import Literal,Union
+from src.models import ExerciseOutput, CourseOutput
+import time
+from datetime import datetime
+import json
 
 
 # =========================================================
@@ -102,12 +107,16 @@ class DBManager:
     # -----------------------------------------------------
     # REQUÊTES MÉTIER ASYNC
     # -----------------------------------------------------
+
+    # Route fetchallchats
     async def fetch_all_chats(self, user_id: str):
         """Récupère toutes les sessions de chat pour un utilisateur donné."""
         async with self.engine.begin() as conn:
             result = await conn.execute(FETCH_ALL_CHATS, {"user_id": user_id})
             sessions = [dict(row._mapping) for row in result.fetchall()]
         return sessions
+    
+    # Route chat
     
     async def rename_session(self, title:str, session_id:str):
         """Renomme une session de chat donnée."""
@@ -123,6 +132,23 @@ class DBManager:
             await conn.execute(
                 CREATE_SESSION_TITLE,
                 {"session_id": session_id, "title": title, "is_deepcourse": is_deepcourse}
+            )
+
+    async def store_basic_document(self, content:Union[ExerciseOutput, CourseOutput], session_id:str, sub:str):
+        """Stocke un document (exercice ou cours) associé à une session."""
+        type = "exercise" if isinstance(content, ExerciseOutput) else "course"
+        document_id = content.id
+        created_at = datetime.now()
+        updated_at = created_at
+        chapter_id = None  # Pas de chapitre associé car pas deepcourse
+        contenu_json = json.dumps(
+            content.model_dump() if hasattr(content, "model_dump") else content
+        )
+
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                STORE_BASIC_DOCUMENT,
+                {"id": document_id, "google_sub": sub, "session_id": session_id, "chapter_id": chapter_id, "document_type": type, "contenu": contenu_json, "created_at": created_at, "updated_at": updated_at}
             )
 
         

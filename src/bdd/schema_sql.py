@@ -33,7 +33,7 @@ class DeepCourse(Base):
     __tablename__ = "deepcourse"
     __table_args__ = {"schema": "public"}
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Text, primary_key=True)
     titre = Column(Text, nullable=False)
     google_sub = Column(Text, ForeignKey("public.users.google_sub", ondelete="CASCADE"))
 
@@ -41,8 +41,8 @@ class Chapter(Base):
     __tablename__ = "chapter"
     __table_args__ = {"schema": "public"}
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    deep_course_id = Column(Integer, ForeignKey("public.deepcourse.id", ondelete="CASCADE"))
+    id = Column(Text, primary_key=True)
+    deep_course_id = Column(Text, ForeignKey("public.deepcourse.id", ondelete="CASCADE"))
     titre = Column(Text, nullable=False)
     is_complete = Column(Boolean, nullable=False, default=False)
 
@@ -52,10 +52,10 @@ class Document(Base):
     __tablename__ = "document"
     __table_args__ = {"schema": "public"}
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Text, primary_key=True)
     google_sub = Column(Text, ForeignKey("public.users.google_sub", ondelete="CASCADE"), nullable=False)
     session_id = Column(String(128), nullable=False)
-    chapter_id = Column(Integer, ForeignKey("public.chapter.id", ondelete="CASCADE"), nullable=False)
+    chapter_id = Column(Text, ForeignKey("public.chapter.id", ondelete="CASCADE"), nullable=True)
     document_type = Column(Enum(DocumentType, name="document_type_enum"), nullable=False)
     contenu = Column(JSON, nullable=False)
     created_at = Column(TIMESTAMP, server_default=text("now()"))
