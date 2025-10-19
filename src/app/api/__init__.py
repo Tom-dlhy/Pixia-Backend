@@ -6,6 +6,11 @@ from .fetchallchats import router as fetchallchats_router
 from .renamechat import router as renamechat_router
 from .deletechat import router as deletechat_router
 from .renamechapter import router as renamechapter_router
+from .deletechapter import router as deletechapter_router
+from .correctplainquestion import router as correctplainquestion_router
+from .markchaptercomplete import router as markchaptercomplete_router
+from .markchapteruncomplete import router as markchapteruncomplete_router
+from .changesettings import router as changesettings_router
 
 api_router = APIRouter()
 api_router.include_router(health_router)
@@ -15,6 +20,11 @@ api_router.include_router(fetchallchats_router)
 api_router.include_router(renamechat_router)
 api_router.include_router(deletechat_router)
 api_router.include_router(renamechapter_router)
+api_router.include_router(deletechapter_router)
+api_router.include_router(correctplainquestion_router)
+api_router.include_router(markchaptercomplete_router)
+api_router.include_router(markchapteruncomplete_router)
+api_router.include_router(changesettings_router)
 
 __all__ = [
     "health_router",
@@ -24,5 +34,10 @@ __all__ = [
     "fetchallchats_router",
     "renamechat_router",
     "deletechat_router",
-    "renamechapter_router"
+    "renamechapter_router",
+    "deletechapter_router",
+    "correctplainquestion_router",
+    "markchaptercomplete_router",
+    "markchapteruncomplete_router"
+    "changesettings_router"
 ]

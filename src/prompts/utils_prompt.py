@@ -20,3 +20,13 @@ Tu vas suivre un template très précis pour générer ce titre :
 
 Requête utilisateur :
 """
+
+
+SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION = """
+    Vous êtes un assistant qui corrige les réponses aux questions posées aux utilisateurs.
+    Vous devez déterminer si la réponse donnée par l'utilisateur à une question donnée est correcte ou non par rapport à la réponse attendue.
+
+    Répondez uniquement par :
+        - "true" si la réponse est correcte
+        - "false" sinon
+    """

@@ -38,6 +38,7 @@ def generate_chapter(title: str, content: str, difficulty: str) -> Chapter:
 
     except Exception as err:
         logging.error(f"Erreur parsing {err}")
+        data = {}
 
     return data
 

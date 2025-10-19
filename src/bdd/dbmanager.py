@@ -1,12 +1,28 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy import text, create_engine
 from google.adk.sessions import DatabaseSessionService
 from src.bdd.schema_sql import Base
-from src.bdd.query import CHECK_TABLES, CLEAR_ALL_TABLES, DROP_ALL_TABLES, FETCH_ALL_CHATS, RENAME_SESSION, CREATE_SESSION_TITLE, STORE_BASIC_DOCUMENT, RENAME_CHAT, DELETE_CHAT, RENAME_CHAPTER
+from src.bdd.query import (
+    CHECK_TABLES, 
+    CLEAR_ALL_TABLES,
+    DROP_ALL_TABLES, 
+    FETCH_ALL_CHATS, 
+    RENAME_SESSION,
+    CREATE_SESSION_TITLE, 
+    STORE_BASIC_DOCUMENT, 
+    RENAME_CHAT, 
+    DELETE_SESSION_TITLE, 
+    DELETE_DOCUMENTS,
+    RENAME_CHAPTER, 
+    DELETE_CHAPTER,
+    MARK_CHAPTER_COMPLETE,
+    MARK_CHAPTER_UNCOMPLETE,
+    CHANGE_SETTINGS,
+    GET_SESSION_FROM_DOCUMENT,
+    DELETE_DOCUMENTS_BY_CHAPTER
+)
 from src.config import database_settings
-from typing import Literal,Union
+from typing import Union
 from src.models import ExerciseOutput, CourseOutput
-import time
 from datetime import datetime
 import json
 
@@ -163,7 +179,11 @@ class DBManager:
         """Supprime une session de chat donnée."""
         async with self.engine.begin() as conn:
             await conn.execute(
-                DELETE_CHAT,
+                DELETE_SESSION_TITLE,
+                {"session_id": session_id}
+            )
+            await conn.execute(
+                DELETE_DOCUMENTS,
                 {"session_id": session_id}
             )
         
@@ -175,7 +195,75 @@ class DBManager:
                 RENAME_CHAPTER,
                 {"title": title, "chapter_id": chapter_id}
             )
+
+
+    async def delete_chapter(self, chapter_id: str):
+        """Supprime un chapitre donné."""
+        # Implémentation fictive (à adapter selon le schéma réel)
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                DELETE_CHAPTER,
+                {"chapter_id": chapter_id}
+            )
+
+    async def get_session_from_document(self, chapter_id: str):
+        """Récupère les session_id des documents ayant ce chapter_id."""
+        async with self.engine.begin() as conn:
+            result = await conn.execute(
+                GET_SESSION_FROM_DOCUMENT,
+                {"chapter_id": chapter_id},
+            )
+            return [row[0] for row in result.fetchall()]
+        
+    async def delete_document_for_chapter(self, chapter_id: str):
+        """Supprime les documents associés à un chapitre donné."""
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                DELETE_DOCUMENTS_BY_CHAPTER,
+                {"chapter_id": chapter_id}
+            )
+
+    async def delete_session_title(self, session_id: str):
+        """Supprime le titre d'une session donnée."""
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                DELETE_SESSION_TITLE,
+                {"session_id": session_id}
+            )
+
+    async def mark_chapter_complete(self, chapter_id: str):
+        """Marque un chapitre comme complété pour un utilisateur donné."""
+        # Implémentation fictive (à adapter selon le schéma réel)
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                MARK_CHAPTER_COMPLETE,
+                {"chapter_id": chapter_id}
+            )
     
+    async def mark_chapter_uncomplete(self, chapter_id: str):
+        """Marque un chapitre comme non complété pour un utilisateur donné."""
+        # Implémentation fictive (à adapter selon le schéma réel)
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                MARK_CHAPTER_UNCOMPLETE,
+                {"chapter_id": chapter_id}
+            )
+
+    async def change_settings(self, user_id: str, new_given_name: Union[str, None], new_family_name: Union[str, None], 
+                              new_notion_url: Union[str, None], new_drive_url: Union[str, None]):
+        """Change les paramètres utilisateur."""
+        # Implémentation fictive (à adapter selon le schéma réel)
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                CHANGE_SETTINGS,
+                {
+                    "user_id": user_id, 
+                    "new_given_name": new_given_name, 
+                    "new_family_name": new_family_name, 
+                    "new_notion_url": new_notion_url, 
+                    "new_drive_url": new_drive_url
+                }
+            )
 
 
 # =========================================================

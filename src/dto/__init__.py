@@ -3,6 +3,10 @@ from .fetchallchats import FetchAllChatsRequest, FetchAllChatsResponse, DisplayS
 from .renamechat import RenameChatRequest, RenameChatResponse
 from .deletechat import DeleteChatRequest
 from .renamechapter import RenameChapterRequest, RenameChapterResponse
+from .deletechapter import DeleteChapterRequest
+from .correctplainquestion import CorrectPlainQuestionRequest, CorrectPlainQuestionResponse
+from .markchapter import MarkChapterRequest, MarkChapterResponse
+from .changesettings import ChangeSettingsRequest, ChangeSettingsResponse
 
 __all__ = [
     "ChatRequest", 
@@ -16,5 +20,12 @@ __all__ = [
     "RenameChatResponse",
     "DeleteChatRequest",
     "RenameChapterRequest",
-    "RenameChapterResponse"
+    "RenameChapterResponse",
+    "DeleteChapterRequest",
+    "CorrectPlainQuestionRequest",
+    "CorrectPlainQuestionResponse",
+    "MarkChapterRequest",
+    "MarkChapterResponse",
+    "ChangeSettingsRequest",
+    "ChangeSettingsResponse",
 ]

@@ -70,13 +70,55 @@ SET title = :title
 WHERE session_id = :session_id
 """)
 
-DELETE_CHAT = text("""
-DELETE FROM sessions
-WHERE id = :session_id
+DELETE_SESSION_TITLE = text("""
+DELETE FROM session_titles
+WHERE session_id = :session_id
+""")
+
+DELETE_DOCUMENTS = text("""
+DELETE FROM document
+WHERE session_id = :session_id
 """)
 
 RENAME_CHAPTER = text("""
 UPDATE chapters
 SET title = :title
 WHERE id = :chapter_id
+""")
+
+DELETE_CHAPTER = text("""
+DELETE FROM chapter
+WHERE id = :chapter_id
+""")
+
+MARK_CHAPTER_COMPLETE = text("""
+UPDATE chapter
+SET is_complete = TRUE  
+WHERE id = :chapter_id
+""")
+
+MARK_CHAPTER_UNCOMPLETE = text("""
+UPDATE chapter
+SET is_complete = FALSE
+WHERE id = :chapter_id
+""")
+
+CHANGE_SETTINGS = text("""
+UPDATE users
+SET given_name = COALESCE(:new_given_name, given_name),
+    family_name = COALESCE(:new_family_name, family_name),
+    notion = COALESCE(:new_notion_url, notion),
+    drive = COALESCE(:new_drive_url, drive)
+WHERE google_sub = :user_id
+""")
+
+GET_SESSION_FROM_DOCUMENT = text("""
+SELECT DISTINCT session_id 
+FROM documents 
+WHERE chapter_id = :chapter_id
+""")
+
+DELETE_DOCUMENTS_BY_CHAPTER = text("""
+DELETE FROM document
+WHERE chapter_id = :chapter_id
 """)
