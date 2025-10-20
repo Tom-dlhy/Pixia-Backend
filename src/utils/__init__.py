@@ -24,6 +24,9 @@ from .session_context import (
     clear_session,
 )
 
+from .generate_title import generate_title_from_messages
+from .correct_plain_question import agent_correct_plain_question
+
 
 __all__ = [
     "generate_plain",
@@ -40,4 +43,8 @@ __all__ = [
     "add_gemini_file",
     "get_gemini_files",
     "clear_session",
+    "generate_title_from_messages",
+    "agent_correct_plain_question",
 ]
+
+

@@ -98,7 +98,7 @@ async def upsert_user(
             family_name = EXCLUDED.family_name,
             picture = EXCLUDED.picture,
             locale = EXCLUDED.locale
-        RETURNING id, google_sub, email, given_name, family_name, picture, locale
+        RETURNING google_sub, email, given_name, family_name, picture, locale
     """
 
     async with pool.acquire() as conn:
@@ -156,7 +156,6 @@ async def auth_google(request: Request, payload: GoogleAuthPayload):
 
     return {
         "token": access_token,
-        "user_id": db_user["id"],
         "google_sub": db_user["google_sub"],
         "email": db_user["email"],
         "given_name": db_user["given_name"],

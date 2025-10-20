@@ -3,9 +3,12 @@ from src.dto import ChatResponse, ChatRequest, build_chat_response
 from src.config import database_settings, app_settings
 from src.agents.root_agent import root_agent
 from src.models import _validate_exercise_output, _validate_course_output
+from src.utils import generate_title_from_messages
+from src.bdd import DBManager
+from src.models import ExerciseOutput, CourseOutput
 
 from typing import List, Optional, Union
-from google.adk.sessions import Session
+from google.adk.sessions import Session, InMemorySessionService
 from google.adk.runners import Runner
 from google.adk.sessions.database_session_service import DatabaseSessionService
 from google.genai import types
@@ -27,6 +30,8 @@ session_service = DatabaseSessionService(
     db_url=database_settings.dsn, 
 )
 
+inmemory_service = InMemorySessionService()
+
 @router.post("", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     """Traite un message utilisateur via une session ADK."""
@@ -35,9 +40,11 @@ async def chat(req: ChatRequest):
     message: str = req.message
     session_id: Optional[str] = req.session_id  # None si nouvelle conversation
     files = req.files or []  # support fichiers futur
+    title: Optional[str]  = None  # support titre futur
 
     final_response: Optional[Union[str, dict, list]] = None
     author: Optional[str] = None
+    bdd_manager = DBManager()
 
     # === Étape 1 : création ou récupération de session ===
     try:
@@ -48,6 +55,16 @@ async def chat(req: ChatRequest):
                 user_id=user_id
             )
             session_id = session.id
+            title = await generate_title_from_messages(message)
+            # TODO : gérer le cas où c'est un deep course et passer is_deepcourse=True
+            if isinstance(title, str):
+                await bdd_manager.create_session_title(session_id, title)
+            else:
+                logger.warning("⚠️ Le titre généré n'est pas une chaîne de caractères valide.")
+            
+
+            
+
         else:
             logger.info(f"🔄 Chargement de la session existante {session_id} pour {user_id}")
             session = await session_service.get_session(
@@ -114,15 +131,24 @@ async def chat(req: ChatRequest):
                             logging.info("✅ Tool 'generate_exercises' détecté")
                             if _validate_exercise_output(tool_resp):
                                 final_response = _validate_exercise_output(tool_resp)
-                                logger.info(f"✅ ExerciseOutput validé pour la session {session_id}")
+                                if isinstance(final_response, ExerciseOutput):
+                                    logger.info(f"✅ ExerciseOutput validé pour la session {session_id}")
+                                    await bdd_manager.store_basic_document(content=final_response, session_id=session_id, sub=user_id)
                                 author = event.author
+                                
+
+                        # elif tool_name == "generate_deepcourse": TODO
+
+                                
 
                         elif tool_name == "generate_courses":
                             logging.info("✅ Tool 'generate_courses' détecté")
                             if _validate_course_output(tool_resp):
                                 final_response = _validate_course_output(tool_resp)
-                            logger.info(f"✅ Réponse de 'generate_courses' reçue pour la session {session_id}")
-                            author = event.author
+                                if isinstance(final_response, CourseOutput):
+                                    logger.info(f"✅ CourseOutput validé pour la session {session_id}")
+                                    await bdd_manager.store_basic_document(content=final_response, session_id=session_id, sub=user_id)
+                                author = event.author
 
     except Exception as e:
         logger.exception("❌ Erreur pendant l'exécution du runner ADK")
