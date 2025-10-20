@@ -12,10 +12,10 @@ from .exercise_models import (
 from .cours_models import (
     CourseSynthesis,
     CoursePlan,
-    ChaptersPlanItem,
-    Chapter,
+    PartPlanItem,
+    Part,
     CourseOutput,
-    Chapter_Schema,
+    PartSchema,
     _validate_course_output,
 )
 
@@ -31,9 +31,9 @@ __all__ = [
     "_validate_exercise_output",
     "CourseSynthesis",
     "CoursePlan",
-    "ChaptersPlanItem",
-    "Chapter",
+    "PartPlanItem",
+    "Part",
     "CourseOutput",
-    "Chapter_Schema",
+    "PartSchema",
     "_validate_course_output",
 ]

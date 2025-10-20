@@ -1,23 +1,26 @@
 from src.config import gemini_settings
-from src.models import CoursePlan, CourseSynthesis, ChaptersPlanItem, Chapter, Chapter_Schema
-from src.prompts import SYSTEM_PROMPT_PLANNER_COURS, SYSTEM_PROMPT_GENERATE_CHAPTER, SYSTEM_PROMPT_GENERATE_IMAGE_CHAPTER
+from src.models import CoursePlan, CourseSynthesis, PartSchema, Part, PartPlanItem, CourseOutput
+from src.prompts import SYSTEM_PROMPT_PLANNER_COURS,SYSTEM_PROMPT_GENERATE_PART, SYSTEM_PROMPT_GENERATE_IMAGE_PART
 import logging, asyncio
 import base64
 import uuid
 from google.genai import types
+from typing import Dict, Any
+from enum import Enum
+from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO)
 
-def generate_chapter(title: str, content: str, difficulty: str) -> Chapter:
-    """Génère le contenue d'un chapitre basé sur la description fournie.
+def generate_part(title: str, content: str, difficulty: str):
+    """Génère le contenu d'une partie basé sur la description fournie.
 
     Args:
-        title (str): Titre du chapitre à générer.
-        content (str): Explication du contenu du chapitre à générer.
-        difficulty (str): Niveau de difficulté du cours dans lequel le chapitre s'inscrit.
+        title (str): Titre de la partie à générer.
+        content (str): Explication du contenu de la partie à générer.
+        difficulty (str): Niveau de difficulté du cours dans lequel la partie s'inscrit.
 
     Returns:
-        dict: Dictionnaire représentant le chapitre généré.
+        dict: Dictionnaire représentant le partie généré.
     """
 
     prompt = f"Titre: {title}\nDescription: {content}\nDifficulté: {difficulty}"
@@ -26,9 +29,9 @@ def generate_chapter(title: str, content: str, difficulty: str) -> Chapter:
         model=gemini_settings.GEMINI_MODEL_2_5_FLASH_LITE,
         contents=prompt,
         config={
-            "system_instruction": SYSTEM_PROMPT_GENERATE_CHAPTER,
+            "system_instruction": SYSTEM_PROMPT_GENERATE_PART,
             "response_mime_type": "application/json",
-            "response_schema": Chapter,
+            "response_schema": Part,
         },
     )
     logging.info(f"Response: {response}")
@@ -43,19 +46,21 @@ def generate_chapter(title: str, content: str, difficulty: str) -> Chapter:
     return data
 
 
-def generate_schema_for_chapter(chapter: Chapter) -> Chapter_Schema:
-    """Génère une image schématique pour un chapitre donné.
+def generate_schema_for_part(course_part: Part) -> PartSchema:
+    """Génère une image schématique pour une partie donné.
 
     Args:
-        chapter (Chapter): Chapitre pour lequel générer le schéma.
+        part (Part): partie pour laquelle générer le schéma.
 
     Returns:
         dict: Dictionnaire représentant le schéma généré.
     """
-
+    schema_description = ""
+    if isinstance(course_part.schema_description, str):
+        schema_description = course_part.schema_description
     response = gemini_settings.CLIENT.models.generate_content(
         model=gemini_settings.GEMINI_MODEL_2_5_FLASH_IMAGE,
-        contents=SYSTEM_PROMPT_GENERATE_IMAGE_CHAPTER + "\n" + chapter.schema_description,
+        contents=SYSTEM_PROMPT_GENERATE_IMAGE_PART + "\n" + schema_description,
         config=types.GenerateContentConfig(
             response_modalities=['Image'],
             image_config=types.ImageConfig(
@@ -65,18 +70,18 @@ def generate_schema_for_chapter(chapter: Chapter) -> Chapter_Schema:
     )
     
     uuid_schema = str(uuid.uuid4())
-    for part in response.candidates[0].content.parts:
-        if part.text is not None:
-            print(part.text)
-        elif part.inline_data is not None:
+    for response_part in response.candidates[0].content.parts:
+        if response_part.text is not None:
+            print(response_part.text)
+        elif response_part.inline_data is not None:
             with open(f"{uuid_schema}_generated_image.png", "wb") as f:
-                f.write(part.inline_data.data)
+                f.write(response_part.inline_data.data)
             print(f"Image enregistrée sous '{uuid_schema}_generated_image.png'")
 
-            return Chapter_Schema(
+            return PartSchema(
                 id_schema=uuid_schema,
-                id_chapter=chapter.id_chapter,
-                img_base64=base64.b64encode(part.inline_data.data).decode('utf-8')
+                id_part=course_part.id_part,
+                img_base64=base64.b64encode(response_part.inline_data.data).decode('utf-8')
             )
 
 
@@ -112,20 +117,63 @@ def planner_cours(synthesis: CourseSynthesis) -> CoursePlan:
     return data
 
 
-async def generate_for_chapter(item: ChaptersPlanItem, difficulty: str, ) -> Chapter:
-    """Génère un chapitre pour un sujet donné."""
+async def generate_for_part(item: PartPlanItem, difficulty: str, ) -> Part | None:
+    """Génère un partie pour un sujet donné."""
     try:
-        logging.info(f"Génération du chapitre : {item.title}")
+        logging.info(f"Génération du partie : {item.title}")
 
-        chapter = await asyncio.to_thread(generate_chapter, item.title, item.content, difficulty)
-        if hasattr(chapter, "id_chapter") and getattr(chapter, "id_chapter") in (None, ""):
-            setattr(chapter, "id_chapter", str(uuid.uuid4()))
+        part = await asyncio.to_thread(generate_part, item.title, item.content, difficulty)
+        if hasattr(part, "id_part") and getattr(part, "id_part") in (None, ""):
+            setattr(part, "id_part", str(uuid.uuid4()))
 
-        Chapter_Schema = await asyncio.to_thread(generate_schema_for_chapter, chapter)
-        setattr(chapter, "id_schema", Chapter_Schema.id_schema)
+        Part_Schema = await asyncio.to_thread(generate_schema_for_part, part)
+        setattr(part, "id_schema", Part_Schema.id_schema)
 
-        return chapter
+        return part
     except Exception as e:
         logging.error(f"Erreur lors de la génération de {item.title} : {e}")
         return None
     
+
+def add_uuid_recursive(course_output: CourseOutput) -> None:
+    """
+    Parcourt récursivement un objet (BaseModel, dict, list) et ajoute un champ 'id' unique
+    à chaque entité Pydantic qui ne possède pas déjà d'ID.
+
+    Args:
+        exercise_output (ExerciseOutput): L'objet ExerciseOutput à modifier.
+    Returns:
+        None: Modifie l'objet en place.
+    """
+    # Si c'est un modèle Pydantic
+    if isinstance(course_output, BaseModel):
+        # Si l'objet a un champ 'id' et qu'il est vide → on le remplit
+        if hasattr(course_output, "id") and getattr(course_output, "id") in (None, ""):
+            setattr(course_output, "id", str(uuid.uuid4()))
+
+        # Parcours récursif des champs du modèle
+        for field_name, field_value in course_output.__dict__.items():
+            add_uuid_recursive(field_value)
+
+    # Si c'est une liste → on itère
+    elif isinstance(course_output, list):
+        for item in course_output:
+            add_uuid_recursive(item)
+
+    # Si c'est un dict → on itère aussi
+    elif isinstance(course_output, dict):
+        for key, value in course_output.items():
+            add_uuid_recursive(value)
+
+def assign_uuids_to_output_course(course_output: CourseOutput) -> CourseOutput:
+    """
+    Ajoute un UUID à tous les niveaux d'un CourseOutput complet.
+
+    Args:
+        course_output (CourseOutput): L'objet CourseOutput à modifier.
+
+    Returns:
+        CourseOutput: L'objet CourseOutput avec des UUID ajoutés.
+    """
+    add_uuid_recursive(course_output)
+    return course_output

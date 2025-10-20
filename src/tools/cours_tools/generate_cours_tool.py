@@ -1,9 +1,11 @@
 import logging
 from src.models.cours_models import CourseSynthesis, CoursePlan, CourseOutput
-from src.utils import planner_cours, generate_for_chapter
+from src.utils import planner_cours, generate_for_part
 import json
 import asyncio
 import uuid
+
+from src.utils.cours_utils import assign_uuids_to_output_course
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,17 +33,17 @@ async def generate_courses(course_synthesis: CourseSynthesis) -> dict:
 
     # Création des tâches pour tous les exercices du plan
     tasks = [
-        generate_for_chapter(chapter, course_synthesis.difficulty)
-        for chapter in plan.chapters
+        generate_for_part(part, course_synthesis.difficulty)
+        for part in plan.parts
     ]
 
-    # Ré-exécuter les chapitres en batch de 4 en parallèle
+    # Ré-exécuter les parties en batch de 4 en parallèle
     results = []
     batch_size = 4
-    for i in range(0, len(plan.chapters), batch_size):
-        batch = plan.chapters[i : i + batch_size]
+    for i in range(0, len(plan.parts), batch_size):
+        batch = plan.parts[i : i + batch_size]
         batch_tasks = [
-            generate_for_chapter(ch, course_synthesis.difficulty) for ch in batch
+            generate_for_part(ch, course_synthesis.difficulty) for ch in batch
         ]
         batch_results = await asyncio.gather(*batch_tasks)
         results.extend(batch_results)
@@ -50,13 +52,10 @@ async def generate_courses(course_synthesis: CourseSynthesis) -> dict:
     generated_cours = [r for r in results if r is not None]
 
     logging.info(f"{len(generated_cours)} cours générés avec succès.")
+    
     # Convertir la liste de cours générés en un vrai CourseOutput
+    cours_output = CourseOutput(title=plan.title, parts=generated_cours)
 
-    cours_output = CourseOutput(title=plan.title, chapters=generated_cours)
-
-    # Ajouter de l'id du cours_output
-    # Si l'objet a un champ 'id' et qu'il est vide → on le remplit
-    if hasattr(cours_output, "id") and getattr(cours_output, "id") in (None, ""):
-        setattr(cours_output, "id", str(uuid.uuid4()))
+    assign_uuids_to_output_course(cours_output)
 
     return cours_output.model_dump()

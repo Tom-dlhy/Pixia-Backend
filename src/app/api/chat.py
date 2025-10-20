@@ -54,6 +54,7 @@ async def chat(req: ChatRequest):
                 user_id=user_id,
                 session_id=session_id
             )
+            session_service = inmemory_service
             if session : 
                 session_id = session.id
             else : 
@@ -69,7 +70,9 @@ async def chat(req: ChatRequest):
                 app_name=settings.APP_NAME,
                 user_id=user_id
             )
+            session_service = inmemory_service
             session_id = session.id
+            logger.info(f"✅ Nouvelle session créée : {session_id}")
             # title = await generate_title_from_messages(message)
             # # TODO : gérer le cas où c'est un deep course et passer is_deepcourse=True
             # if isinstance(title, str):
@@ -165,15 +168,15 @@ async def chat(req: ChatRequest):
                             logger.info("✅ Tool 'delete_course' détecté")
                             await bdd_manager.delete_document(document_id=session_id)
 
-                        elif tool_name == "generate_deepcourse":
-                            deepcourse_id = str(uuid4())
-                            if isinstance(final_response, DeepCourseOutput):    
-                                logger.info(f"✅ DeepCourseOutput validé pour la session {session_id}")
-                                await bdd_manager.store_deepcourse(deepcourse_id=deepcourse_id, content=final_response)
+                        # elif tool_name == "generate_deepcourse":
+                        #     deepcourse_id = str(uuid4())
+                        #     if isinstance(final_response, DeepCourseOutput):    
+                        #         logger.info(f"✅ DeepCourseOutput validé pour la session {session_id}")
+                        #         await bdd_manager.store_deepcourse(deepcourse_id=deepcourse_id, content=final_response)
                         
-                        elif tool_name == "generate_new_chapter_deepcourse":
-                            logger.info("✅ Tool 'generate_new_chapter_deepcourse' détecté")
-                            await 
+                        # elif tool_name == "generate_new_chapter_deepcourse":
+                        #     logger.info("✅ Tool 'generate_new_chapter_deepcourse' détecté")
+                        #     await 
                             
 
     except Exception as e:
