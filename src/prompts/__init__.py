@@ -21,11 +21,13 @@ from .copilote_prompt import (
     build_copilot_exercice_system_prompt,
 )
 
+from .utils_prompt import GENERATE_TITLE_PROMPT, SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION
 
 __all__ = [
     "SYSTEM_PROMPT_OPEN",
     "SYSTEM_PROMPT_QCM",
     "SYSTEM_PROMPT_PLANNER_EXERCISES",
+    "GENERATE_TITLE_PROMPT",
     "AGENT_PROMPT_ORCHESTRATOR",
     "AGENT_PROMPT_ExerciseAgent",
     "AGENT_PROMPT_CopiloteExerciceAgent_base",
@@ -37,4 +39,5 @@ __all__ = [
     "SYSTEM_PROMPT_GENERATE_IMAGE_CHAPTER",
     "SYSTEM_PROMPT_PLANNER_COURS",
     "AGENT_PROMPT_CourseAgent",
+    "SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION",
 ]

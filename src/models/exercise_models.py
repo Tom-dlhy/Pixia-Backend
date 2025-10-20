@@ -12,6 +12,12 @@ class OpenQuestion(BaseModel):
         "",
         description="Champ réservé pour la réponse de l'utilisateur, à laisser vide.",
     )
+    is_correct: bool = Field(
+        False, description="Indique si la réponse est correcte, à laisser vide lors de la génération."
+    )
+    is_corrected: bool = Field(
+        False, description="Indique si la question a été corrigée, à laisser vide lors de la génération."
+    )
     explanation: Annotated[str, StringConstraints(max_length=2000)]
 
 
@@ -32,6 +38,9 @@ class QCMAnswer(BaseModel):
     id: Optional[str] = Field(None)
     text: str
     is_correct: bool
+    is_selected: bool = Field(
+        False, description="Indique si la réponse a été sélectionnée par l'utilisateur, à laisser vide lors de la génération."
+    )
 
 
 class QCMQuestion(BaseModel):
@@ -46,6 +55,10 @@ class QCMQuestion(BaseModel):
         ..., 
         description="true si la question a plusieurs réponses correctes"
     )
+    is_corrected: bool = Field(
+        False, description="Indique si la question a été corrigée, à laisser vide lors de la génération."
+    )
+
 
 class QCM(BaseModel):
     id: Optional[str] = Field(None, description="Identifiant unique du bloc de questions")
@@ -67,14 +80,14 @@ class ExercicePlanItem(BaseModel):
 
 class ExercisePlan(BaseModel):
     difficulty: Annotated[str, StringConstraints(max_length=100)]
-    exercises: list[ExercicePlanItem] = Field(
+    exercises: List[ExercicePlanItem] = Field(
         ..., min_length=1, max_length=20, description="Liste des exercices à générer."
     )
 
 
 class ClassifiedPlan(BaseModel):
-    qcm: list[ExercicePlanItem] = Field(default_factory=list)
-    open: list[ExercicePlanItem] = Field(default_factory=list)
+    qcm: List[ExercicePlanItem] = Field(default_factory=List)
+    open: List[ExercicePlanItem] = Field(default_factory=List)
 
 ############################################################################
 ### Modèle Pydantic pour la synthèse pour générer le plan des exercices ####
