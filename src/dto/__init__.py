@@ -7,6 +7,8 @@ from .deletechapter import DeleteChapterRequest
 from .correctplainquestion import CorrectPlainQuestionRequest, CorrectPlainQuestionResponse
 from .markchapter import MarkChapterRequest, MarkChapterResponse
 from .changesettings import ChangeSettingsRequest, ChangeSettingsResponse
+from .login import LoginRequest, LoginResponse
+from .signup import SignupRequest, SignupResponse
 
 __all__ = [
     "ChatRequest", 
@@ -28,4 +30,8 @@ __all__ = [
     "MarkChapterResponse",
     "ChangeSettingsRequest",
     "ChangeSettingsResponse",
+    "LoginRequest",
+    "LoginResponse",
+    "SignupRequest",
+    "SignupResponse"
 ]

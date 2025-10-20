@@ -18,7 +18,9 @@ from src.bdd.query import (
     MARK_CHAPTER_UNCOMPLETE,
     CHANGE_SETTINGS,
     GET_SESSION_FROM_DOCUMENT,
-    DELETE_DOCUMENTS_BY_CHAPTER
+    DELETE_DOCUMENTS_BY_CHAPTER,
+    LOGIN_USER,
+    SIGNUP_USER
 )
 from src.config import database_settings
 from typing import Union
@@ -265,6 +267,22 @@ class DBManager:
                 }
             )
 
+    async def login_user(self, email: str):
+        async with self.engine.begin() as conn:
+            result = await conn.execute(
+                LOGIN_USER,
+                {"email": email}
+            )
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
+
+    async def signup_user(self, google_sub: str, email: str, given_name: str = "", family_name: str = ""):
+        async with self.engine.begin() as conn:
+            result = await conn.execute(
+                SIGNUP_USER,
+                {"google_sub": google_sub, "email": email, "given_name": given_name, "family_name": family_name}
+            )
+            return result.fetchone()
 
 # =========================================================
 # SCRIPT DE TEST / DEBUG DIRECT

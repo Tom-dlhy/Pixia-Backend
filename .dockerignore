@@ -1,0 +1,9 @@
+.venv/
+.env
+.gitignore
+*/__pycache__/
+*/.DS_Store/
+.env.exemple
+src/tests/
+mcp-mermaid/
+.vscode/

@@ -8,7 +8,7 @@ from src.bdd import DBManager
 from src.models import ExerciseOutput, CourseOutput
 
 from typing import List, Optional, Union
-from google.adk.sessions import Session
+from google.adk.sessions import Session, InMemorySessionService
 from google.adk.runners import Runner
 from google.adk.sessions.database_session_service import DatabaseSessionService
 from google.genai import types
@@ -28,6 +28,8 @@ settings = app_settings
 session_service = DatabaseSessionService(
     db_url=database_settings.dsn, 
 )
+
+inmemory_service = InMemorySessionService()
 
 @router.post("", response_model=ChatResponse)
 async def chat(req: ChatRequest):

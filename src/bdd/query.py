@@ -122,3 +122,14 @@ DELETE_DOCUMENTS_BY_CHAPTER = text("""
 DELETE FROM document
 WHERE chapter_id = :chapter_id
 """)
+
+LOGIN_USER = text("""
+SELECT google_sub, given_name, family_name
+FROM users
+WHERE email = :email
+""")
+
+SIGNUP_USER = text("""
+INSERT INTO users (google_sub, email, given_name, family_name)
+VALUES (:google_sub, :email, :given_name, :family_name)
+""")
