@@ -74,10 +74,7 @@ def generate_schema_for_part(course_part: Part) -> PartSchema:
         if response_part.text is not None:
             print(response_part.text)
         elif response_part.inline_data is not None:
-            with open(f"{uuid_schema}_generated_image.png", "wb") as f:
-                f.write(response_part.inline_data.data)
-            print(f"Image enregistrée sous '{uuid_schema}_generated_image.png'")
-
+            
             return PartSchema(
                 id_schema=uuid_schema,
                 id_part=course_part.id_part,
