@@ -1,28 +1,20 @@
-# ...existing code...
-FROM python:3.12-slim
+FROM python:3.12-slim-trixie
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# installer uv avant, mettre à jour pip
-RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir uv
+RUN --mount=type=cache,target=/root/.cache/uv \
+  --mount=type=bind,source=uv.lock,target=uv.lock \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  uv sync --locked --no-install-project
 
-# Copier requirements d'abord pour utiliser le cache Docker
-COPY requirements.txt ./ 
-RUN pip install --no-cache-dir -r requirements.txt
+ADD . /app
 
-# Copier le reste du code
-COPY . .
+RUN --mount=type=cache,target=/root/.cache/uv \
+  uv sync --locked --no-editable --compile-bytecode
 
-# Vérifier adk (si l'exécutable est disponible après l'installation)
-RUN adk --version || true
-
-# Exposer le port sur lequel le container écoute (aligné avec CMD)
 EXPOSE 8080
 
-# WORKDIR /app/src/agents
-CMD ["uv", "run","dev", "--port=8080", "--host=0.0.0.0"]
-
-# ...existing code...
+CMD ["uv", "run","prod", "--port=8080", "--host=0.0.0.0"]
