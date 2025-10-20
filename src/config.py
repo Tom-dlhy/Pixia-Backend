@@ -60,13 +60,16 @@ class DatabaseSettings(BaseSettings):
     def dsn(self) -> str:
         """Construit le DSN PostgreSQL complet (format asyncpg)."""
         encoded_password = quote_plus(self.DB_PASSWORD_SQL)
-        dsn = f"postgresql://{self.DB_USER_SQL}:{encoded_password}@{self.DB_HOST_SQL}:{self.DB_PORT_SQL}/{self.DB_NAME_SQL}"
-        logger.info(
-            f"Database DSN generated for host {self.DB_HOST_SQL}:{self.DB_PORT_SQL}"
-        )
+
+        if self.DB_HOST_SQL.startswith('/'):
+            dsn = f"postgresql://{self.DB_USER_SQL}:{encoded_password}@/{self.DB_NAME_SQL}?host={self.DB_HOST_SQL}"
+            logger.info(f"Database DSN generated for Unix socket {self.DB_HOST_SQL}")
+        else:
+            dsn = f"postgresql://{self.DB_USER_SQL}:{encoded_password}@{self.DB_HOST_SQL}:{self.DB_PORT_SQL}/{self.DB_NAME_SQL}"
+            logger.info(f"Database DSN generated for host {self.DB_HOST_SQL}:{self.DB_PORT_SQL}")
+
         return dsn
-
-
+    
 class OAuthSettings(BaseSettings):
     """Configuration OAuth pour l'authentification."""
 
