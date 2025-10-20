@@ -9,6 +9,7 @@ from .markchapter import MarkChapterRequest, MarkChapterResponse
 from .changesettings import ChangeSettingsRequest, ChangeSettingsResponse
 from .login import LoginRequest, LoginResponse
 from .signup import SignupRequest, SignupResponse
+from .markcorrectedQCM import MarkIsCorrectedQCMRequest, MarkIsCorrectedQCMResponse
 
 __all__ = [
     "ChatRequest", 
@@ -33,5 +34,7 @@ __all__ = [
     "LoginRequest",
     "LoginResponse",
     "SignupRequest",
-    "SignupResponse"
+    "SignupResponse",
+    "MarkIsCorrectedQCMRequest",
+    "MarkIsCorrectedQCMResponse",
 ]
