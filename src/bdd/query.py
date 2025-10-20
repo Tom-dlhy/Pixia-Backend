@@ -133,3 +133,20 @@ SIGNUP_USER = text("""
 INSERT INTO users (google_sub, email, given_name, family_name)
 VALUES (:google_sub, :email, :given_name, :family_name)
 """)
+
+CREATE_DEEPCOURSE= text(""" 
+INSERT INTO public.deepcourses (id, title, google_sub, is_complete)
+VALUES (:id, :title, :google_sub, :is_complete)
+""")
+
+CREATE_CHAPTER= text(""" 
+INSERT INTO public.chapters (id, deepcourse_id, title)
+VALUES (:id, :deepcourse_id, :title)
+""")
+
+UPDATE_DOCUMENT_CONTENT = text("""
+UPDATE public.document
+SET contenu = :contenu
+WHERE session_id = :session_id
+""")
+

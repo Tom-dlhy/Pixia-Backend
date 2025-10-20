@@ -20,13 +20,18 @@ from src.bdd.query import (
     GET_SESSION_FROM_DOCUMENT,
     DELETE_DOCUMENTS_BY_CHAPTER,
     LOGIN_USER,
-    SIGNUP_USER
+    SIGNUP_USER,
+    CREATE_CHAPTER,
+    CREATE_DEEPCOURSE,
+    UPDATE_DOCUMENT_CONTENT
 )
 from src.config import database_settings
 from typing import Union
 from src.models import ExerciseOutput, CourseOutput
 from datetime import datetime
 import json
+from uuid import uuid4
+from typing import Optional
 
 
 # =========================================================
@@ -152,13 +157,13 @@ class DBManager:
                 {"session_id": session_id, "title": title, "is_deepcourse": is_deepcourse}
             )
 
-    async def store_basic_document(self, content:Union[ExerciseOutput, CourseOutput], session_id:str, sub:str):
+    async def store_basic_document(self, content:Union[ExerciseOutput, CourseOutput], session_id:str, sub:str, chapter_id:Optional[str]=None):
         """Stocke un document (exercice ou cours) associé à une session."""
-        type = "exercise" if isinstance(content, ExerciseOutput) else "course"
+        type = "exercise" if isinstance(content, ExerciseOutput) else "course" if isinstance(content, CourseOutput) else "eval"
         document_id = content.id
         created_at = datetime.now()
         updated_at = created_at
-        chapter_id = None  # Pas de chapitre associé car pas deepcourse
+        chapter_id = chapter_id if chapter_id else None
         contenu_json = json.dumps(
             content.model_dump() if hasattr(content, "model_dump") else content
         )
@@ -167,6 +172,41 @@ class DBManager:
             await conn.execute(
                 STORE_BASIC_DOCUMENT,
                 {"id": document_id, "google_sub": sub, "session_id": session_id, "chapter_id": chapter_id, "document_type": type, "contenu": contenu_json, "created_at": created_at, "updated_at": updated_at}
+            )
+
+    async def delete_document(self, document_id: str):
+        """Supprime un document donné."""
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                DELETE_DOCUMENTS,
+                {"document_id": document_id}
+            )
+
+    async def update_document(self, document_id: str, new_content: Union[ExerciseOutput, CourseOutput]):
+        """Met à jour le contenu d'un document donné."""
+        contenu_json = json.dumps(
+            new_content.model_dump() if hasattr(new_content, "model_dump") else new_content
+        )
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                UPDATE_DOCUMENT_CONTENT,
+                {"id": document_id, "contenu": contenu_json}
+            )
+
+    async def store_deepcourse(self, title: str, sub: str):
+        id = str(uuid4())
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                CREATE_DEEPCOURSE,
+                {"id": id, "title": title, "google_sub": sub}
+            )
+        
+    async def store_chapter(self, deepcourse_id: str, title: str):
+        id = str(uuid4())
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                CREATE_CHAPTER,
+                {"id": id, "deepcourse_id": deepcourse_id, "title": title}
             )
 
     async def rename_chat(self, session_id: str, title: str):
@@ -197,7 +237,6 @@ class DBManager:
                 RENAME_CHAPTER,
                 {"title": title, "chapter_id": chapter_id}
             )
-
 
     async def delete_chapter(self, chapter_id: str):
         """Supprime un chapitre donné."""
