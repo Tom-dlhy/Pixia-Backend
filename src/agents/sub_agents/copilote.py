@@ -2,7 +2,7 @@ from google.adk.agents import LlmAgent
 from src.prompts import AGENT_PROMPT_CopiloteExerciceAgent_base, AGENT_PROMPT_CopiloteCourseAgent_base, AGENT_PROMPT_CopiloteDeepCourseAgent_base
 from src.config import gemini_settings
 from google.adk.tools import google_search
-from src.tools.import_fichier_tools import recevoir_et_lire_pdf
+from src.tools.import_fichier_tools import recevoir_et_lire_pdf, resumer_pdfs_session
 
 copilote_exercice_agent = LlmAgent(
     name="CopiloteExerciceAgent",
@@ -11,6 +11,7 @@ copilote_exercice_agent = LlmAgent(
     instruction=AGENT_PROMPT_CopiloteExerciceAgent_base,
     tools=[
         recevoir_et_lire_pdf,
+        resumer_pdfs_session,
     ],
     # tools=[google_search]
 )
@@ -22,6 +23,7 @@ copilote_cours_agent = LlmAgent(
     instruction=AGENT_PROMPT_CopiloteCourseAgent_base,
     tools=[
         recevoir_et_lire_pdf,
+        resumer_pdfs_session,
     ],
     # tools=[google_search]
 )
@@ -34,5 +36,6 @@ copilote_deep_course_agent = LlmAgent(
     # tools=[google_search]
     tools=[
         recevoir_et_lire_pdf,
+        resumer_pdfs_session,
     ],
 )

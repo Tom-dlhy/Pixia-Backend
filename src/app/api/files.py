@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 import os
 import tempfile
-from src.utils import gemini_upload_file, add_gemini_file
+from src.utils import upload_file, add_gemini_file
 
 router = APIRouter(prefix="/files", tags=["Files"])
 
@@ -20,12 +20,14 @@ async def upload_pdf(session_id: str = Form("default"), file: UploadFile = File(
             tmp.write(content)
             tmp_path = tmp.name
 
-        uploaded = gemini_upload_file(tmp_path)
+        uploaded = upload_file(tmp_path)
         file_id = getattr(uploaded, "name", None)
         file_state = getattr(uploaded, "state", None)
+        file_uri = getattr(uploaded, "uri", None)
 
-        if file_id:
-            add_gemini_file(session_id, file_id)
+        # Stocker l'URI pour un usage direct par le modèle
+        if file_uri:
+            add_gemini_file(session_id, file_uri)
 
         return {
             "ok": True,
@@ -42,4 +44,3 @@ async def upload_pdf(session_id: str = Form("default"), file: UploadFile = File(
                 os.remove(tmp_path)
         except Exception:
             pass
-

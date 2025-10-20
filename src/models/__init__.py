@@ -22,6 +22,10 @@ from .import_fichier_model import (
     EntreeRecevoirEtLirePDF,
     SortieRecevoirEtLirePDF
 )
+from .pdf_summary_models import (
+    EntreeResumerPDFs,
+    SortieResumerPDFs,
+)
 
 __all__ = [
     "QCM",
@@ -34,6 +38,8 @@ __all__ = [
     "_validate_exercise_output",
     "EntreeRecevoirEtLirePDF",
     "SortieRecevoirEtLirePDF",
+    "EntreeResumerPDFs",
+    "SortieResumerPDFs",
     "CourseSynthesis",
     "CoursePlan",
     "ChaptersPlanItem",

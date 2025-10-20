@@ -3,11 +3,12 @@ from google.adk.tools import google_search
 from src.config import gemini_settings
 from src.tools.normal_tools import construire_prompt_systeme_agent_normal
 
-from src.tools.import_fichier_tools import recevoir_et_lire_pdf
+from src.tools.import_fichier_tools import recevoir_et_lire_pdf, resumer_pdfs_session
 
 
 TOOLS = [
     recevoir_et_lire_pdf,
+    resumer_pdfs_session,
 ]
 
 agent_normal = LlmAgent(

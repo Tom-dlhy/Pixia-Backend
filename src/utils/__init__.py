@@ -14,8 +14,8 @@ from .cours_utils import (
 )
 
 from .gemini_files import (
-    upload_file as gemini_upload_file,
-    delete_file as gemini_delete_file,
+    upload_file,
+    delete_file,
 )
 
 from .session_context import (
@@ -35,8 +35,8 @@ __all__ = [
     "get_connection",
     "planner_cours",
     "generate_for_chapter",
-    "gemini_upload_file",
-    "gemini_delete_file",
+    "upload_file",
+    "delete_file",
     "add_gemini_file",
     "get_gemini_files",
     "clear_session",
