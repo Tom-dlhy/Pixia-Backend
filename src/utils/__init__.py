@@ -8,17 +8,20 @@ from .exercises_utils import (
 
 from .get_db_url import create_db_pool, get_connection
 
-from .import_fichier import (
-    is_pdf_ext, is_pdf_content_type, starts_with_pdf_magic,
-    sha256_hex, decode_b64_to_bytes, write_unique, count_pages,
-    extract_text_from_pdf_bytes, chunk_text, sanitize_filename,
-    session_upload_dir, session_text_dir
-)
-
-
 from .cours_utils import (
     planner_cours,
     generate_for_chapter
+)
+
+from .gemini_files import (
+    upload_file as gemini_upload_file,
+    delete_file as gemini_delete_file,
+)
+
+from .session_context import (
+    add_gemini_file,
+    get_gemini_files,
+    clear_session,
 )
 
 
@@ -30,18 +33,11 @@ __all__ = [
     "assign_uuids_to_output",
     "create_db_pool",
     "get_connection",
-    "is_pdf_ext",
-    "is_pdf_content_type",
-    "starts_with_pdf_magic",
-    "sha256_hex",
-    "decode_b64_to_bytes",
-    "write_unique",
-    "count_pages",
-    "extract_text_from_pdf_bytes",
-    "chunk_text",
-    "sanitize_filename",
-    "session_upload_dir",
-    "session_text_dir",
     "planner_cours",
-    "generate_for_chapter"
+    "generate_for_chapter",
+    "gemini_upload_file",
+    "gemini_delete_file",
+    "add_gemini_file",
+    "get_gemini_files",
+    "clear_session",
 ]

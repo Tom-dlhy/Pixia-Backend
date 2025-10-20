@@ -7,8 +7,7 @@ from src.tools.import_fichier_tools import recevoir_et_lire_pdf
 
 
 TOOLS = [
-    recevoir_et_lire_pdf, 
-   
+    recevoir_et_lire_pdf,
 ]
 
 agent_normal = LlmAgent(

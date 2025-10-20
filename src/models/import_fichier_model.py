@@ -1,24 +1,18 @@
-
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel, Field
 
+
 class EntreeRecevoirEtLirePDF(BaseModel):
-    """Entrée pour le tool 'recevoir_et_lire_pdf'."""
-    nom_fichier: str = Field(..., description="Nom du fichier (terminé par .pdf)")
-    contenu_base64: str = Field(..., description="Contenu du fichier PDF encodé en base64")
-    content_type: Optional[str] = Field(None, description="Type MIME du fichier (ex: application/pdf)")
+    """Entrée pour le tool 'recevoir_et_lire_pdf' (simplifié: chemin de fichier uniquement)."""
+    file_path: str = Field(..., description="Chemin local du fichier PDF à uploader vers Gemini")
     session_id: str = Field("default", description="Identifiant unique de la session utilisateur")
-    max_chars_per_chunk: int = Field(6000, description="Taille max d'un chunk de texte (caractères)")
-    max_chunks: int = Field(5, description="Nombre maximum de chunks retournés")
+
 
 class SortieRecevoirEtLirePDF(BaseModel):
-    """Sortie du tool 'recevoir_et_lire_pdf'."""
+    """Sortie du tool 'recevoir_et_lire_pdf' (simplifiée)."""
     ok: bool
     message: str
-    chemin_pdf: Optional[str] = None
-    chemin_txt: Optional[str] = None
-    pages: Optional[int] = None
-    sha256: Optional[str] = None
-    chunks: Optional[List[str]] = None
-    total_chars: Optional[int] = None
     nom_effectif: Optional[str] = None
+    gemini_file_id: Optional[str] = Field(None, description="Identifiant du fichier côté Gemini (resource name)")
+    gemini_state: Optional[str] = Field(None, description="État de traitement du fichier côté Gemini")
+
