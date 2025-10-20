@@ -18,6 +18,7 @@ def recevoir_et_lire_pdf(payload: Dict[str, Any]) -> Dict[str, Any]:
     - Écrit sur disque uniquement après validation PDF.
     - Ne lève jamais d'exception vers ADK (toujours un dict {ok, message, ...}).
     """
+    
     try:
         # 0) Validation d'entrée (Pydantic)
         data = EntreeRecevoirEtLirePDF(**payload)

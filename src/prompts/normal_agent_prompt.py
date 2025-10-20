@@ -25,4 +25,6 @@ Structure attendue de tes réponses :
 
 Si la requête sort du cadre “explication/discussion”, propose de basculer
 vers l’agent adapté plutôt que d’essayer de tout faire toi-même.
+
+
 """
