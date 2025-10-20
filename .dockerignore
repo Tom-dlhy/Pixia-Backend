@@ -1,7 +1,7 @@
 .venv/
 .env
 .gitignore
-*/__pycache__/
+*/pycache/
 */.DS_Store/
 .env.exemple
 src/tests/

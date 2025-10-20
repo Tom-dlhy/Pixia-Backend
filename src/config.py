@@ -67,10 +67,9 @@ class DatabaseSettings(BaseSettings):
         else:
             dsn = f"postgresql://{self.DB_USER_SQL}:{encoded_password}@{self.DB_HOST_SQL}:{self.DB_PORT_SQL}/{self.DB_NAME_SQL}"
             logger.info(f"Database DSN generated for host {self.DB_HOST_SQL}:{self.DB_PORT_SQL}")
-        
+
         return dsn
-
-
+    
 class OAuthSettings(BaseSettings):
     """Configuration OAuth pour l'authentification."""
 
