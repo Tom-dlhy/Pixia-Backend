@@ -5,9 +5,9 @@ from src.agents.root_agent import root_agent
 from src.models import _validate_exercise_output, _validate_course_output
 from src.utils import generate_title_from_messages
 from src.bdd import DBManager
-from src.models import ExerciseOutput, CourseOutput
+from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 from uuid import uuid4
 from google.adk.sessions import Session, InMemorySessionService
 from google.adk.runners import Runner
@@ -178,11 +178,37 @@ async def chat(req: ChatRequest):
                             logger.info("✅ Tool 'delete_course' détecté")
                             await bdd_manager.delete_document(document_id=session_id)
 
-                        # elif tool_name == "generate_deepcourse":
-                        #     deepcourse_id = str(uuid4())
-                        #     if isinstance(final_response, DeepCourseOutput):    
-                        #         logger.info(f"✅ DeepCourseOutput validé pour la session {session_id}")
-                        #         await bdd_manager.store_deepcourse(deepcourse_id=deepcourse_id, content=final_response)
+                        elif tool_name == "generate_deepcourse":
+                            if isinstance(final_response, DeepCourseOutput):    
+                                logger.info(f"✅ DeepCourseOutput validé pour la session {session_id}")
+                                dict_session:List[Dict[str,Dict[str,str]]]
+                                for chapter in final_response.chapters:
+                                    session_exercise = await inmemory_service.create_session(
+                                        app_name=settings.APP_NAME,
+                                        user_id=user_id
+                                    )
+                                    session_course = await inmemory_service.create_session(
+                                        app_name=settings.APP_NAME,
+                                        user_id=user_id
+                                    )
+                                    session_evaluation = await inmemory_service.create_session(
+                                        app_name=settings.APP_NAME,
+                                        user_id=user_id
+                                    )
+                                    [
+                                        "chapter" :
+                                        {
+                                            "session_id_exercise":session_exercise.session_id,
+                                            "session_id_course":session_course.session_id,
+                                            "session_id_evaluation":session_evaluation.session_id
+                                        }
+                                    ]
+                                   
+
+                                    
+                                        
+
+                                await bdd_manager.store_deepcourse(user_id=req.user_id, content=final_response, dict_session=dict_session)
                         
                         # elif tool_name == "generate_new_chapter_deepcourse":
                         #     logger.info("✅ Tool 'generate_new_chapter_deepcourse' détecté")

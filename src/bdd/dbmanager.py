@@ -195,12 +195,11 @@ class DBManager:
                 {"id": document_id, "contenu": contenu_json}
             )
 
-    async def store_deepcourse(self, title: str, sub: str):
-        id = str(uuid4())
+    async def store_deepcourse(self, deepcourse_id: str, title: str, sub: str):
         async with self.engine.begin() as conn:
             await conn.execute(
                 CREATE_DEEPCOURSE,
-                {"id": id, "title": title, "google_sub": sub}
+                {"id": deepcourse_id, "title": title, "google_sub": sub}
             )
         
     async def store_chapter(self, deepcourse_id: str, title: str):
