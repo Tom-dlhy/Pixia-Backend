@@ -3,6 +3,7 @@ from src.models import DeepCourseSynthesis, DeepCourseOutput, Chapter, ExerciseO
 from src.tools.exercises_tools import generate_exercises
 from src.tools.cours_tools import generate_courses
 from uuid import uuid4
+import json
 
 async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> DeepCourseOutput:
     if isinstance(synthesis, dict):
@@ -61,5 +62,5 @@ async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> DeepCourseOutpu
         title=synthesis.title,
         chapters=chapters
     )
-    print(deepcourse_output.model_dump_json(indent=2, ensure_ascii=False))
+    print(json.dumps(deepcourse_output.model_dump(), indent=2, ensure_ascii=False))
     return deepcourse_output
