@@ -30,6 +30,12 @@ from .pdf_summary_models import (
     EntreeResumerPDFs,
     SortieResumerPDFs,
 )
+from .deepcourse_models import (
+    Chapter,
+    ChapterSynthesis, 
+    DeepCourseSynthesis, 
+    DeepCourseOutput
+)
 
 __all__ = [
     "QCM",
@@ -53,4 +59,9 @@ __all__ = [
     "CourseOutput",
     "PartSchema",
     "_validate_course_output",
+    "EvaluationOutput", 
+    "Chapter",
+    "ChapterSynthesis", 
+    "DeepCourseSynthesis", 
+    "DeepCourseOutput"
 ]
