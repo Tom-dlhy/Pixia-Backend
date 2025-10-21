@@ -49,6 +49,11 @@ Documentation ADK: https://google.github.io/adk-docs/
 
 - Drive : 
 
+- Calendar : https://github.com/nspady/google-calendar-mcp?utm_source=chatgpt.com
+
+- outlook : https://github.com/ryaker/outlook-mcp?utm_source=chatgpt.com
+
+- 
 # Technos
 
 - UV : package manager
