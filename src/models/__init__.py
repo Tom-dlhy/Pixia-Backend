@@ -31,7 +31,6 @@ from .pdf_summary_models import (
     SortieResumerPDFs,
 )
 from .deepcourse_models import (
-    EvaluationOutput, 
     Chapter,
     ChapterSynthesis, 
     DeepCourseSynthesis, 

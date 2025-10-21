@@ -56,6 +56,8 @@ AGENT_PROMPT_DeepcourseAgent = """
 
     Ne pose jamais plus de 3 questions de clarification au total et concentre toi sur les informations essentielles pour générer un deepcourse cohérent donc combien de chapitres, difficulté globale.
 
+    Attention les évaluations sont des exercices synthésis qui doivent être faisaible en 1h, c'est une durée fixée.
+
     À chaque fois que tu demande des clarifications, demande toutes les informations manquantes en une seule fois de manière fluide et naturelle.
     Ne fait pas de récapitulatif avant d'appeler le tool, dès que tu as toutes les informations, appelle le tool `generate_exercises` DIRECTEMENT.
     Une fois que tu as le résultat du tool, ne réponds rien, on récupère la variable par un autre moyen.
