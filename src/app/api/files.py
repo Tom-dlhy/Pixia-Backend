@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 import os
 import tempfile
-from src.utils import upload_file, add_gemini_file
+from src.utils import upload_file, add_gemini_file, add_gemini_file_name
 
 router = APIRouter(prefix="/files", tags=["Files"])
 
@@ -21,13 +21,15 @@ async def upload_pdf(session_id: str = Form("default"), file: UploadFile = File(
             tmp_path = tmp.name
 
         uploaded = upload_file(tmp_path)
-        file_id = getattr(uploaded, "name", None)
+        file_id = getattr(uploaded, "name", None)  # resource name for deletion
         file_state = getattr(uploaded, "state", None)
-        file_uri = getattr(uploaded, "uri", None)
+        file_uri = getattr(uploaded, "uri", None)  # URI for model usage
 
         # Stocker l'URI pour un usage direct par le modèle
         if file_uri:
             add_gemini_file(session_id, file_uri)
+        if file_id:
+            add_gemini_file_name(session_id, file_id)
 
         return {
             "ok": True,
@@ -44,3 +46,50 @@ async def upload_pdf(session_id: str = Form("default"), file: UploadFile = File(
                 os.remove(tmp_path)
         except Exception:
             pass
+
+
+@router.post("/purge")
+async def purge_session_files(session_id: str = Form("default")):
+    """Supprime les fichiers Gemini liés à une session et nettoie le contexte en mémoire."""
+    from src.utils import get_gemini_files, get_gemini_file_names, clear_session, delete_file
+    from src.config import gemini_settings
+
+    deleted = 0
+    errors: list[str] = []
+
+    # 1) Supprimer via les noms (resource name) si disponibles
+    names = get_gemini_file_names(session_id)
+    for name in names:
+        try:
+            delete_file(name)
+            deleted += 1
+        except Exception as e:
+            errors.append(f"{name}: {e}")
+
+    # 2) Pour les URIs restantes sans nom, tenter de résoudre via list() puis supprimer
+    uris = set(get_gemini_files(session_id))
+    try:
+        # list() paginé potentiel — pour simplicité, on itère une fois
+        listing = gemini_settings.CLIENT.files.list()
+        for f in getattr(listing, "files", []) or []:
+            uri = getattr(f, "uri", None)
+            name = getattr(f, "name", None)
+            if uri in uris and name:
+                try:
+                    delete_file(name)
+                    deleted += 1
+                    uris.remove(uri)
+                except Exception as e:
+                    errors.append(f"{name}: {e}")
+    except Exception as e:
+        errors.append(f"list(): {e}")
+
+    # 3) Nettoyage contexte mémoire
+    clear_session(session_id)
+
+    return {
+        "ok": True,
+        "deleted": deleted,
+        "remaining_uris": list(uris),
+        "errors": errors,
+    }

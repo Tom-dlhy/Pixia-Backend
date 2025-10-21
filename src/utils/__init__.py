@@ -20,7 +20,9 @@ from .gemini_files import (
 
 from .session_context import (
     add_gemini_file,
+    add_gemini_file_name,
     get_gemini_files,
+    get_gemini_file_names,
     clear_session,
 )
 
@@ -41,7 +43,9 @@ __all__ = [
     "upload_file",
     "delete_file",
     "add_gemini_file",
+    "add_gemini_file_name",
     "get_gemini_files",
+    "get_gemini_file_names",
     "clear_session",
     "generate_title_from_messages",
     "agent_correct_plain_question",

@@ -38,23 +38,45 @@ def resumer_pdfs_session(payload: Dict[str, Any]) -> Dict[str, Any]:
 
         # Construire la demande avec les fichiers en pièces
         instruction = (
-            "Tu es un assistant qui résume des documents PDF fournis. "
-            "Fournis un résumé clair et utile en français, sans préambule."
+            "Tu es un assistant qui résume des documents PDF. "
+            "Procède par: (1) survol global, (2) détection des titres/sections, (3) extraction des passages clés, "
+            "(4) synthèse structurée en quelques points, en français, sans préambule. "
+            "Si le PDF est scanné, appuie-toi sur la compréhension d'image du modèle."
         )
-        # Only file_data parts in the user message; put instruction as system prompt
-        user_parts = [
-            {"file_data": {"file_uri": uri}}
-            for uri in file_ids[:5]
-        ]
+        user_parts = [{"file_data": {"file_uri": uri}} for uri in file_ids[:5]]
 
-        response = gemini_settings.CLIENT.models.generate_content(
-            model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
-            contents=[{"role": "user", "parts": user_parts}],
-            config={
-                "system_instruction": instruction,
-                "response_mime_type": "text/plain",
-            },
-        )
+        # Première tentative
+        try:
+            response = gemini_settings.CLIENT.models.generate_content(
+                model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
+                contents=[{"role": "user", "parts": user_parts}],
+                config={
+                    "system_instruction": instruction,
+                    "response_mime_type": "text/plain",
+                },
+            )
+            summary = getattr(response, "text", None) or getattr(response, "parsed", None)
+            if isinstance(summary, str) and summary.strip():
+                return SortieResumerPDFs(ok=True, message="Résumé généré avec succès.", summary=summary).model_dump()
+        except Exception:
+            pass
+
+        # Fallback image/file-capable model si dispo
+        model_image = getattr(gemini_settings, "GEMINI_MODEL_2_5_FLASH_IMAGE", None)
+        if model_image:
+            response = gemini_settings.CLIENT.models.generate_content(
+                model=model_image,
+                contents=[{"role": "user", "parts": user_parts}],
+                config={
+                    "system_instruction": instruction,
+                    "response_mime_type": "text/plain",
+                },
+            )
+            summary = getattr(response, "text", None) or getattr(response, "parsed", None)
+            if isinstance(summary, str) and summary.strip():
+                return SortieResumerPDFs(ok=True, message="Résumé généré avec succès.", summary=summary).model_dump()
+
+        return SortieResumerPDFs(ok=False, message="Impossible de générer un résumé fiable.", summary=None).model_dump()
 
         summary = getattr(response, "text", None) or getattr(response, "parsed", None)
         return SortieResumerPDFs(

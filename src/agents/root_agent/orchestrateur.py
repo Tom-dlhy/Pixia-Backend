@@ -9,7 +9,7 @@ from src.agents.sub_agents import (
     course_agent,
 )
 from src.prompts import AGENT_PROMPT_ORCHESTRATOR
-from src.tools.import_fichier_tools import recevoir_et_lire_pdf, resumer_pdfs_session
+from src.tools.import_fichier_tools import recevoir_et_lire_pdf, resumer_pdfs_session, repondre_question_pdf
 
 root_agent = LlmAgent(
     name="RootAgent",
@@ -18,6 +18,7 @@ root_agent = LlmAgent(
     tools=[
         recevoir_et_lire_pdf,
         resumer_pdfs_session,
+        repondre_question_pdf,
     ],
     sub_agents=[
         exercise_agent,

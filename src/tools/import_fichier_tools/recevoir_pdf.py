@@ -3,7 +3,7 @@ import os
 import logging
 
 from src.models.import_fichier_model import EntreeRecevoirEtLirePDF, SortieRecevoirEtLirePDF
-from src.utils import upload_file, add_gemini_file
+from src.utils import upload_file, add_gemini_file, add_gemini_file_name
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,8 @@ def recevoir_et_lire_pdf(payload: Dict[str, Any]) -> Dict[str, Any]:
         # Conserver en contexte la ressource exploitable par le modèle (URI)
         if file_uri:
             add_gemini_file(data.session_id, file_uri)
+        if file_id:
+            add_gemini_file_name(data.session_id, file_id)
 
         return SortieRecevoirEtLirePDF(
             ok=True,
