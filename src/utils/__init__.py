@@ -13,9 +13,22 @@ from .cours_utils import (
     generate_for_chapter
 )
 
-from .generate_title import generate_title_from_messages
+from .gemini_files import (
+    upload_file,
+    delete_file,
+)
 
+from .session_context import (
+    add_gemini_file,
+    add_gemini_file_name,
+    get_gemini_files,
+    get_gemini_file_names,
+    clear_session,
+)
+
+from .generate_title import generate_title_from_messages
 from .correct_plain_question import agent_correct_plain_question
+
 
 __all__ = [
     "generate_plain",
@@ -27,6 +40,15 @@ __all__ = [
     "get_connection",
     "planner_cours",
     "generate_for_chapter",
+    "upload_file",
+    "delete_file",
+    "add_gemini_file",
+    "add_gemini_file_name",
+    "get_gemini_files",
+    "get_gemini_file_names",
+    "clear_session",
     "generate_title_from_messages",
     "agent_correct_plain_question",
 ]
+
+

@@ -18,7 +18,18 @@ from .cours_models import (
     Chapter_Schema,
     _validate_course_output,
 )
-
+from .import_fichier_model import (
+    EntreeRecevoirEtLirePDF,
+    SortieRecevoirEtLirePDF
+)
+from .pdf_qa_models import (
+    EntreeQuestionPDF,
+    SortieQuestionPDF,
+)
+from .pdf_summary_models import (
+    EntreeResumerPDFs,
+    SortieResumerPDFs,
+)
 
 __all__ = [
     "QCM",
@@ -29,6 +40,12 @@ __all__ = [
     "ExerciseSynthesis",
     "ExerciseOutput",
     "_validate_exercise_output",
+    "EntreeRecevoirEtLirePDF",
+    "SortieRecevoirEtLirePDF",
+    "EntreeQuestionPDF",
+    "SortieQuestionPDF",
+    "EntreeResumerPDFs",
+    "SortieResumerPDFs",
     "CourseSynthesis",
     "CoursePlan",
     "ChaptersPlanItem",
