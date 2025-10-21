@@ -21,6 +21,8 @@ from .copilote_prompt import (
     build_copilot_exercice_system_prompt,
 )
 
+from .deepcourse_prompt import AGENT_PROMPT_DeepcourseAgent
+
 from .utils_prompt import GENERATE_TITLE_PROMPT, SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION
 
 __all__ = [
@@ -40,4 +42,5 @@ __all__ = [
     "SYSTEM_PROMPT_PLANNER_COURS",
     "AGENT_PROMPT_CourseAgent",
     "SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION",
+    "AGENT_PROMPT_DeepcourseAgent",
 ]

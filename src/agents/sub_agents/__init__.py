@@ -7,6 +7,7 @@ from .copilote import (
     copilote_deep_course_agent,
 )
 from .cours_agents import course_agent
+from .deepcourse_agents import deepcourse_agent
 
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "copilote_cours_agent",
     "copilote_deep_course_agent",
     "course_agent",
+    "deepcourse_agent",
 ]
