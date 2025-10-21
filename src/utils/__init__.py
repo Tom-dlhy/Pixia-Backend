@@ -11,7 +11,6 @@ from .get_db_url import create_db_pool, get_connection
 
 from .cours_utils import (
     planner_cours,
-    generate_for_chapter
     generate_for_part,
     assign_uuids_to_output_course
 )
