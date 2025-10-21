@@ -21,6 +21,8 @@ from src.bdd.query import (
     DELETE_DOCUMENTS_BY_CHAPTER,
     LOGIN_USER,
     SIGNUP_USER,
+    CORRECT_PLAIN_QUESTION,
+    MARK_IS_CORRECTED_QCM,
     CREATE_CHAPTER,
     CREATE_DEEPCOURSE,
     UPDATE_DOCUMENT_CONTENT
@@ -322,6 +324,25 @@ class DBManager:
                 {"google_sub": google_sub, "email": email, "given_name": given_name, "family_name": family_name}
             )
             return result.fetchone()
+        
+
+    async def correct_plain_question(self, doc_id: str, id_question: str, is_correct: bool, answer: str):
+        """Met à jour le statut de correction d'une question dans un document."""
+        # Implémentation fictive (à adapter selon le schéma réel)
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                CORRECT_PLAIN_QUESTION,
+                {"doc_id": doc_id, "id_question": id_question, "is_correct": is_correct, "answer": answer}
+            )
+
+    async def mark_is_corrected_qcm(self, doc_id: str, question_id: str):
+        """Marque une question QCM comme corrigée dans un document."""
+        # Implémentation fictive (à adapter selon le schéma réel)
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                MARK_IS_CORRECTED_QCM,
+                {"doc_id": doc_id, "id_question": question_id}
+            )
 
 # =========================================================
 # SCRIPT DE TEST / DEBUG DIRECT

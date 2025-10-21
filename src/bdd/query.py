@@ -134,6 +134,95 @@ INSERT INTO users (google_sub, email, given_name, family_name)
 VALUES (:google_sub, :email, :given_name, :family_name)
 """)
 
+
+CORRECT_PLAIN_QUESTION = text("""
+WITH target AS (
+  SELECT "id", "contenu"
+  FROM "document"
+  WHERE "id" = :doc_id
+    AND "document_type" = 'exercise'
+),
+rebuilt AS (
+  SELECT
+    t."id",
+    jsonb_agg(
+      CASE
+        WHEN e->>'type' = 'open' THEN
+          e || jsonb_build_object(
+                'questions',
+                (
+                  SELECT jsonb_agg(
+                           CASE
+                             WHEN q->>'id' = :id_question
+                               THEN q
+                                    || jsonb_build_object('is_corrected', true)
+                                    || jsonb_build_object('is_correct', :is_correct)
+                                    || jsonb_build_object('answers', :answer)
+                             ELSE q
+                           END
+                         )
+                  FROM jsonb_array_elements((e->'questions')::jsonb) AS q
+                )
+              )
+        ELSE
+          e
+      END
+    ) AS new_exercises
+  FROM target t
+  CROSS JOIN LATERAL jsonb_array_elements((t."contenu"::jsonb -> 'exercises')) AS e
+  GROUP BY t."id"
+)
+UPDATE "document" d
+SET "contenu" = ((d."contenu")::jsonb || jsonb_build_object('exercises', r.new_exercises))::json
+FROM rebuilt r
+WHERE d."id" = r."id";
+                     
+""")
+
+
+
+MARK_IS_CORRECTED_QCM = text("""
+WITH target AS (
+  SELECT "id", "contenu"
+  FROM "document"
+  WHERE "id" = :doc_id
+    AND "document_type" = 'exercise'
+),
+rebuilt AS (
+  SELECT
+    t."id",
+    jsonb_agg(
+      CASE
+        WHEN e->>'type' = 'qcm' THEN
+          e || jsonb_build_object(
+                'questions',
+                (
+                  SELECT jsonb_agg(
+                           CASE
+                             WHEN q->>'id' = :id_question
+                               THEN q || jsonb_build_object('is_corrected', true)
+                             ELSE q
+                           END
+                         )
+                  FROM jsonb_array_elements((e->'questions')::jsonb) AS q
+                )
+              )
+        ELSE
+          e
+      END
+    ) AS new_exercises
+  FROM target t
+  CROSS JOIN LATERAL jsonb_array_elements((t."contenu"::jsonb -> 'exercises')) AS e
+  GROUP BY t."id"
+)
+UPDATE "document" d
+SET "contenu" = ((d."contenu")::jsonb || jsonb_build_object('exercises', r.new_exercises))::json
+FROM rebuilt r
+WHERE d."id" = r."id";                  
+""")
+
+
+
 CREATE_DEEPCOURSE= text(""" 
 INSERT INTO public.deepcourses (id, title, google_sub, is_complete)
 VALUES (:id, :title, :google_sub, :is_complete)

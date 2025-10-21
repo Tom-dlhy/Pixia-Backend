@@ -17,6 +17,7 @@ from google.genai.types import Part
 import logging
 
 from dotenv import load_dotenv
+from src.utils import get_gemini_files
 
 load_dotenv()
 
@@ -95,7 +96,16 @@ async def chat(req: ChatRequest):
 
     # === Étape 2 : exécution du runner ADK ===
     try:
-        typed_message = types.Content(role="user", parts=[Part(text=message)])
+        # Attach session files (PDFs uploaded to Gemini) to the user message
+        parts = [Part(text=message)]
+        try:
+            for fid in get_gemini_files(session_id):  # type: ignore[arg-type]
+                parts.append(Part.from_uri(file_uri=fid, mime_type="application/pdf"))
+        except Exception:
+            # Non-fatal: continue without file parts if any issue arises
+            pass
+
+        typed_message = types.Content(role="user", parts=parts)
         runner = Runner(
             agent=root_agent,
             app_name=settings.APP_NAME,
@@ -188,7 +198,7 @@ async def chat(req: ChatRequest):
         logger.error(f"Aucune réponse reçue pour la session {session_id}")
         raise HTTPException(status_code=500, detail="Aucune réponse de l’agent.")
 
-    # === Étape 4 : construction de la réponse ===
+    # === Étape 4 : coynstruction de la réponse ===
     return build_chat_response(
         chat_id=session_id,  # TODO : renommer chat_id → session_id dans le DTO
         agent_used=author or "unknown",  # Fallback si l’auteur n’est pas défini
