@@ -21,6 +21,8 @@ from .copilote_prompt import (
     build_copilot_exercice_system_prompt,
 )
 
+from .deepcourse_prompt import SYSTEM_PROMPT_DEEPCOURSE, SYSTEM_PROMPT_CHAPTER
+
 from .utils_prompt import GENERATE_TITLE_PROMPT, SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION
 
 __all__ = [

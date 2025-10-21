@@ -19,6 +19,13 @@ from .cours_models import (
     _validate_course_output,
 )
 
+from .deepcourse_models import (
+    EvaluationOuput, 
+    Chapter,
+    ChapterSynthesis, 
+    DeepCourseSynthesis, 
+    DeepCourseOutput
+)
 
 __all__ = [
     "QCM",
@@ -36,4 +43,6 @@ __all__ = [
     "CourseOutput",
     "Chapter_Schema",
     "_validate_course_output",
+    "PlanDeepCourse",
+    "ChaptersDescription"
 ]
