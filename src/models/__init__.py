@@ -34,7 +34,8 @@ from .deepcourse_models import (
     Chapter,
     ChapterSynthesis, 
     DeepCourseSynthesis, 
-    DeepCourseOutput
+    DeepCourseOutput,
+    _validate_deepcourse_output
 )
 
 __all__ = [
@@ -59,9 +60,9 @@ __all__ = [
     "CourseOutput",
     "PartSchema",
     "_validate_course_output",
-    "EvaluationOutput", 
     "Chapter",
-    "ChapterSynthesis", 
-    "DeepCourseSynthesis", 
-    "DeepCourseOutput"
+    "ChapterSynthesis",
+    "DeepCourseSynthesis",
+    "DeepCourseOutput",
+    "_validate_deepcourse_output"
 ]

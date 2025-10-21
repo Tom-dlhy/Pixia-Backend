@@ -124,7 +124,7 @@ class ExerciseOutput(BaseModel):
 ### Fonction de validation de l'ExerciseOutput ###
 ##################################################
 
-def _validate_exercise_output(data: dict | str) -> ExerciseOutput | None:
+def _validate_exercise_output(data: dict | str | None ) -> ExerciseOutput | None:
     """Valide et parse les données en tant qu'ExerciseOutput."""
     if isinstance(data, dict):
         return ExerciseOutput.model_validate(data)

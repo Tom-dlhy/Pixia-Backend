@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List, Literal, Union
-from src.models import ExerciseOutput
+from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput
 
 
 class LoadFile(BaseModel):
@@ -18,7 +18,7 @@ class ChatRequest(BaseModel):
 
 from pydantic import BaseModel
 from typing import Literal, Union
-from src.models import ExerciseOutput  # à adapter selon ton projet
+from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput
 
 
 # ---- 1️⃣ Représente une réponse de l'agent ----
@@ -44,18 +44,36 @@ class ChatResponse(BaseModel):
         "main",  # chat main
     ]
     answer_type: Literal["text", "exercise", "course", "deep-course"]
-    answer: Union[str, ExerciseOutput, None] = None
+    answer: Union[str, ExerciseOutput, CourseOutput, DeepCourseOutput, None] = None
 
 
-# ---- 3️⃣ Exemple de fonction utilitaire ----
+# ---- 3️⃣ Fonction utilitaire ----
 def build_chat_response(
     chat_id: str,
     agent_used: str,
-    raw_answer: ExerciseOutput,
+    raw_answer: Union[str, ExerciseOutput, CourseOutput, DeepCourseOutput],
 ) -> ChatResponse:
     """Construit un ChatResponse à partir de la réponse brute de l'agent."""
 
-    if isinstance(raw_answer, ExerciseOutput):
+    if isinstance(raw_answer, DeepCourseOutput):
+        return ChatResponse(
+            chat_id=chat_id,
+            agent_used=agent_used,
+            scene="deep-course",
+            answer_type="deep-course",
+            answer=None,
+        )
+
+    elif isinstance(raw_answer, CourseOutput):
+        return ChatResponse(
+            chat_id=chat_id,
+            agent_used=agent_used,
+            scene="course",
+            answer_type="course",
+            answer=raw_answer,
+        )
+
+    elif isinstance(raw_answer, ExerciseOutput):
         return ChatResponse(
             chat_id=chat_id,
             agent_used=agent_used,
@@ -63,15 +81,6 @@ def build_chat_response(
             answer_type="exercise",
             answer=raw_answer,
         )
-
-    # elif isinstance(raw_answer, CourseOutput):
-    #     return ChatResponse(
-    #         chat_id=chat_id,
-    #         agent_used=agent_used,
-    #         scene="course",
-    #         answer_type="course",
-    #         answer=raw_answer,
-    #     )
 
     elif isinstance(raw_answer, str):
         return ChatResponse(

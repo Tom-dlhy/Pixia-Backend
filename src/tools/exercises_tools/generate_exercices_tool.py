@@ -43,6 +43,6 @@ async def generate_exercises(synthesis: ExerciseSynthesis) -> dict:
     # Convertir la liste d'exercices générés en un vrai ExerciseOutput
 
     exercise_output = ExerciseOutput(exercises=generated_exercises)
-    assign_uuids_to_output(exercise_output)
+    assign_ds_to_outputuui(exercise_output)
 
     return exercise_output.model_dump()

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, StringConstraints
-from typing import Annotated, List, Union, Optional, Literal, Dict
+from typing import Annotated, List, Union, Optional, Literal, Dict, Any
 from src.models import ExerciseOutput, CourseOutput, ExerciseSynthesis, CourseSynthesis
 
 class Chapter(BaseModel):
@@ -25,3 +25,12 @@ class DeepCourseOutput(BaseModel):
     title: str = Field(..., description="Titre du deepcourse")
     chapters: List[Chapter] = Field(..., min_length=1, max_length=16,description="Liste des chapitres du deepcourse")
     
+
+def _validate_deepcourse_output(data: dict | str | Dict[str, Any] | DeepCourseOutput) -> DeepCourseOutput | None:
+    """Valide et parse les données en tant qu'DeepCourseOutput."""
+    if isinstance(data, dict):
+        return DeepCourseOutput.model_validate(data)
+    elif isinstance(data, str):
+        return DeepCourseOutput.model_validate_json(data)
+    else:
+        return None
