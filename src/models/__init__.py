@@ -12,13 +12,24 @@ from .exercise_models import (
 from .cours_models import (
     CourseSynthesis,
     CoursePlan,
-    ChaptersPlanItem,
-    Chapter,
+    PartPlanItem,
+    Part,
     CourseOutput,
-    Chapter_Schema,
+    PartSchema,
     _validate_course_output,
 )
-
+from .import_fichier_model import (
+    EntreeRecevoirEtLirePDF,
+    SortieRecevoirEtLirePDF
+)
+from .pdf_qa_models import (
+    EntreeQuestionPDF,
+    SortieQuestionPDF,
+)
+from .pdf_summary_models import (
+    EntreeResumerPDFs,
+    SortieResumerPDFs,
+)
 from .deepcourse_models import (
     EvaluationOutput, 
     Chapter,
@@ -36,12 +47,18 @@ __all__ = [
     "ExerciseSynthesis",
     "ExerciseOutput",
     "_validate_exercise_output",
+    "EntreeRecevoirEtLirePDF",
+    "SortieRecevoirEtLirePDF",
+    "EntreeQuestionPDF",
+    "SortieQuestionPDF",
+    "EntreeResumerPDFs",
+    "SortieResumerPDFs",
     "CourseSynthesis",
     "CoursePlan",
-    "ChaptersPlanItem",
-    "Chapter",
+    "PartPlanItem",
+    "Part",
     "CourseOutput",
-    "Chapter_Schema",
+    "PartSchema",
     "_validate_course_output",
     "EvaluationOutput", 
     "Chapter",

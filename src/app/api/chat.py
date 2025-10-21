@@ -8,6 +8,7 @@ from src.bdd import DBManager
 from src.models import ExerciseOutput, CourseOutput
 
 from typing import List, Optional, Union
+from uuid import uuid4
 from google.adk.sessions import Session, InMemorySessionService
 from google.adk.runners import Runner
 from google.adk.sessions.database_session_service import DatabaseSessionService
@@ -16,6 +17,7 @@ from google.genai.types import Part
 import logging
 
 from dotenv import load_dotenv
+from src.utils import get_gemini_files
 
 load_dotenv()
 
@@ -47,39 +49,46 @@ async def chat(req: ChatRequest):
 
     # === Étape 1 : création ou récupération de session ===
     try:
-        if not session_id:
-            logger.info(f"🆕 Création d'une nouvelle session pour l'utilisateur {user_id}")
-            session = await session_service.create_session(
-                app_name=settings.APP_NAME,
-                user_id=user_id
-            )
-            session_id = session.id
-            title = await generate_title_from_messages(message)
-            # TODO : gérer le cas où c'est un deep course et passer is_deepcourse=True
-            if isinstance(title, str):
-                await bdd_manager.create_session_title(session_id, title)
-            else:
-                logger.warning("⚠️ Le titre généré n'est pas une chaîne de caractères valide.")
-            
-
-            
-
-        else:
-            logger.info(f"🔄 Chargement de la session existante {session_id} pour {user_id}")
-            session = await session_service.get_session(
+        if session_id :
+            session = await inmemory_service.get_session(
                 app_name=settings.APP_NAME,
                 user_id=user_id,
                 session_id=session_id
             )
-            if session is None:
-                logger.warning(f"⚠️ Session {session_id} introuvable. Création d'une nouvelle.")
-                session = await session_service.create_session(
-                    app_name=settings.APP_NAME,
-                    user_id=user_id
-                )
+            session_service = inmemory_service
+            if session : 
                 session_id = session.id
+            else : 
+                session = await session_service.get_session(
+                app_name=settings.APP_NAME,
+                user_id=user_id,
+                session_id=session_id
+            )
+         
+        elif not session_id:
+            logger.info(f"🆕 Création d'une nouvelle session pour l'utilisateur {user_id}")
+            session = await inmemory_service.create_session(
+                app_name=settings.APP_NAME,
+                user_id=user_id
+            )
+            session_service = inmemory_service
+            session_id = session.id
+            logger.info(f"✅ Nouvelle session créée : {session_id}")
+            # title = await generate_title_from_messages(message)
+            # # TODO : gérer le cas où c'est un deep course et passer is_deepcourse=True
+            # if isinstance(title, str):
+            #     await bdd_manager.create_session_title(session_id, title)
+            # else:
+            #     logger.warning("⚠️ Le titre généré n'est pas une chaîne de caractères valide.")  
 
-        logger.info(f"✅ Session opérationnelle : {session_id}")
+        # else:
+        #     logger.info(f"🔄 Chargement de la session existante {session_id} pour {user_id}")
+        #     session = await session_service.get_session(
+        #         app_name=settings.APP_NAME,
+        #         user_id=user_id,
+        #         session_id=session_id
+        #     )  
+        # logger.info(f"✅ Session opérationnelle : {session_id}")
 
     except Exception as e:
         logger.exception("❌ Erreur pendant la gestion de la session")
@@ -87,7 +96,16 @@ async def chat(req: ChatRequest):
 
     # === Étape 2 : exécution du runner ADK ===
     try:
-        typed_message = types.Content(role="user", parts=[Part(text=message)])
+        # Attach session files (PDFs uploaded to Gemini) to the user message
+        parts = [Part(text=message)]
+        try:
+            for fid in get_gemini_files(session_id):  # type: ignore[arg-type]
+                parts.append(Part.from_uri(file_uri=fid, mime_type="application/pdf"))
+        except Exception:
+            # Non-fatal: continue without file parts if any issue arises
+            pass
+
+        typed_message = types.Content(role="user", parts=parts)
         runner = Runner(
             agent=root_agent,
             app_name=settings.APP_NAME,
@@ -118,27 +136,58 @@ async def chat(req: ChatRequest):
                         tool_resp = fr.response
 
                         if tool_name == "generate_exercises":
-                            logging.info("✅ Tool 'generate_exercises' détecté")
+                            logger.info("✅ Tool 'generate_exercises' détecté")
                             if _validate_exercise_output(tool_resp):
+                                copilote_session_id = str(uuid4())
+                                await session_service.create_session(
+                                    session_id=copilote_session_id,
+                                    app_name=settings.APP_NAME,
+                                    user_id=user_id
+                                )
                                 final_response = _validate_exercise_output(tool_resp)
                                 if isinstance(final_response, ExerciseOutput):
                                     logger.info(f"✅ ExerciseOutput validé pour la session {session_id}")
-                                    await bdd_manager.store_basic_document(content=final_response, session_id=session_id, sub=user_id)
+                                    await bdd_manager.store_basic_document(content=final_response, session_id=copilote_session_id, sub=user_id)
                                 author = event.author
-                                
-
-                        # elif tool_name == "generate_deepcourse": TODO
-
-                                
-
+                            
                         elif tool_name == "generate_courses":
-                            logging.info("✅ Tool 'generate_courses' détecté")
+                            logger.info("✅ Tool 'generate_courses' détecté")
+                            if _validate_course_output(tool_resp):
+                                copilote_session_id = str(uuid4())
+                                await session_service.create_session(
+                                    session_id=copilote_session_id,
+                                    app_name=settings.APP_NAME,
+                                    user_id=user_id
+                                )
+                                final_response = _validate_course_output(tool_resp)
+                                if isinstance(final_response, CourseOutput):
+                                    logger.info(f"✅ CourseOutput validé pour la session {session_id}")
+                                    await bdd_manager.store_basic_document(content=final_response, session_id=copilote_session_id, sub=user_id)
+                                author = event.author
+
+                        elif tool_name == "modify_course":
+                            logger.info("✅ Tool 'modify_course' détecté")
                             if _validate_course_output(tool_resp):
                                 final_response = _validate_course_output(tool_resp)
                                 if isinstance(final_response, CourseOutput):
                                     logger.info(f"✅ CourseOutput validé pour la session {session_id}")
-                                    await bdd_manager.store_basic_document(content=final_response, session_id=session_id, sub=user_id)
+                                    await bdd_manager.update_document(document_id=session_id, new_content=final_response)
                                 author = event.author
+
+                        elif tool_name == "delete_course":
+                            logger.info("✅ Tool 'delete_course' détecté")
+                            await bdd_manager.delete_document(document_id=session_id)
+
+                        # elif tool_name == "generate_deepcourse":
+                        #     deepcourse_id = str(uuid4())
+                        #     if isinstance(final_response, DeepCourseOutput):    
+                        #         logger.info(f"✅ DeepCourseOutput validé pour la session {session_id}")
+                        #         await bdd_manager.store_deepcourse(deepcourse_id=deepcourse_id, content=final_response)
+                        
+                        # elif tool_name == "generate_new_chapter_deepcourse":
+                        #     logger.info("✅ Tool 'generate_new_chapter_deepcourse' détecté")
+                        #     await 
+                            
 
     except Exception as e:
         logger.exception("❌ Erreur pendant l'exécution du runner ADK")
@@ -149,7 +198,7 @@ async def chat(req: ChatRequest):
         logger.error(f"Aucune réponse reçue pour la session {session_id}")
         raise HTTPException(status_code=500, detail="Aucune réponse de l’agent.")
 
-    # === Étape 4 : construction de la réponse ===
+    # === Étape 4 : coynstruction de la réponse ===
     return build_chat_response(
         chat_id=session_id,  # TODO : renommer chat_id → session_id dans le DTO
         agent_used=author or "unknown",  # Fallback si l’auteur n’est pas défini
