@@ -6,11 +6,14 @@ from .exercises_utils import (
     assign_uuids_to_output
 )
 
+
 from .get_db_url import create_db_pool, get_connection
 
 from .cours_utils import (
     planner_cours,
     generate_for_chapter
+    generate_for_part,
+    assign_uuids_to_output_course
 )
 
 from .gemini_files import (
@@ -36,10 +39,11 @@ __all__ = [
     "planner_exercises",
     "generate_for_topic",
     "assign_uuids_to_output",
+    "assign_uuids_to_output_course",
     "create_db_pool",
     "get_connection",
     "planner_cours",
-    "generate_for_chapter",
+    "generate_for_part",
     "upload_file",
     "delete_file",
     "add_gemini_file",

@@ -22,44 +22,44 @@ class CourseSynthesis(BaseModel):
 #############################################################
 
 
-class ChaptersPlanItem(BaseModel):
-    title: str = Field(..., description="Titre du chapitre généré.")
-    content: str = Field(..., description="Explication du contenu du chapitre.")
+class PartPlanItem(BaseModel):
+    title: str = Field(..., description="Titre de la partie générée.")
+    content: str = Field(..., description="Explication du contenu de la partie.")
 
 
 class CoursePlan(BaseModel):
     title: str = Field(..., description="Titre du cours généré.")
-    chapters: List[ChaptersPlanItem] = Field(
+    parts: List[PartPlanItem] = Field(
         ...,
-        description="Liste des chapitres à générer.",
+        description="Liste des parties à générer.",
     )
 
 
 ##########################################
-### Modèles Pydantic pour un Chapitre ####
+### Modèles Pydantic pour une partie ####
 ##########################################
 
 
-class Chapter_Schema(BaseModel):
+class PartSchema(BaseModel):
     id_schema: Optional[str] = Field(None, description="Identifiant unique du schéma")
-    id_chapter: Optional[str] = Field(
-        None, description="Identifiant unique du chapitre associé"
+    id_part: Optional[str] = Field(
+        None, description="Identifiant unique de la partie associée"
     )
     img_base64: str = Field(None, description="Image du schéma encodée en base64")
 
 
-class Chapter(BaseModel):
-    id_chapter: Optional[str] = Field(
-        None, description="Identifiant unique du chapitre"
+class Part(BaseModel):
+    id_part: Optional[str] = Field(
+        None, description="Identifiant unique de la partie"
     )
     id_schema: Optional[str] = Field(
-        None, description="Identifiant unique du schéma associé au chapitre"
+        None, description="Identifiant unique du schéma associé à la partie"
     )
-    title: str = Field(..., description="Titre du chapitre.")
-    content: str = Field(..., description="Contenu détaillé du chapitre.")
+    title: str = Field(..., description="Titre de la partie.")
+    content: str = Field(..., description="Contenu détaillé de la partie.")
     schema_description: Optional[str] = Field(
         None,
-        description="Description précise du contenu du schéma associé au chapitre.",
+        description="Description précise du contenu du schéma associé à la partie.",
     )
 
 
@@ -69,12 +69,10 @@ class Chapter(BaseModel):
 
 
 class CourseOutput(BaseModel):
-    id: Optional[str] = Field(
-        None, description="Identifiant unique de la sortie de cours"
-    )
+    id: Optional[str] = Field(None, description="Identifiant unique de la sortie de cours")
     title: str = Field(..., description="Titre du cours généré.")
-    chapters: List[Chapter] = Field(
-        ..., min_length=1, description="Liste des chapitres générés."
+    parts: List[Part] = Field(
+        ..., min_length=1, description="Liste des parties générées."
     )
 
 ################################################

@@ -12,10 +12,10 @@ from .exercise_models import (
 from .cours_models import (
     CourseSynthesis,
     CoursePlan,
-    ChaptersPlanItem,
-    Chapter,
+    PartPlanItem,
+    Part,
     CourseOutput,
-    Chapter_Schema,
+    PartSchema,
     _validate_course_output,
 )
 from .import_fichier_model import (
@@ -48,9 +48,9 @@ __all__ = [
     "SortieResumerPDFs",
     "CourseSynthesis",
     "CoursePlan",
-    "ChaptersPlanItem",
-    "Chapter",
+    "PartPlanItem",
+    "Part",
     "CourseOutput",
-    "Chapter_Schema",
+    "PartSchema",
     "_validate_course_output",
 ]
