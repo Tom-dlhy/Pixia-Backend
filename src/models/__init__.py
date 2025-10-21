@@ -20,7 +20,7 @@ from .cours_models import (
 )
 
 from .deepcourse_models import (
-    EvaluationOuput, 
+    EvaluationOutput, 
     Chapter,
     ChapterSynthesis, 
     DeepCourseSynthesis, 
@@ -43,6 +43,9 @@ __all__ = [
     "CourseOutput",
     "Chapter_Schema",
     "_validate_course_output",
-    "PlanDeepCourse",
-    "ChaptersDescription"
+    "EvaluationOutput", 
+    "Chapter",
+    "ChapterSynthesis", 
+    "DeepCourseSynthesis", 
+    "DeepCourseOutput"
 ]

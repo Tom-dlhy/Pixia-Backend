@@ -7,6 +7,7 @@ from src.agents.sub_agents import (
     copilote_deep_course_agent,
     agent_normal,
     course_agent,
+    deepcourse_agent,
 )
 from src.prompts import AGENT_PROMPT_ORCHESTRATOR
 
@@ -21,5 +22,6 @@ root_agent = LlmAgent(
         copilote_deep_course_agent,
         agent_normal,
         course_agent,
+        deepcourse_agent,
     ],
 )
