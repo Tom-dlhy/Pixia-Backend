@@ -11,10 +11,18 @@ from src.agents.sub_agents import (
 from src.prompts import AGENT_PROMPT_ORCHESTRATOR
 from src.tools.import_fichier_tools import recevoir_et_lire_pdf, resumer_pdfs_session, repondre_question_pdf
 
+PDF_TOOLS_POLICY = (
+    "\n\nPolitique outils (PDF):\n"
+    "- Si la demande concerne un document PDF en contexte (résumer, trouver des infos, expliquer), utilise les outils :\n"
+    "  * repondre_question_pdf pour les questions ciblées avec références.\n"
+    "  * resumer_pdfs_session pour produire un résumé concis.\n"
+    "- Pour les questions de suivi sur le même document, continue d'utiliser ces outils (ne redemande pas le fichier)."
+)
+
 root_agent = LlmAgent(
     name="RootAgent",
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
-    instruction=AGENT_PROMPT_ORCHESTRATOR,
+    instruction=AGENT_PROMPT_ORCHESTRATOR + PDF_TOOLS_POLICY,
     tools=[
         recevoir_et_lire_pdf,
         resumer_pdfs_session,
