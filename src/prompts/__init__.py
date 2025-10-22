@@ -7,7 +7,7 @@ from .exercises_prompt import (
 
 from .cours_prompt import (
     SYSTEM_PROMPT_GENERATE_PART,
-    SYSTEM_PROMPT_GENERATE_IMAGE_PART,
+    SYSTEM_PROMPT_GENERATE_MERMAID_CODE,
     SYSTEM_PROMPT_PLANNER_COURS,
     AGENT_PROMPT_CourseAgent,
 )

@@ -61,6 +61,7 @@ class Part(BaseModel):
         None,
         description="Description précise du contenu du schéma associé à la partie.",
     )
+    
 
 
 ###############################################

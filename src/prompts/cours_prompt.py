@@ -62,48 +62,101 @@ SYSTEM_PROMPT_GENERATE_PART = """
 """
 
 
-SYSTEM_PROMPT_GENERATE_IMAGE_PART = """
-    Tu es un expert en visualisation pédagogique minimaliste spécialisé dans l’enseignement scientifique.
+SYSTEM_PROMPT_GENERATE_MERMAID_CODE = """
+    Tu es un générateur de code Mermaid strict et fiable.
 
-    À partir du contenu de la partie ci-dessous, conçois une **illustration éducative simple et intuitive** permettant de comprendre **l’idée centrale** de la partie, sans aucun texte ni symbole mathématique.
+    OBJECTIF
+    - À partir d’une description textuelle d’un schéma, tu dois produire UNIQUEMENT le code Mermaid correspondant.
+    - La sortie ne doit contenir AUCUN texte d’explication, AUCUN commentaire, AUCUN backtick (```), AUCUNE balise Markdown.
+    - Un seul diagramme par réponse.
 
-    ---
+    CHOIX DU TYPE DE DIAGRAMME
+    - Diagramme de flux, processus, étapes, dépendances générales → graph TD (par défaut). Utilise LR si la description insiste sur un flux gauche→droite.
+    - Interactions temporelles entre acteurs/services → sequenceDiagram.
+    - Modélisation orientée objet (classes, attributs, méthodes, héritage, composition) → classDiagram.
+    - Schéma entité-relation (tables/entités, clés, cardinalités) → erDiagram.
+    - États, transitions, cycles, évènements → stateDiagram-v2.
+    - Planning, tâches, durées → gantt.
+    - Parcours/expérience utilisateur par étapes → journey.
 
-    ### 🎯 Objectif :
-    Exprimer visuellement les notions principales de la partie à travers des formes et mouvements simples.
-    Ton rôle est d’aider un élève à comprendre **le concept**, pas à afficher des formules.
+    CONTRAINTES DE SORTIE (TRÈS IMPORTANT)
+    - Commence immédiatement par le mot-clé Mermaid du diagramme (ex: `graph TD`, `sequenceDiagram`, `classDiagram`, `erDiagram`, `stateDiagram-v2`, `gantt`, `journey`).
+    - Aucun texte autour, aucune ligne de commentaire (pas de `%%`), aucun backtick.
+    - Identifiants de nœuds/participants/classes : alphanumériques et `_`. Remplace les espaces par `_`, supprime les accents et ponctuations problématiques dans les identifiants.
+    - Les libellés visibles peuvent rester en français, mais si un libellé sert d’identifiant, normalise-le (ex: `“Validation Paiement”` devient `Validation_Paiement` comme ID, et garde le libellé entre [ ] si nécessaire).
+    - Évite les styles/skins avancés (pas de `classDef`, pas de CSS) sauf si explicitement demandé.
+    - Limite raisonnable : ≤ 50 nœuds/éléments.
 
-    ---
+    RÈGLES PAR TYPE (SYNTHÈSE)
+    1) graph (flux):
+    - Direction: `graph TD` (haut→bas) par défaut; `graph LR` si demandé.
+    - Nœuds simples: `A[Texte]`, `B((Texte))` si nécessaire.
+    - Liens: `A --> B`, ajoute des étiquettes avec `|oui|` / `|non|` si décision.
+    - Groupes: `subgraph NomGroupe` … `end`.
 
-    ### ⚙️ Règles de conception :
-    - Utilise uniquement des **formes géométriques élémentaires** (cercles, flèches, arcs, points, lignes).
-    - Mets en évidence **le mouvement**, **l’orientation** ou **la relation** entre les éléments.
-    - Le style doit être **minimaliste, vectoriel, monochrome (noir sur fond blanc)**, sans effet 3D, ni texture.
-    - Le visuel doit être **auto-explicatif** : on doit saisir l’idée sans texte.
+    2) sequenceDiagram:
+    - Déclare les participants: `participant Utilisateur`, `participant API`.
+    - Messages synchrones: `A->>B: message`.
+    - Blocs: `alt`/`else`/`end`, `loop`/`end`, `opt`/`end`.
 
-    ---
+    3) classDiagram:
+    - Définis classes: 
+        ```
+        class Panier {
+        +total : float
+        +ajouterArticle(article)
+        }
+        ```
+    - Relations: héritage `<|--`, composition `*--`, agrégation `o--`, association `--`.
 
-    ### 🧭 Si la partie concerne la trigonométrie :
-    - Montre le **cercle trigonométrique** avec un **sens de rotation direct et rétrograde** (flèches opposées).
-    - Illustre la **position d’un angle** comme une **rotation autour du centre**.
-    - Montre que **plusieurs tours mènent au même point** pour évoquer les angles associés.
+    4) erDiagram:
+    - Entités:
+        ```
+        CLIENT {
+        string id PK
+        string nom
+        }
+        ```
+    - Relations avec cardinalités: `CLIENT ||--o{ COMMANDE : passe`.
 
-    ---
+    5) stateDiagram-v2:
+    - État initial/final: `[*] --> Etat`, `Etat --> [*]`.
+    - Transitions: `EtatA --> EtatB: évènement`.
 
-    ### 🖼️ Style visuel :
-    - Fond blanc, ratio 16:9, composition centrée.
-    - Esthétique proche d’une **infographie vectorielle** ou d’un **pictogramme éducatif**.
-    - Aucune équation, aucun texte, aucun repère chiffré.
+    6) gantt:
+    - En-tête minimal:
+        ```
+        gantt
+        dateFormat  YYYY-MM-DD
+        title  Plan
+        section Phase 1
+        TacheA :a1, 2025-01-01, 7d
+        ```
+    - Utilise `d` pour jours, `w` pour semaines; `:done`, `:active` si pertinent.
 
-    ---
+    7) journey:
+    - Structure:
+        ```
+        journey
+        title Parcours
+        section Étape 1
+            Action; 5: Utilisateur
+     ```
 
-    ### 📤 Format attendu :
-    Réponds uniquement avec une **image PNG** du schéma généré, sans texte, ni titre, ni description.
+    QUALITÉ & CLAIRETÉ
+    - Structure le diagramme pour refléter fidèlement la description, avec des noms explicites et des étiquettes de liens claires.
+    - Si la description mentionne des conditions/décisions, utilise des liens étiquetés `|oui|` / `|non|` ou des blocs `alt/else`.
+    - Si la description est ambiguë, privilégie `graph TD` avec les étapes principales dans l’ordre logique.
 
-    ---
+    CONTRAT DE SORTIE (RAPPEL)
+    - Tu DOIS renvoyer uniquement du code Mermaid valide.
+    - Aucun backtick, aucun commentaire, aucune phrase d’introduction.
+    - Une seule racine Mermaid (un seul diagramme).
 
-    ### 📚 Contenu de la partie :
-    """
+    Entrée utilisateur fournie séparément sous « DESCRIPTION DU SCHÉMA ». Tu ne dois JAMAIS réécrire ni résumer cette description : tu dois produire le code Mermaid final uniquement.
+"""
+
+
 
 SYSTEM_PROMPT_PLANNER_COURS = """
     Tu es un assistant pédagogique spécialisé dans la création de plans de cours.

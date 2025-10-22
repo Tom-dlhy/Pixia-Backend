@@ -31,7 +31,7 @@ async def generate_courses(course_synthesis: CourseSynthesis) -> Union[dict, Any
         logging.error(f"Erreur de validation du plan d'exercice: {err}")
         return plan_json if isinstance(plan_json, dict) else {}
 
-    # Création des tâches pour tous les exercices du plan
+    # Création des tâches pour toutes les parties du cours
     tasks = [
         generate_for_part(part, course_synthesis.difficulty)
         for part in plan.parts
