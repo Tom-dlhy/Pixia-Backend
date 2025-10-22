@@ -10,7 +10,7 @@ from .changesettings import ChangeSettingsRequest, ChangeSettingsResponse
 from .login import LoginRequest, LoginResponse
 from .signup import SignupRequest, SignupResponse
 from .markcorrectedQCM import MarkIsCorrectedQCMRequest, MarkIsCorrectedQCMResponse
-from .fetchchat import FetchChatRequest, FetchChatResponse
+from .fetchchat import FetchChatRequest, FetchChatResponse, EventMessage
 
 __all__ = [
     "ChatResponse",
@@ -38,4 +38,5 @@ __all__ = [
     "SignupResponse",
     "MarkIsCorrectedQCMRequest",
     "MarkIsCorrectedQCMResponse",
+    "EventMessage",
 ]

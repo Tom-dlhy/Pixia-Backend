@@ -134,7 +134,7 @@ async def fetch_chat(
     user_id: str = Form(...),
     session_id: Optional[str] = Form(None),
 ):
-    user_id = "user_123"
+    user_id = "aladldladkfafk"
     logger.info(
         f"📖 Fetching chat history for user_id={user_id}, session_id={session_id}"
     )  # Pour test
