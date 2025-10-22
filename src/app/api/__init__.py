@@ -14,6 +14,14 @@ from .markchaptercomplete import router as markchaptercomplete_router
 from .markchapteruncomplete import router as markchapteruncomplete_router
 from .changesettings import router as changesettings_router
 from .markcorrectedQCM import router as markcorrectedQCM_router
+from .signup import router as signup_router
+from .login import router as login_router
+from .test import router as test_router
+from .signup import router as signup_router
+from .login import router as login_router
+from .test import router as test_router
+from .fetchexercise import router as fetch_exercise_router
+from .fetchcourse import router as fetch_course_router
 
 
 api_router = APIRouter()
@@ -21,9 +29,6 @@ api_router.include_router(health_router)
 api_router.include_router(chat_router)
 api_router.include_router(google_router)
 api_router.include_router(files_router)
-
-
-__all__ = ["health_router", "chat_router","api_router", "google_router", "files_router"]
 api_router.include_router(fetchallchats_router)
 api_router.include_router(fetchchat_router)
 api_router.include_router(renamechat_router)
@@ -35,6 +40,11 @@ api_router.include_router(markchaptercomplete_router)
 api_router.include_router(markchapteruncomplete_router)
 api_router.include_router(changesettings_router)
 api_router.include_router(markcorrectedQCM_router)
+api_router.include_router(signup_router)
+api_router.include_router(login_router)
+api_router.include_router(test_router)
+api_router.include_router(fetch_exercise_router)
+api_router.include_router(fetch_course_router)
 
 
 __all__ = [
@@ -42,6 +52,7 @@ __all__ = [
     "chat_router",
     "api_router",
     "google_router",
+    "files_router",
     "fetchallchats_router",
     "fetchchat_router",
     "renamechat_router",
@@ -53,5 +64,10 @@ __all__ = [
     "markchapteruncomplete_router"
     "changesettings_router",
     "markcorrectedQCM_router",
+    "signup_router",
+    "login_router",
+    "test_router",
+    "fetch_exercise_router",
+    "fetch_course_router"
 ]
 

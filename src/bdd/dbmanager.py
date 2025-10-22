@@ -25,7 +25,8 @@ from src.bdd.query import (
     MARK_IS_CORRECTED_QCM,
     CREATE_CHAPTER,
     CREATE_DEEPCOURSE,
-    UPDATE_DOCUMENT_CONTENT
+    UPDATE_DOCUMENT_CONTENT,
+    FETCH_DOCUMENT_BY_SESSION
 )
 from src.config import database_settings
 from typing import Union,List,Dict,Any
@@ -441,6 +442,16 @@ class DBManager:
                 MARK_IS_CORRECTED_QCM,
                 {"doc_id": doc_id, "id_question": question_id}
             )
+
+    async def get_document(self, sesssion_id: str):
+        """Récupère un document par session_id."""
+        async with self.engine.begin() as conn:
+            result = await conn.execute(
+                FETCH_DOCUMENT_BY_SESSION,
+                {"session_id": sesssion_id}
+            )
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
 
 # =========================================================
 # SCRIPT DE TEST / DEBUG DIRECT

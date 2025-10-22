@@ -81,7 +81,9 @@ async def chat(
                 app_name=settings.APP_NAME, user_id=user_id
             )
             session_id = session.id
-            logger.info(f"✅ Nouvelle session créée : {session_id}")
+            logger.info(
+                f"✅ Nouvelle session créée : {session_id} pour l'utilisateur {user_id} et stockée dans inmemory_service."
+            )
             current_session_service = inmemory_service
 
     except Exception as e:
