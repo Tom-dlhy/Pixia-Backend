@@ -97,6 +97,9 @@ class ExerciseSynthesis(BaseModel):
     description: Annotated[str, StringConstraints(max_length=500)] = (
         Field(..., description="Description détaillé du sujet des exercices à générer.")
     )
+    title: Annotated[str, StringConstraints(max_length=200)] = Field(
+        ..., description="Titre global du sujet des exercices à générer."
+    )
     difficulty: Annotated[str, StringConstraints(max_length=100)] = Field(
         ..., description="Niveau de difficulté de l'exercice"
     )
@@ -107,12 +110,14 @@ class ExerciseSynthesis(BaseModel):
         Field(..., description="Type d'exercice à générer : qcm / open / both")
     )
 
+
 ############################################################
 ### Modèle Pydantic pour la sortie des exercices générés ###
 ############################################################
 
 class ExerciseOutput(BaseModel):
     id: Optional[str] = Field(None, description="Identifiant unique de la sortie d'exercice")
+    title: str = Field(..., description="Titre de l'exercice généré.")
     exercises: List[
         Annotated[
             Union[QCM, Open],

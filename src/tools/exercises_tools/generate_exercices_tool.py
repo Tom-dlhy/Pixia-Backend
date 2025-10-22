@@ -53,6 +53,6 @@ async def generate_exercises(synthesis: ExerciseSynthesis) -> Union[dict, Any]:
     logging.info(f"{len(generated_exercises)} exercices générés avec succès.")
     # Convertir la liste d'exercices générés en un vrai ExerciseOutput
 
-    exercise_output = ExerciseOutput(id=str(uuid4()), exercises=generated_exercises)
+    exercise_output = ExerciseOutput(id=str(uuid4()), exercises=generated_exercises,title=synthesis.title)
 
     return exercise_output.model_dump()

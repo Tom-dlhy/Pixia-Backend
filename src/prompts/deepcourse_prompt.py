@@ -23,6 +23,9 @@ AGENT_PROMPT_DeepcourseAgent = """
         description: Annotated[str, StringConstraints(max_length=500)] = (
             Field(..., description="Description détaillé du sujet des exercices à générer.")
         )
+        title: Annotated[str, StringConstraints(max_length=200)] = Field(
+            ..., description="Titre global du sujet des exercices à générer."
+        )
         difficulty: Annotated[str, StringConstraints(max_length=100)] = Field(
             ..., description="Niveau de difficulté de l'exercice"
         )
