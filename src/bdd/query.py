@@ -124,7 +124,7 @@ WHERE chapter_id = :chapter_id
 """)
 
 LOGIN_USER = text("""
-SELECT google_sub, given_name, family_name
+SELECT google_sub, email, given_name, family_name
 FROM users
 WHERE email = :email
 """)
