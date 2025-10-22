@@ -32,10 +32,10 @@ async def generate_courses(course_synthesis: CourseSynthesis) -> Union[dict, Any
         return plan_json if isinstance(plan_json, dict) else {}
 
     # Création des tâches pour toutes les parties du cours
-    tasks = [
-        generate_for_part(part, course_synthesis.difficulty)
-        for part in plan.parts
-    ]
+    # tasks = [
+    #     generate_for_part(part, course_synthesis.difficulty)
+    #     for part in plan.parts
+    # ]
 
     # Ré-exécuter les parties en batch de 4 en parallèle
     results = []

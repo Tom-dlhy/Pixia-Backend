@@ -45,13 +45,13 @@ class PartSchema(BaseModel):
     id_part: Optional[str] = Field(
         None, description="Identifiant unique de la partie associée"
     )
-    img_base64: Optional[str] = Field(None, description="Image du schéma encodée en base64")
+    img_base64: Optional[str] = Field(
+        None, description="Image du schéma encodée en base64"
+    )
 
 
 class Part(BaseModel):
-    id_part: Optional[str] = Field(
-        None, description="Identifiant unique de la partie"
-    )
+    id_part: Optional[str] = Field(None, description="Identifiant unique de la partie")
     id_schema: Optional[str] = Field(
         None, description="Identifiant unique du schéma associé à la partie"
     )
@@ -61,7 +61,6 @@ class Part(BaseModel):
         None,
         description="Description précise du contenu du schéma associé à la partie.",
     )
-    
 
 
 ###############################################
@@ -70,11 +69,44 @@ class Part(BaseModel):
 
 
 class CourseOutput(BaseModel):
-    id: Optional[str] = Field(None, description="Identifiant unique de la sortie de cours")
+    id: Optional[str] = Field(
+        None, description="Identifiant unique de la sortie de cours"
+    )
     title: str = Field(..., description="Titre du cours généré.")
     parts: List[Part] = Field(
         ..., min_length=1, description="Liste des parties générées."
     )
+
+
+###############################################
+### Modèles pour le nouveau pipeline unifié ###
+###############################################
+
+
+class CoursePartWithMermaid(BaseModel):
+    """Partie de cours avec code Mermaid et schéma directement générés."""
+
+    id_part: Optional[str] = Field(None, description="Identifiant unique de la partie")
+    id_schema: Optional[str] = Field(None, description="Identifiant unique du schéma")
+    title: str = Field(..., description="Titre de la partie.")
+    content: str = Field(..., description="Contenu détaillé de la partie.")
+    schema_description: Optional[str] = Field(
+        None, description="Description courte du schéma visuel."
+    )
+    mermaid_syntax: Optional[str] = Field(
+        None, description="Code Mermaid validé pour générer le schéma."
+    )
+
+
+class CourseOutputWithMermaid(BaseModel):
+    """Sortie complète du cours avec tous les Mermaid générés d'un coup."""
+
+    id: Optional[str] = Field(None, description="Identifiant unique")
+    title: str = Field(..., description="Titre du cours généré.")
+    parts: List[CoursePartWithMermaid] = Field(
+        ..., min_length=1, description="Parties avec Mermaid intégrés."
+    )
+
 
 ################################################
 ### Fonction de validation de l'CourseOutput ###
@@ -88,16 +120,17 @@ def _validate_course_output(data: dict | str) -> CourseOutput | None:
             return data
         elif isinstance(data, dict):
             # Si les données sont imbriquées dans une clé 'result', les extraire
-            if 'result' in data and isinstance(data['result'], dict):
-                data = data['result']
+            if "result" in data and isinstance(data["result"], dict):
+                data = data["result"]
             return CourseOutput.model_validate(data)
         elif isinstance(data, str):
             # Essayer de parser en JSON d'abord
             import json
+
             try:
                 parsed = json.loads(data)
-                if isinstance(parsed, dict) and 'result' in parsed:
-                    parsed = parsed['result']
+                if isinstance(parsed, dict) and "result" in parsed:
+                    parsed = parsed["result"]
                 return CourseOutput.model_validate(parsed)
             except (json.JSONDecodeError, ValueError):
                 # Si ce n'est pas du JSON valide, essayer la validation directe
@@ -106,5 +139,6 @@ def _validate_course_output(data: dict | str) -> CourseOutput | None:
             return None
     except Exception as e:
         import logging
+
         logging.error(f"Erreur lors de la validation CourseOutput: {e}")
         return None

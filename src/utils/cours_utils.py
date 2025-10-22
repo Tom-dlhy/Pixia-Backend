@@ -8,7 +8,7 @@ from google.genai import types
 from typing import Dict, Any, Union, Optional
 from enum import Enum
 from pydantic import BaseModel
-import os, hashlib, subprocess, base64
+import os, hashlib, subprocess
 
 
 logging.basicConfig(level=logging.INFO)
@@ -95,32 +95,32 @@ def generate_mermaid_schema_description(course_part: Part):
     schema_description = ""
     if isinstance(course_part.schema_description, str):
         schema_description = course_part.schema_description
-    try:
-        response = gemini_settings.CLIENT.models.generate_content(
-            model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
-            contents=SYSTEM_PROMPT_GENERATE_MERMAID_CODE + "\n" + schema_description,
-            config=types.GenerateContentConfig(
-                response_modalities=['Text'],
+        try:
+            response = gemini_settings.CLIENT.models.generate_content(
+                model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
+                contents=SYSTEM_PROMPT_GENERATE_MERMAID_CODE + "\n" + schema_description,
+                config=types.GenerateContentConfig(
+                    response_modalities=['Text'],
+                )
             )
-        )
-        uuid_schema = str(uuid4())
-        mermaid_code = ""
-        if getattr(response, "candidates", None):
-            for cand in response.candidates:
-                content = getattr(cand, "content", None)
-                if content and getattr(content, "parts", None):
-                    for p in content.parts:
-                        if getattr(p, "text", None):
-                            mermaid_code += p.text
+            uuid_schema = str(uuid4())
+            mermaid_code = ""
+            if getattr(response, "candidates", None):
+                for cand in response.candidates:
+                    content = getattr(cand, "content", None)
+                    if content and getattr(content, "parts", None):
+                        for p in content.parts:
+                            if getattr(p, "text", None):
+                                mermaid_code += p.text
 
-        mermaid_code = (mermaid_code or "").strip()
-        if not mermaid_code:
-            logging.error("Le modèle n'a pas renvoyé de code Mermaid.")
-            return None
+            mermaid_code = (mermaid_code or "").strip()
+            if not mermaid_code:
+                logging.error("Le modèle n'a pas renvoyé de code Mermaid.")
+                return None
 
-        img_b64 = generate_schema_mermaid(mermaid_code)
-    except Exception as e:
-        logging.info("Erreur")
+            img_b64 = generate_schema_mermaid(mermaid_code)
+        except Exception as e:
+            logging.info("Erreur")
 
     return PartSchema(
         id_schema=uuid_schema,

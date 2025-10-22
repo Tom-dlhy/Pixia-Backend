@@ -1,17 +1,22 @@
 from .exercises_utils import (
-    generate_plain, 
-    generate_qcm, 
-    planner_exercises, 
-    generate_for_topic
+    generate_plain,
+    generate_qcm,
+    planner_exercises,
+    generate_for_topic,
 )
 
 
 from .get_db_url import create_db_pool, get_connection
 
-from .cours_utils import (
-    planner_cours,
-    generate_for_part
+from .cours_utils import planner_cours, generate_for_part
+
+from .cours_utils_v2 import (
+    generate_complete_course,
+    generate_all_schemas,
+    generate_schema_mermaid,
 )
+
+from .mermaid_validator import MermaidValidator
 
 from .gemini_files import (
     upload_file,
@@ -30,8 +35,6 @@ from .generate_title import generate_title_from_messages
 from .correct_plain_question import agent_correct_plain_question
 
 
-
-
 __all__ = [
     "generate_plain",
     "generate_qcm",
@@ -41,6 +44,10 @@ __all__ = [
     "get_connection",
     "planner_cours",
     "generate_for_part",
+    "generate_complete_course",
+    "generate_all_schemas",
+    "generate_schema_mermaid",
+    "MermaidValidator",
     "upload_file",
     "delete_file",
     "add_gemini_file",
@@ -51,5 +58,3 @@ __all__ = [
     "generate_title_from_messages",
     "agent_correct_plain_question",
 ]
-
-
