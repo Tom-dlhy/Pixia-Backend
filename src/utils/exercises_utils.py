@@ -1,13 +1,13 @@
 from src.config import gemini_settings
-from src.models import Open, QCM, QCM, ExercisePlan, ExercicePlanItem, ExerciseOutput, ExerciseSynthesis
+from src.models import Open, QCM, ExercisePlan, ExercicePlanItem, ExerciseOutput, ExerciseSynthesis
 from src.prompts import SYSTEM_PROMPT_OPEN, SYSTEM_PROMPT_QCM, SYSTEM_PROMPT_PLANNER_EXERCISES
 import logging, asyncio, uuid
-from typing import Any
+from typing import Any, Union
 from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO)
 
-def generate_plain(prompt: str, difficulty: str) -> Open:
+def generate_plain(prompt: str, difficulty: str) -> Union[Open, dict, Any]:
     """Génère des questions à réponse ouverte basées sur la description de l'exercice fournie.
 
     Args:
@@ -40,7 +40,7 @@ def generate_plain(prompt: str, difficulty: str) -> Open:
 
     return data
 
-def generate_qcm(prompt: str, difficulty: str) -> QCM:
+def generate_qcm(prompt: str, difficulty: str) -> Union[QCM, dict, Any]:
     """Génère un QCM basé sur la description de l'exercice fournie.
 
     Args:
@@ -72,7 +72,7 @@ def generate_qcm(prompt: str, difficulty: str) -> QCM:
 
     return data
 
-def planner_exercises(synthesis: ExerciseSynthesis) -> ExercisePlan:
+def planner_exercises(synthesis: ExerciseSynthesis) -> Union[ExercisePlan, dict, Any]:
     """
     Génère un plan d'exercice basé sur la description, la difficulté, le nombre d'exercices et le type d'exercice.
 
@@ -104,7 +104,7 @@ def planner_exercises(synthesis: ExerciseSynthesis) -> ExercisePlan:
 
     return data
 
-async def generate_for_topic(item: ExercicePlanItem, difficulty: str) -> ExerciseOutput:
+async def generate_for_topic(item: ExercicePlanItem, difficulty: str) -> Union[ExerciseOutput, dict, Any, None]:
     """Génère un exercice (QCM ou Open) pour un sujet donné."""
     try:
         if item.type == "qcm":
@@ -118,45 +118,3 @@ async def generate_for_topic(item: ExercicePlanItem, difficulty: str) -> Exercis
         logging.error(f"Erreur lors de la génération de {item.topic} : {e}")
         return None
 
-def add_uuid_recursive(exercise_output: ExerciseOutput) -> None:
-    """
-    Parcourt récursivement un objet (BaseModel, dict, list) et ajoute un champ 'id' unique
-    à chaque entité Pydantic qui ne possède pas déjà d'ID.
-
-    Args:
-        exercise_output (ExerciseOutput): L'objet ExerciseOutput à modifier.
-    Returns:
-        None: Modifie l'objet en place.
-    """
-    # Si c'est un modèle Pydantic
-    if isinstance(exercise_output, BaseModel):
-        # Si l'objet a un champ 'id' et qu'il est vide → on le remplit
-        if hasattr(exercise_output, "id") and getattr(exercise_output, "id") in (None, ""):
-            setattr(exercise_output, "id", str(uuid.uuid4()))
-
-        # Parcours récursif des champs du modèle
-        for field_name, field_value in exercise_output.__dict__.items():
-            add_uuid_recursive(field_value)
-
-    # Si c'est une liste → on itère
-    elif isinstance(exercise_output, list):
-        for item in exercise_output:
-            add_uuid_recursive(item)
-
-    # Si c'est un dict → on itère aussi
-    elif isinstance(exercise_output, dict):
-        for key, value in exercise_output.items():
-            add_uuid_recursive(value)
-
-def assign_uuids_to_output(exercise_output: ExerciseOutput) -> ExerciseOutput:
-    """
-    Ajoute un UUID à tous les niveaux d'un ExerciseOutput complet.
-
-    Args:
-        exercise_output (ExerciseOutput): L'objet ExerciseOutput à modifier.
-
-    Returns:
-        ExerciseOutput: L'objet ExerciseOutput avec des UUID ajoutés.
-    """
-    add_uuid_recursive(exercise_output)
-    return exercise_output

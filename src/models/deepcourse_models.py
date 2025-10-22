@@ -28,9 +28,54 @@ class DeepCourseOutput(BaseModel):
 
 def _validate_deepcourse_output(data: dict | str | Dict[str, Any] | DeepCourseOutput) -> DeepCourseOutput | None:
     """Valide et parse les données en tant qu'DeepCourseOutput."""
-    if isinstance(data, dict):
-        return DeepCourseOutput.model_validate(data)
-    elif isinstance(data, str):
-        return DeepCourseOutput.model_validate_json(data)
-    else:
+    import logging
+    import json
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        if isinstance(data, DeepCourseOutput):
+            return data
+        
+        elif isinstance(data, dict):
+            logger.debug(f"📊 Type détecté: dict, clés présentes: {list(data.keys())}")
+            
+            # Extraire les données si imbriquées dans 'result'
+            extracted_data = data
+            if 'result' in data:
+                logger.debug(f"🔍 Clé 'result' détectée, extraction...")
+                if isinstance(data['result'], dict):
+                    extracted_data = data['result']
+                    logger.debug(f"✓ Données extraites de 'result', clés: {list(extracted_data.keys())}")
+                elif isinstance(data['result'], DeepCourseOutput):
+                    logger.debug(f"✓ 'result' est déjà une instance DeepCourseOutput")
+                    return data['result']
+            
+            logger.debug(f"📋 Tentative de validation avec données: {list(extracted_data.keys())}")
+            return DeepCourseOutput.model_validate(extracted_data)
+        
+        elif isinstance(data, str):
+            logger.debug(f"📊 Type détecté: str (JSON)")
+            try:
+                parsed = json.loads(data)
+                logger.debug(f"✓ JSON parsé, clés: {list(parsed.keys()) if isinstance(parsed, dict) else type(parsed)}")
+                
+                # Extraire si nécessaire
+                if isinstance(parsed, dict) and 'result' in parsed:
+                    logger.debug(f"🔍 Clé 'result' détectée dans JSON")
+                    parsed = parsed['result']
+                    logger.debug(f"✓ Données extraites, clés: {list(parsed.keys()) if isinstance(parsed, dict) else type(parsed)}")
+                
+                return DeepCourseOutput.model_validate(parsed)
+            except (json.JSONDecodeError, ValueError) as je:
+                logger.debug(f"⚠️ Erreur JSON parsing: {je}, tentative avec model_validate_json")
+                return DeepCourseOutput.model_validate_json(data)
+        
+        else:
+            logger.warning(f"⚠️ Type non supporté: {type(data)}")
+            return None
+    
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la validation DeepCourseOutput: {e}")
+        logger.debug(f"📦 Données brutes (type={type(data)}): {str(data)[:500]}...")
         return None

@@ -54,7 +54,10 @@ AGENT_PROMPT_DeepcourseAgent = """
             Par exemple : "Quel niveau de détail souhaitez-vous pour le cours du chapitre ... ? (flash, standard, detailed)"
 
     3e Étape : 
-        - Une fois que tu as le informations pour appeler le tool, ne réponds rien, on récupère la variable par un autre moyen.
+    
         - Ne fait pas de récapitulatif avant d'appeler le tool, dès que tu as toutes les informations, appelle le tool `generate_exercises` DIRECTEMENT.
         - Lorsque tu génères des évaluations, fait en sorte qu'ils y ait 5 exercices de type qcm et 5 exercices de type open.
+
+    ENFIN :
+        - Une fois que tu as la réponse du tool `generate_deepcourse`, ne réponds rien, on récupère la variable par un autre moyen.
     """
