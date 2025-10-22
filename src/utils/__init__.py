@@ -33,7 +33,6 @@ from .session_context import (
     clear_session,
 )
 
-from .generate_title import generate_title_from_messages
 from .correct_plain_question import agent_correct_plain_question
 
 
@@ -56,6 +55,5 @@ __all__ = [
     "get_gemini_files",
     "get_gemini_file_names",
     "clear_session",
-    "generate_title_from_messages",
     "agent_correct_plain_question",
 ]
