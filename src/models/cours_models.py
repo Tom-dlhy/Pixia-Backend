@@ -40,27 +40,33 @@ class CoursePlan(BaseModel):
 ##########################################
 
 
-class PartSchema(BaseModel):
-    id_schema: Optional[str] = Field(None, description="Identifiant unique du schéma")
-    id_part: Optional[str] = Field(
-        None, description="Identifiant unique de la partie associée"
-    )
-    img_base64: Optional[str] = Field(
-        None, description="Image du schéma encodée en base64"
-    )
-
-
 class Part(BaseModel):
+    """Partie de cours avec contenu markdown, diagramme intelligent et SVG généré."""
+
     id_part: Optional[str] = Field(None, description="Identifiant unique de la partie")
     id_schema: Optional[str] = Field(
         None, description="Identifiant unique du schéma associé à la partie"
     )
     title: str = Field(..., description="Titre de la partie.")
-    content: str = Field(..., description="Contenu détaillé de la partie.")
+    content: str = Field(..., description="Contenu détaillé de la partie en markdown.")
     schema_description: Optional[str] = Field(
         None,
         description="Description précise du contenu du schéma associé à la partie.",
     )
+    diagram_type: str = Field(
+        "mermaid",
+        description="Type de diagramme sélectionné: mermaid, plantuml, graphviz, vegalite",
+    )
+    diagram_code: Optional[str] = Field(
+        None, description="Code du diagramme généré (Mermaid, GraphViz, etc.)"
+    )
+    img_base64: Optional[str] = Field(
+        None, description="SVG du schéma encodé en base64 (généré par Kroki)"
+    )
+
+
+# Alias pour compatibilité rétroactive (legacy)
+PartSchema = Part
 
 
 ###############################################
@@ -69,43 +75,24 @@ class Part(BaseModel):
 
 
 class CourseOutput(BaseModel):
+    """Sortie complète du cours avec toutes les parties et diagrammes générés."""
+
     id: Optional[str] = Field(
         None, description="Identifiant unique de la sortie de cours"
     )
     title: str = Field(..., description="Titre du cours généré.")
     parts: List[Part] = Field(
-        ..., min_length=1, description="Liste des parties générées."
+        ...,
+        min_length=1,
+        description="Liste des parties générées avec contenu et diagrammes.",
     )
 
 
-###############################################
-### Modèles pour le nouveau pipeline unifié ###
-###############################################
-
-
-class CoursePartWithMermaid(BaseModel):
-    """Partie de cours avec code Mermaid et schéma directement générés."""
-
-    id_part: Optional[str] = Field(None, description="Identifiant unique de la partie")
-    id_schema: Optional[str] = Field(None, description="Identifiant unique du schéma")
-    title: str = Field(..., description="Titre de la partie.")
-    content: str = Field(..., description="Contenu détaillé de la partie.")
-    schema_description: Optional[str] = Field(
-        None, description="Description courte du schéma visuel."
-    )
-    mermaid_syntax: Optional[str] = Field(
-        None, description="Code Mermaid validé pour générer le schéma."
-    )
-
-
-class CourseOutputWithMermaid(BaseModel):
-    """Sortie complète du cours avec tous les Mermaid générés d'un coup."""
-
-    id: Optional[str] = Field(None, description="Identifiant unique")
-    title: str = Field(..., description="Titre du cours généré.")
-    parts: List[CoursePartWithMermaid] = Field(
-        ..., min_length=1, description="Parties avec Mermaid intégrés."
-    )
+# Aliases pour compatibilité rétroactive (legacy - ancien pipeline)
+CoursePartWithMermaid = Part
+CoursePartWithDiagram = Part
+CourseOutputWithMermaid = CourseOutput
+CourseOutputWithDiagram = CourseOutput
 
 
 ################################################

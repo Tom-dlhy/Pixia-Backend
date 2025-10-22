@@ -1,67 +1,47 @@
 import logging
-from src.models.cours_models import CourseSynthesis, CoursePlan, CourseOutput
-from src.utils import planner_cours, generate_for_part
+from src.models.cours_models import CourseSynthesis
+from src.utils.cours_utils_quad_llm_integration import generate_courses_quad_llm
 import json
-import asyncio
-import uuid
 from typing import Any, Union
 
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 async def generate_courses(course_synthesis: CourseSynthesis) -> Union[dict, Any]:
+    """
+    Génère un cours complet avec le pipeline Quad LLM spécialisé.
+
+    Processus:
+    1. Validation du CourseSynthesis (description, difficulty, level_detail)
+    2. Appel du planner pour générer la structure du cours (CoursePlan)
+    3. Génération PARALLÈLE de toutes les parties avec Quad LLM:
+       - LLM #1: Contenu markdown + sélection type diagramme (4 types)
+       - LLM #2 (spécialisé): Code diagramme selon le type (max 3 retries)
+       - Kroki: Conversion en SVG base64
+    4. Retour du CourseOutput avec contenu markdown + diagrammes
+
+    Args:
+        course_synthesis: CourseSynthesis avec description, difficulty, level_detail
+
+    Returns:
+        CourseOutput.model_dump() avec toutes les parties complètes
+    """
     if isinstance(course_synthesis, dict):
         course_synthesis = CourseSynthesis(**course_synthesis)
-    plan_json = planner_cours(course_synthesis)
 
-    # Validation du plan
-    try:
-        if isinstance(plan_json, CoursePlan):
-            plan = plan_json
-        elif isinstance(plan_json, dict):
-            plan = CoursePlan.model_validate(plan_json)
-        elif isinstance(plan_json, str):
-            plan = CoursePlan.model_validate_json(plan_json)
-        else:
-            raise TypeError("Format de sortie inattendu.")
+    logger.info(f"[GENERATE_COURSES] Début génération cours avec Quad LLM")
+    logger.info(
+        f"[GENERATE_COURSES] Description: {course_synthesis.description[:100]}..."
+    )
+    logger.info(
+        f"[GENERATE_COURSES] Difficulté: {course_synthesis.difficulty}, Détail: {course_synthesis.level_detail}"
+    )
 
-        print(json.dumps(plan.model_dump(), indent=2, ensure_ascii=False))
-    except Exception as err:
-        logging.error(f"Erreur de validation du plan d'exercice: {err}")
-        return plan_json if isinstance(plan_json, dict) else {}
+    # Utiliser le pipeline Quad LLM intégré
+    result = await generate_courses_quad_llm(course_synthesis)
 
-    # Création des tâches pour toutes les parties du cours
-    # tasks = [
-    #     generate_for_part(part, course_synthesis.difficulty)
-    #     for part in plan.parts
-    # ]
+    logger.info(f"[GENERATE_COURSES] ✅ Cours généré avec succès")
 
-    # Ré-exécuter les parties en batch de 4 en parallèle
-    results = []
-    batch_size = 4
-    for i in range(0, len(plan.parts), batch_size):
-        batch = plan.parts[i : i + batch_size]
-        batch_tasks = [
-            generate_for_part(ch, course_synthesis.difficulty) for ch in batch
-        ]
-        batch_results = await asyncio.gather(*batch_tasks)
-        results.extend(batch_results)
-
-    # Filtrage des résultats valides
-    generated_cours = []
-    for r in results:
-        if r is not None:
-            # Convertir en dict si nécessaire pour la validation
-            if isinstance(r, dict):
-                generated_cours.append(r)
-            elif hasattr(r, 'model_dump'):
-                generated_cours.append(r.model_dump())
-            else:
-                generated_cours.append(r)
-
-    logging.info(f"{len(generated_cours)} cours générés avec succès.")
-    
-    # Convertir la liste de cours générés en un vrai CourseOutput
-    cours_output = CourseOutput(id=str(uuid.uuid4()), title=plan.title, parts=generated_cours)
-    return cours_output.model_dump()
+    return result

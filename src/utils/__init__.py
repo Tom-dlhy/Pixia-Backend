@@ -8,12 +8,14 @@ from .exercises_utils import (
 
 from .get_db_url import create_db_pool, get_connection
 
-from .cours_utils import planner_cours, generate_for_part
-
 from .cours_utils_v2 import (
     generate_complete_course,
     generate_all_schemas,
     generate_schema_mermaid,
+)
+
+from .cours_utils_quad_llm_integration import (
+    generate_courses_quad_llm,
 )
 
 from .mermaid_validator import MermaidValidator
@@ -42,11 +44,10 @@ __all__ = [
     "generate_for_topic",
     "create_db_pool",
     "get_connection",
-    "planner_cours",
-    "generate_for_part",
     "generate_complete_course",
     "generate_all_schemas",
     "generate_schema_mermaid",
+    "generate_courses_quad_llm",
     "MermaidValidator",
     "upload_file",
     "delete_file",
