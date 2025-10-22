@@ -44,22 +44,20 @@ ORDER BY table_name;
 """
 )
 
-FETCH_ALL_CHATS = text(
-    """
+FETCH_ALL_CHATS = text("""
 SELECT 
-    d.session_id AS session_id,
-    d.document_type AS document_type,
+    session_id AS session_id,
+    document_type AS document_type,
     CASE
-        WHEN d.document_type = 'exercise' THEN 'Exercice'
-        WHEN d.document_type = 'course' THEN 'Cours'
+        WHEN document_type = 'exercise' THEN 'Exercice'
+        WHEN document_type = 'course' THEN 'Cours'
         ELSE 'Document'
     END AS title
-FROM sessions s
-LEFT JOIN document d ON d.session_id = s.id
-WHERE s.user_id = :user_id
-  AND d.chapter_id IS NULL
-  AND d.session_id IS NOT NULL
-ORDER BY d.updated_at DESC
+FROM document
+WHERE google_sub = :user_id
+  AND chapter_id IS NULL
+  AND google_sub IS NOT NULL
+ORDER BY updated_at DESC
 """
 )
 
