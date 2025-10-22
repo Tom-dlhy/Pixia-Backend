@@ -31,7 +31,6 @@ from .correct_plain_question import agent_correct_plain_question
 
 
 
-
 __all__ = [
     "generate_plain",
     "generate_qcm",
