@@ -16,12 +16,13 @@ from .cours_models import (
     Part,
     CourseOutput,
     PartSchema,
+    CoursePartWithMermaid,
+    CoursePartWithDiagram,
+    CourseOutputWithMermaid,
+    CourseOutputWithDiagram,
     _validate_course_output,
 )
-from .import_fichier_model import (
-    EntreeRecevoirEtLirePDF,
-    SortieRecevoirEtLirePDF
-)
+from .import_fichier_model import EntreeRecevoirEtLirePDF, SortieRecevoirEtLirePDF
 from .pdf_qa_models import (
     EntreeQuestionPDF,
     SortieQuestionPDF,
@@ -32,10 +33,10 @@ from .pdf_summary_models import (
 )
 from .deepcourse_models import (
     Chapter,
-    ChapterSynthesis, 
-    DeepCourseSynthesis, 
+    ChapterSynthesis,
+    DeepCourseSynthesis,
     DeepCourseOutput,
-    _validate_deepcourse_output
+    _validate_deepcourse_output,
 )
 
 __all__ = [
@@ -59,10 +60,14 @@ __all__ = [
     "Part",
     "CourseOutput",
     "PartSchema",
+    "CoursePartWithMermaid",
+    "CoursePartWithDiagram",
+    "CourseOutputWithMermaid",
+    "CourseOutputWithDiagram",
     "_validate_course_output",
     "Chapter",
     "ChapterSynthesis",
     "DeepCourseSynthesis",
     "DeepCourseOutput",
-    "_validate_deepcourse_output"
+    "_validate_deepcourse_output",
 ]

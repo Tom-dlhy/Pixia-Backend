@@ -40,27 +40,33 @@ class CoursePlan(BaseModel):
 ##########################################
 
 
-class PartSchema(BaseModel):
-    id_schema: Optional[str] = Field(None, description="Identifiant unique du schéma")
-    id_part: Optional[str] = Field(
-        None, description="Identifiant unique de la partie associée"
-    )
-    img_base64: Optional[str] = Field(None, description="Image du schéma encodée en base64")
-
-
 class Part(BaseModel):
-    id_part: Optional[str] = Field(
-        None, description="Identifiant unique de la partie"
-    )
+    """Partie de cours avec contenu markdown, diagramme intelligent et SVG généré."""
+
+    id_part: Optional[str] = Field(None, description="Identifiant unique de la partie")
     id_schema: Optional[str] = Field(
         None, description="Identifiant unique du schéma associé à la partie"
     )
     title: str = Field(..., description="Titre de la partie.")
-    content: str = Field(..., description="Contenu détaillé de la partie.")
+    content: str = Field(..., description="Contenu détaillé de la partie en markdown.")
     schema_description: Optional[str] = Field(
         None,
         description="Description précise du contenu du schéma associé à la partie.",
     )
+    diagram_type: str = Field(
+        "mermaid",
+        description="Type de diagramme sélectionné: mermaid, plantuml, graphviz, vegalite",
+    )
+    diagram_code: Optional[str] = Field(
+        None, description="Code du diagramme généré (Mermaid, GraphViz, etc.)"
+    )
+    img_base64: Optional[str] = Field(
+        None, description="SVG du schéma encodé en base64 (généré par Kroki)"
+    )
+
+
+# Alias pour compatibilité rétroactive (legacy)
+PartSchema = Part
 
 
 ###############################################
@@ -69,11 +75,25 @@ class Part(BaseModel):
 
 
 class CourseOutput(BaseModel):
-    id: Optional[str] = Field(None, description="Identifiant unique de la sortie de cours")
+    """Sortie complète du cours avec toutes les parties et diagrammes générés."""
+
+    id: Optional[str] = Field(
+        None, description="Identifiant unique de la sortie de cours"
+    )
     title: str = Field(..., description="Titre du cours généré.")
     parts: List[Part] = Field(
-        ..., min_length=1, description="Liste des parties générées."
+        ...,
+        min_length=1,
+        description="Liste des parties générées avec contenu et diagrammes.",
     )
+
+
+# Aliases pour compatibilité rétroactive (legacy - ancien pipeline)
+CoursePartWithMermaid = Part
+CoursePartWithDiagram = Part
+CourseOutputWithMermaid = CourseOutput
+CourseOutputWithDiagram = CourseOutput
+
 
 ################################################
 ### Fonction de validation de l'CourseOutput ###
@@ -87,16 +107,17 @@ def _validate_course_output(data: dict | str) -> CourseOutput | None:
             return data
         elif isinstance(data, dict):
             # Si les données sont imbriquées dans une clé 'result', les extraire
-            if 'result' in data and isinstance(data['result'], dict):
-                data = data['result']
+            if "result" in data and isinstance(data["result"], dict):
+                data = data["result"]
             return CourseOutput.model_validate(data)
         elif isinstance(data, str):
             # Essayer de parser en JSON d'abord
             import json
+
             try:
                 parsed = json.loads(data)
-                if isinstance(parsed, dict) and 'result' in parsed:
-                    parsed = parsed['result']
+                if isinstance(parsed, dict) and "result" in parsed:
+                    parsed = parsed["result"]
                 return CourseOutput.model_validate(parsed)
             except (json.JSONDecodeError, ValueError):
                 # Si ce n'est pas du JSON valide, essayer la validation directe
@@ -105,5 +126,6 @@ def _validate_course_output(data: dict | str) -> CourseOutput | None:
             return None
     except Exception as e:
         import logging
+
         logging.error(f"Erreur lors de la validation CourseOutput: {e}")
         return None

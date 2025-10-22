@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, File
+from fastapi import APIRouter, HTTPException, UploadFile, Form, File
 from src.dto import ChatResponse
 from src.config import database_settings, app_settings
 from src.agents.root_agent import root_agent
@@ -7,7 +7,6 @@ from src.models import (
     _validate_course_output,
     _validate_deepcourse_output,
 )
-from src.utils import generate_title_from_messages
 from src.bdd import DBManager
 from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput
 
@@ -61,17 +60,11 @@ async def chat(
     # === Étape 1 : création ou récupération de session ===
     try:
         if session_id:
-            logger.info(
-                f"🔄 Récupération de la session {session_id} pour l'utilisateur {user_id}"
-            )
             session = await inmemory_service.get_session(
                 app_name=settings.APP_NAME, user_id=user_id, session_id=session_id
             )
 
             if session:
-                logger.info(
-                    f"✅ Session {session_id} récupérée avec succès depuis inmemory_service."
-                )
                 session_id = session.id
                 current_session_service = inmemory_service
             else:
@@ -79,9 +72,6 @@ async def chat(
                     app_name=settings.APP_NAME, user_id=user_id, session_id=session_id
                 )
                 current_session_service = db_session_service
-                logger.info(
-                    f"✅ Session {session_id} récupérée avec succès depuis db_session_service."
-                )
 
         elif not session_id:
             logger.info(
@@ -121,9 +111,6 @@ async def chat(
                 redirect_id=redirect_id,
             )
 
-        logging.info(
-            f"🚀 Démarrage du runner ADK avec les paramètres suivants: session_type {current_session_service.__class__.__name__}, session_id {session_id}, user_id {user_id}"
-        )
         runner = Runner(
             agent=root_agent,
             app_name=settings.APP_NAME,
@@ -140,7 +127,6 @@ async def chat(
                     txt_reponse = event.content.parts[0].text
 
                     logger.info(f"✅ Réponse finale reçue pour la session {session_id}")
-                    author = event.author
                 break
 
             # --- Sortie d’un outil (tool output) ---
@@ -154,20 +140,18 @@ async def chat(
                             if tool_name == "generate_exercises":
                                 logger.info("✅ Tool 'generate_exercises' détecté")
                                 if _validate_exercise_output(tool_resp):
+                                    copilote_session_id = str(uuid4())
+                                    await db_session_service.create_session(
+                                        session_id=copilote_session_id,
+                                        app_name=settings.APP_NAME,
+                                        user_id=user_id,
+                                    )
                                     final_response = _validate_exercise_output(
                                         tool_resp
                                     )
                                     if isinstance(final_response, ExerciseOutput):
-                                        # Créer la session copilote et récupérer son ID
-                                        copilote_session = (
-                                            await db_session_service.create_session(
-                                                app_name=settings.APP_NAME,
-                                                user_id=user_id,
-                                            )
-                                        )
-                                        copilote_session_id = copilote_session.id
                                         logger.info(
-                                            f"✅ ExerciseOutput validé pour la session {copilote_session_id}"
+                                            f"✅ ExerciseOutput validé pour la session {session_id}"
                                         )
                                         await bdd_manager.store_basic_document(
                                             content=final_response,
@@ -180,18 +164,16 @@ async def chat(
                             elif tool_name == "generate_courses":
                                 logger.info("✅ Tool 'generate_courses' détecté")
                                 if _validate_course_output(tool_resp):
+                                    copilote_session_id = str(uuid4())
+                                    await db_session_service.create_session(
+                                        session_id=copilote_session_id,
+                                        app_name=settings.APP_NAME,
+                                        user_id=user_id,
+                                    )
                                     final_response = _validate_course_output(tool_resp)
                                     if isinstance(final_response, CourseOutput):
-                                        # Créer la session copilote et récupérer son ID
-                                        copilote_session = (
-                                            await db_session_service.create_session(
-                                                app_name=settings.APP_NAME,
-                                                user_id=user_id,
-                                            )
-                                        )
-                                        copilote_session_id = copilote_session.id
                                         logger.info(
-                                            f"✅ CourseOutput validé pour la session {copilote_session_id}"
+                                            f"✅ CourseOutput validé pour la session {session_id}"
                                         )
                                         await bdd_manager.store_basic_document(
                                             content=final_response,
