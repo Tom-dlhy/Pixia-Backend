@@ -124,11 +124,30 @@ class ExerciseOutput(BaseModel):
 ### Fonction de validation de l'ExerciseOutput ###
 ##################################################
 
-def _validate_exercise_output(data: dict | str) -> ExerciseOutput | None:
+def _validate_exercise_output(data: dict | str | None ) -> ExerciseOutput | None:
     """Valide et parse les données en tant qu'ExerciseOutput."""
-    if isinstance(data, dict):
-        return ExerciseOutput.model_validate(data)
-    elif isinstance(data, str):
-        return ExerciseOutput.model_validate_json(data)
-    else:
+    try:
+        if isinstance(data, ExerciseOutput):
+            return data
+        elif isinstance(data, dict):
+            # Si les données sont imbriquées dans une clé 'result', les extraire
+            if 'result' in data and isinstance(data['result'], dict):
+                data = data['result']
+            return ExerciseOutput.model_validate(data)
+        elif isinstance(data, str):
+            # Essayer de parser en JSON d'abord
+            import json
+            try:
+                parsed = json.loads(data)
+                if isinstance(parsed, dict) and 'result' in parsed:
+                    parsed = parsed['result']
+                return ExerciseOutput.model_validate(parsed)
+            except (json.JSONDecodeError, ValueError):
+                # Si ce n'est pas du JSON valide, essayer la validation directe
+                return ExerciseOutput.model_validate_json(data)
+        else:
+            return None
+    except Exception as e:
+        import logging
+        logging.error(f"Erreur lors de la validation ExerciseOutput: {e}")
         return None

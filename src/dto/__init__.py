@@ -1,4 +1,4 @@
-from .chat import ChatRequest, ChatResponse, AgentAnswer, build_chat_response
+from .chat import ChatResponse, AgentAnswer
 from .fetchallchats import FetchAllChatsRequest, FetchAllChatsResponse, DisplaySessionsMain
 from .renamechat import RenameChatRequest, RenameChatResponse
 from .deletechat import DeleteChatRequest
@@ -10,14 +10,15 @@ from .changesettings import ChangeSettingsRequest, ChangeSettingsResponse
 from .login import LoginRequest, LoginResponse
 from .signup import SignupRequest, SignupResponse
 from .markcorrectedQCM import MarkIsCorrectedQCMRequest, MarkIsCorrectedQCMResponse
+from .fetchchat import FetchChatRequest, FetchChatResponse
 
 __all__ = [
-    "ChatRequest", 
     "ChatResponse",
     "AgentAnswer",
-    "build_chat_response",
     "FetchAllChatsRequest",
     "FetchAllChatsResponse",
+    "FetchChatRequest",
+    "FetchChatResponse",
     "DisplaySessionsMain",
     "RenameChatRequest",
     "RenameChatResponse",

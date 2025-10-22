@@ -45,7 +45,7 @@ class PartSchema(BaseModel):
     id_part: Optional[str] = Field(
         None, description="Identifiant unique de la partie associée"
     )
-    img_base64: str = Field(None, description="Image du schéma encodée en base64")
+    img_base64: Optional[str] = Field(None, description="Image du schéma encodée en base64")
 
 
 class Part(BaseModel):
@@ -82,9 +82,28 @@ class CourseOutput(BaseModel):
 
 def _validate_course_output(data: dict | str) -> CourseOutput | None:
     """Valide et parse les données en tant que CourseOutput."""
-    if isinstance(data, dict):
-        return CourseOutput.model_validate(data)
-    elif isinstance(data, str):
-        return CourseOutput.model_validate_json(data)
-    else:
+    try:
+        if isinstance(data, CourseOutput):
+            return data
+        elif isinstance(data, dict):
+            # Si les données sont imbriquées dans une clé 'result', les extraire
+            if 'result' in data and isinstance(data['result'], dict):
+                data = data['result']
+            return CourseOutput.model_validate(data)
+        elif isinstance(data, str):
+            # Essayer de parser en JSON d'abord
+            import json
+            try:
+                parsed = json.loads(data)
+                if isinstance(parsed, dict) and 'result' in parsed:
+                    parsed = parsed['result']
+                return CourseOutput.model_validate(parsed)
+            except (json.JSONDecodeError, ValueError):
+                # Si ce n'est pas du JSON valide, essayer la validation directe
+                return CourseOutput.model_validate_json(data)
+        else:
+            return None
+    except Exception as e:
+        import logging
+        logging.error(f"Erreur lors de la validation CourseOutput: {e}")
         return None

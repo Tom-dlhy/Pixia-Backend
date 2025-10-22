@@ -28,8 +28,8 @@ from src.bdd.query import (
     UPDATE_DOCUMENT_CONTENT
 )
 from src.config import database_settings
-from typing import Union
-from src.models import ExerciseOutput, CourseOutput
+from typing import Union,List,Dict,Any
+from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput
 from datetime import datetime
 import json
 from uuid import uuid4
@@ -195,21 +195,119 @@ class DBManager:
                 {"id": document_id, "contenu": contenu_json}
             )
 
-    async def store_deepcourse(self, title: str, sub: str):
-        id = str(uuid4())
+    async def store_deepcourse(self, user_id: str, 
+                                content: DeepCourseOutput, 
+                                dict_session: List[Dict[str, str]]):
+        """
+        Stocke un deepcourse complet :
+        1. Crée le deepcourse
+        2. Pour chaque chapitre : crée le chapitre et stocke ses 3 documents (exercice, cours, évaluation)
+        
+        Args:
+            user_id: ID utilisateur (google_sub)
+            content: Objet DeepCourseOutput avec tous les chapitres
+            dict_session: Liste de dicts avec structure:
+                [{
+                    "id_chapter": str,
+                    "session_id_exercise": str,
+                    "session_id_course": str,
+                    "session_id_evaluation": str
+                }, ...]
+        """
+        deepcourse_id = content.id or str(uuid4())
+        
         async with self.engine.begin() as conn:
+            # 1️⃣ Créer le deepcourse
             await conn.execute(
                 CREATE_DEEPCOURSE,
-                {"id": id, "title": title, "google_sub": sub}
+                {
+                    "id": deepcourse_id,
+                    "titre": content.title,
+                    "google_sub": user_id
+                }
             )
+            
+            # 2️⃣ Pour chaque chapitre : créer le chapitre et stocker ses documents
+            for idx, chapter in enumerate(content.chapters):
+                chapter_id = chapter.id_chapter or str(uuid4())
+                
+                # Créer le chapitre
+                await conn.execute(
+                    CREATE_CHAPTER,
+                    {
+                        "id": chapter_id,
+                        "deep_course_id": deepcourse_id,
+                        "titre": chapter.title,
+                        "is_complete": False
+                    }
+                )
+                
+                # Récupérer les sessions pour ce chapitre
+                chapter_sessions = dict_session[idx]
+                session_exercise = chapter_sessions["session_id_exercise"]
+                session_course = chapter_sessions["session_id_course"]
+                session_evaluation = chapter_sessions["session_id_evaluation"]
+                
+                # Créer les 3 documents (exercice, cours, évaluation)
+                now = datetime.now()
+                
+                # 🎯 Stocker l'EXERCICE
+                exercise_id = chapter.exercice.id or str(uuid4())
+                exercise_json = json.dumps(
+                    chapter.exercice.model_dump() if hasattr(chapter.exercice, "model_dump") else chapter.exercice
+                )
+                await conn.execute(
+                    STORE_BASIC_DOCUMENT,
+                    {
+                        "id": exercise_id,
+                        "google_sub": user_id,
+                        "session_id": session_exercise,
+                        "chapter_id": chapter_id,
+                        "document_type": "exercise",
+                        "contenu": exercise_json,
+                        "created_at": now,
+                        "updated_at": now
+                    }
+                )
+                
+                # 📚 Stocker le COURS
+                course_id = chapter.course.id or str(uuid4())
+                course_json = json.dumps(
+                    chapter.course.model_dump() if hasattr(chapter.course, "model_dump") else chapter.course
+                )
+                await conn.execute(
+                    STORE_BASIC_DOCUMENT,
+                    {
+                        "id": course_id,
+                        "google_sub": user_id,
+                        "session_id": session_course,
+                        "chapter_id": chapter_id,
+                        "document_type": "course",
+                        "contenu": course_json,
+                        "created_at": now,
+                        "updated_at": now
+                    }
+                )
+                
+                # ✅ Stocker l'ÉVALUATION (aussi un ExerciseOutput)
+                evaluation_id = chapter.evaluation.id or str(uuid4())
+                evaluation_json = json.dumps(
+                    chapter.evaluation.model_dump() if hasattr(chapter.evaluation, "model_dump") else chapter.evaluation
+                )
+                await conn.execute(
+                    STORE_BASIC_DOCUMENT,
+                    {
+                        "id": evaluation_id,
+                        "google_sub": user_id,
+                        "session_id": session_evaluation,
+                        "chapter_id": chapter_id,
+                        "document_type": "eval",
+                        "contenu": evaluation_json,
+                        "created_at": now,
+                        "updated_at": now
+                    }
+                )
         
-    async def store_chapter(self, deepcourse_id: str, title: str):
-        id = str(uuid4())
-        async with self.engine.begin() as conn:
-            await conn.execute(
-                CREATE_CHAPTER,
-                {"id": id, "deepcourse_id": deepcourse_id, "title": title}
-            )
 
     async def rename_chat(self, session_id: str, title: str):
         """Renomme une session de chat donnée."""

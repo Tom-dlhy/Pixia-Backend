@@ -14,10 +14,10 @@ class FetchChatRequest(BaseModel):
     user_id: str
     session_id: str
 
-class FetchAllChatsResponse(BaseModel):
+class FetchChatResponse(BaseModel):
     session_id: str
     title: str
-    state: 
-    events:
-    scene:
+    state: str
+    events: List[dict]
+    scene: str
     document: List[document]

@@ -224,13 +224,13 @@ WHERE d."id" = r."id";
 
 
 CREATE_DEEPCOURSE= text(""" 
-INSERT INTO public.deepcourses (id, title, google_sub, is_complete)
-VALUES (:id, :title, :google_sub, :is_complete)
+INSERT INTO public.deepcourse (id, titre, google_sub)
+VALUES (:id, :titre, :google_sub)
 """)
 
 CREATE_CHAPTER= text(""" 
-INSERT INTO public.chapters (id, deepcourse_id, title)
-VALUES (:id, :deepcourse_id, :title)
+INSERT INTO public.chapter (id, deep_course_id, titre, is_complete)
+VALUES (:id, :deep_course_id, :titre, :is_complete)
 """)
 
 UPDATE_DOCUMENT_CONTENT = text("""
