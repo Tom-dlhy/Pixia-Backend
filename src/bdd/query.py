@@ -147,6 +147,18 @@ WHERE id = :chapter_id
 """
 )
 
+FETCH_CHAPTER_DOCUMENTS = text(
+    """
+SELECT 
+    MAX(CASE WHEN "document_type" = 'exercise' THEN "session_id" END) AS exercice_session_id,
+    MAX(CASE WHEN "document_type" = 'course' THEN "session_id" END) AS course_session_id,
+    MAX(CASE WHEN "document_type" = 'eval' THEN "session_id" END) AS evaluation_session_id
+FROM "public"."document"
+WHERE "chapter_id" = :chapter_id
+GROUP BY "chapter_id"
+"""
+)
+
 CHANGE_SETTINGS = text(
     """
 UPDATE users
@@ -335,3 +347,4 @@ GROUP BY "d"."id", "d"."titre"
 ORDER BY "d"."id";
 """
 )
+
