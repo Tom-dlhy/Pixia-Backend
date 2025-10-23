@@ -41,7 +41,7 @@ class CoursePlan(BaseModel):
 
 
 class Part(BaseModel):
-    """Partie de cours avec contenu markdown, diagramme intelligent et SVG généré."""
+    """Partie de cours avec contenu markdown, diagramme intelligent et PNG généré."""
 
     id_part: Optional[str] = Field(None, description="Identifiant unique de la partie")
     id_schema: Optional[str] = Field(
@@ -61,7 +61,7 @@ class Part(BaseModel):
         None, description="Code du diagramme généré (Mermaid, GraphViz, etc.)"
     )
     img_base64: Optional[str] = Field(
-        None, description="SVG du schéma encodé en base64 (généré par Kroki)"
+        None, description="PNG du schéma encodé en base64 (généré par Kroki)"
     )
 
 
@@ -85,6 +85,7 @@ class CourseOutput(BaseModel):
         ...,
         description="Liste des parties générées avec contenu et diagrammes.",
     )
+
 
 ################################################
 ### Fonction de validation de l'CourseOutput ###

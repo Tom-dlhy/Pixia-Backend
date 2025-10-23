@@ -8,7 +8,7 @@ Pipeline:
 1. LLM #1: Génère le contenu markdown + sélectionne le type de diagramme (4 types)
    pour TOUTES les parties d'un coup
 2. LLM #2 (spécialisé) EN PARALLÈLE: Génère le code du diagramme avec retry jusqu'à 3 tentatives
-3. Kroki EN PARALLÈLE: Convertit le code en SVG base64
+3. Kroki EN PARALLÈLE: Convertit le code en PNG base64
 4. CourseOutput: Retourne le cours complet avec contenu, diagram_type, diagram_code, img_base64
 """
 
@@ -39,7 +39,7 @@ async def generate_courses_quad_llm(
        - LLM #1: Génère contenu + types de diagramme pour TOUTES les parties
        - EN PARALLÈLE pour chaque partie:
          * LLM #2 (spécialisé): Code diagramme selon le type (max 3 retries)
-         * Kroki: SVG base64
+         * Kroki: PNG base64
     3. CourseOutput retourné avec contenu markdown + diagrams complets
 
     Note: Le planner n'est pas utilisé directement car LLM #1 génère déjà la structure.

@@ -4,7 +4,7 @@ Pipeline DUAL LLM v2: 4 agents spécialisés - UNE SEULE TENTATIVE PAR PARTIE.
 Workflow:
 1. LLM #1: Génère contenu du cours + sélectionne le type de diagramme
 2. LLM #2 (spécialisé): Génère le code du diagramme - pas de retry
-3. Kroki: Convertit en SVG - pas de test préalable
+3. Kroki: Convertit en PNG - pas de test préalable
 4. Si erreur: on continue sans le schéma pour cette partie
 5. Async: Parallélisation complète de toutes les parties
 """
@@ -128,28 +128,28 @@ async def generate_diagram_code(diagram_type: str, content: str) -> Optional[str
 
 
 # ============================================================================
-# ÉTAPE 3: Kroki - Convertir en SVG
+# ÉTAPE 3: Kroki - Convertir en PNG
 # ============================================================================
 
 
-def generate_schema_svg(diagram_code: str, diagram_type: str) -> Optional[str]:
+def generate_schema_png(diagram_code: str, diagram_type: str) -> Optional[str]:
     """
-    Envoie le code à Kroki, retourne SVG en base64.
+    Envoie le code à Kroki, retourne PNG en base64.
     """
-    with Timer(f"SVG Kroki {diagram_type}"):
+    with Timer(f"PNG Kroki {diagram_type}"):
         try:
             if not diagram_code or len(diagram_code.strip()) < 5:
                 logger.error(f"[KROKI] Code vide ou trop court")
                 return None
 
             kroki_endpoints = {
-                "mermaid": "https://kroki.io/mermaid/svg",
-                "plantuml": "https://kroki.io/plantuml/svg",
-                "graphviz": "https://kroki.io/graphviz/svg",
-                "vegalite": "https://kroki.io/vegalite/svg",
+                "mermaid": "https://kroki.io/mermaid/png",
+                "plantuml": "https://kroki.io/plantuml/png",
+                "graphviz": "https://kroki.io/graphviz/png",
+                "vegalite": "https://kroki.io/vegalite/png",
             }
 
-            url = kroki_endpoints.get(diagram_type, "https://kroki.io/mermaid/svg")
+            url = kroki_endpoints.get(diagram_type, "https://kroki.io/mermaid/png")
 
             cmd = [
                 "curl",
@@ -202,7 +202,7 @@ async def process_course_part(part_data: Dict[str, Any], index: int) -> Optional
     Traite UNE partie du cours:
     1. Récupère le type de diagramme
     2. Génère le code du diagramme (LLM #2 spécialisé - UNE SEULE TENTATIVE)
-    3. Convertit en SVG (Kroki)
+    3. Convertit en PNG (Kroki)
     4. Retourne l'objet Part complet
     """
     with Timer(f"[PART-{index}] Traitement complet"):
@@ -217,15 +217,15 @@ async def process_course_part(part_data: Dict[str, Any], index: int) -> Optional
             diagram_code = await generate_diagram_code(diagram_type, content)
 
             if not diagram_code:
-                logger.warning(f"[PART-{index}] Code diagramme non généré, SVG ignoré")
+                logger.warning(f"[PART-{index}] Code diagramme non généré, PNG ignoré")
                 img_base64 = None
             else:
-                # Étape 3: Génère SVG
+                # Étape 3: Génère PNG
                 img_base64 = await asyncio.to_thread(
-                    generate_schema_svg, diagram_code, diagram_type
+                    generate_schema_png, diagram_code, diagram_type
                 )
 
-            # Crée l'objet Part avec tous les champs (contenu + diagram_type + code + SVG)
+            # Crée l'objet Part avec tous les champs (contenu + diagram_type + code + PNG)
             part = Part(
                 id_part=str(uuid4()),
                 id_schema=str(uuid4()),
@@ -258,7 +258,7 @@ async def generate_course_complete(
     1. LLM #1: Génère contenu + type de diagramme
     2. En PARALLÈLE pour chaque partie:
        a. LLM #2 (spécialisé): Code du diagramme - UNE SEULE TENTATIVE
-       b. Kroki: Conversion en SVG
+       b. Kroki: Conversion en PNG
     3. Retourne CourseOutput complet
 
     Résultat: { titre, id, parties: [{ titre, id, contenu, img_base64 }] }
