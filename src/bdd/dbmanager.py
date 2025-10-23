@@ -25,6 +25,7 @@ from src.bdd.query import (
     FETCH_DOCUMENT_BY_SESSION,
     FETCH_ALL_DEEPCOURSES,
     DELETE_DEEPCOURSE,
+    FETCH_ALL_CHAPTERS,
 )
 from src.config import database_settings
 from typing import Union,List,Dict,Any
@@ -322,6 +323,13 @@ class DBManager:
                 DELETE_DOCUMENTS,
                 {"session_id": session_id}
             )
+
+    async def fetch_all_chapters(self, deepcourse_id: str):
+        """Récupère tous les chapitres pour un deepcourse donné."""
+        async with self.engine.begin() as conn:
+            result = await conn.execute(FETCH_ALL_CHAPTERS, {"deepcourse_id": deepcourse_id})
+            chapters = [dict(row._mapping) for row in result.fetchall()]
+        return chapters
         
     async def rename_chapter(self, chapter_id: str, title: str):
         """Renomme un chapitre donné."""

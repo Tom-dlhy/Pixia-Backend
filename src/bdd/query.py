@@ -294,6 +294,14 @@ VALUES (:id, :deep_course_id, :titre, :is_complete)
 """
 )
 
+FETCH_ALL_CHAPTERS = text(
+    """
+SELECT id as chapter_id, titre as title, is_complete
+FROM public.chapter
+WHERE deep_course_id = :deep_course_id
+"""
+)
+
 UPDATE_DOCUMENT_CONTENT = text(
     """
 UPDATE public.document
