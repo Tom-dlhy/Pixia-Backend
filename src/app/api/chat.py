@@ -5,10 +5,11 @@ from src.agents.root_agent import root_agent
 from src.models import (
     _validate_exercise_output,
     _validate_course_output,
+    _validate_chapter_output,
     _validate_deepcourse_output,
 )
 from src.bdd import DBManager
-from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput
+from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput, Chapter
 
 from typing import List, Optional, Union, Dict
 from uuid import uuid4
@@ -237,7 +238,7 @@ async def chat(
                                                     user_id=user_id,
                                                 )
                                             )
-
+ 
                                             chapter_sessions = {
                                                 "id_chapter": chapter.id_chapter,
                                                 "session_id_exercise": session_exercise.id,
@@ -253,6 +254,48 @@ async def chat(
                                         )
                                         agent = "deep-course"
                                         redirect_id = final_response.id
+
+                            elif tool_name == "generate_new_chapter":
+                                logger.info("✅ Tool 'generate_new_chapter' détecté")
+                                validated = _validate_chapter_output(tool_resp)
+                                if validated:
+                                    final_response = validated
+                                    if isinstance(final_response, Chapter):
+                                        logger.info(
+                                            f"✅ Chapter validé pour la session {session_id}"
+                                        )
+                                        session_exercise = (
+                                                await db_session_service.create_session(
+                                                    app_name=settings.APP_NAME,
+                                                    user_id=user_id,
+                                                )
+                                            )
+                                        session_course = (
+                                            await db_session_service.create_session(
+                                                app_name=settings.APP_NAME,
+                                                user_id=user_id,
+                                            )
+                                        )
+                                        session_evaluation = (
+                                            await db_session_service.create_session(
+                                                app_name=settings.APP_NAME,
+                                                user_id=user_id,
+                                            )
+                                        )
+                                        await bdd_manager.store_chapter(
+                                            user_id=user_id,
+                                            session_exercise=session_exercise,
+                                            session_course=session_course,
+                                            session_evaluation=session_evaluation,
+                                            deep_course_id=deep_course_id,
+                                        )   
+                                #TODO créer la fonction store_chapter 
+                                # recup l'id du deep course 
+                                # créer les 3 sessions : exercice cour eval
+                                # créer l'id du chapitre
+                                # tout foutre dans store chapter
+
+                            
 
     except Exception as e:
         logger.exception("❌ Erreur pendant l'exécution du runner ADK")
