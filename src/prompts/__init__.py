@@ -22,7 +22,7 @@ from .copilote_prompt import (
     build_copilot_exercice_system_prompt,
 )
 
-from .deepcourse_prompt import AGENT_PROMPT_DeepcourseAgent
+from .deepcourse_prompt import AGENT_PROMPT_DeepcourseAgent, SYSTEM_PROMPT_GENERATE_NEW_CHAPTER
 
 from .utils_prompt import GENERATE_TITLE_PROMPT, SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION
 

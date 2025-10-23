@@ -36,6 +36,7 @@ from .deepcourse_models import (
     ChapterSynthesis,
     DeepCourseSynthesis,
     DeepCourseOutput,
+    _validate_chapter_output,
     _validate_deepcourse_output,
 )
 
@@ -69,5 +70,6 @@ __all__ = [
     "ChapterSynthesis",
     "DeepCourseSynthesis",
     "DeepCourseOutput",
+    "_validate_chapter_output",
     "_validate_deepcourse_output",
 ]

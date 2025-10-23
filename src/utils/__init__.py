@@ -34,7 +34,7 @@ from .session_context import (
 )
 
 from .correct_plain_question import agent_correct_plain_question
-
+from .deepcourse_utils import generate_new_chapter
 
 __all__ = [
     "generate_plain",
@@ -55,5 +55,6 @@ __all__ = [
     "get_gemini_file_names",
     "clear_session",
     "agent_correct_plain_question",
+    "generate_new_chapter",
     "planner_exercises_async"
 ]
