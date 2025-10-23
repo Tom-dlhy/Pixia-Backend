@@ -61,15 +61,18 @@ class DatabaseSettings(BaseSettings):
         """Construit le DSN PostgreSQL complet (format asyncpg)."""
         encoded_password = quote_plus(self.DB_PASSWORD_SQL)
 
-        if self.DB_HOST_SQL.startswith('/'):
+        if self.DB_HOST_SQL.startswith("/"):
             dsn = f"postgresql://{self.DB_USER_SQL}:{encoded_password}@/{self.DB_NAME_SQL}?host={self.DB_HOST_SQL}"
             logger.info(f"Database DSN generated for Unix socket {self.DB_HOST_SQL}")
         else:
             dsn = f"postgresql://{self.DB_USER_SQL}:{encoded_password}@{self.DB_HOST_SQL}:{self.DB_PORT_SQL}/{self.DB_NAME_SQL}"
-            logger.info(f"Database DSN generated for host {self.DB_HOST_SQL}:{self.DB_PORT_SQL}")
+            logger.info(
+                f"Database DSN generated for host {self.DB_HOST_SQL}:{self.DB_PORT_SQL}"
+            )
 
         return dsn
-    
+
+
 class OAuthSettings(BaseSettings):
     """Configuration OAuth pour l'authentification."""
 
@@ -86,12 +89,12 @@ class OAuthSettings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     GOOGLE_CLIENT_SECRET_B64: str
 
-
     @property
     def GOOGLE_CLIENT_SECRET(self) -> str:
         """Retourne le client_secret décodé depuis Base64."""
         return base64.b64decode(self.GOOGLE_CLIENT_SECRET_B64).decode()
-    
+
+
 # Instances des settings
 app_settings = AppSettings()  # type: ignore
 gemini_settings = GeminiSettings()

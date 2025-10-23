@@ -70,7 +70,7 @@ async def purge_session_files(session_id: str = Form("default")):
     uris = set(get_gemini_files(session_id))
     try:
         # list() paginé potentiel — pour simplicité, on itère une fois
-        listing = gemini_settings.CLIENT.files.list()
+        listing = gemini_settings.CLIENT.aio.files.list()
         for f in getattr(listing, "files", []) or []:
             uri = getattr(f, "uri", None)
             name = getattr(f, "name", None)
