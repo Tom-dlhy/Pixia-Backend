@@ -6,11 +6,7 @@ from src.bdd.query import (
     CLEAR_ALL_TABLES,
     DROP_ALL_TABLES, 
     FETCH_ALL_CHATS, 
-    RENAME_SESSION,
-    CREATE_SESSION_TITLE, 
     STORE_BASIC_DOCUMENT, 
-    RENAME_CHAT, 
-    DELETE_SESSION_TITLE, 
     DELETE_DOCUMENTS,
     RENAME_CHAPTER, 
     DELETE_CHAPTER,
@@ -28,6 +24,10 @@ from src.bdd.query import (
     UPDATE_DOCUMENT_CONTENT,
     FETCH_DOCUMENT_BY_SESSION,
     GET_DEEPCOURSE_AND_CHAPTER_FROM_ID
+    FETCH_ALL_DEEPCOURSES,
+    DELETE_DEEPCOURSE,
+    FETCH_ALL_CHAPTERS,
+    FETCH_CHAPTER_DOCUMENTS,
 )
 from src.config import database_settings
 from typing import Union,List,Dict,Any
@@ -145,21 +145,8 @@ class DBManager:
     
     # Route chat
     
-    async def rename_session(self, title:str, session_id:str):
-        """Renomme une session de chat donnée."""
-        async with self.engine.begin() as conn:
-            await conn.execute(
-                RENAME_SESSION,
-                {"title": title, "session_id": session_id}
-            )
+
     
-    async def create_session_title(self, session_id:str, title:str, is_deepcourse:bool=False):
-        """Crée un titre de session."""
-        async with self.engine.begin() as conn:
-            await conn.execute(
-                CREATE_SESSION_TITLE,
-                {"session_id": session_id, "title": title, "is_deepcourse": is_deepcourse}
-            )
 
     async def store_basic_document(self, content:Union[ExerciseOutput, CourseOutput], session_id:str, sub:str, chapter_id:Optional[str]=None):
         """Stocke un document (exercice ou cours) associé à une session."""
@@ -196,6 +183,13 @@ class DBManager:
                 UPDATE_DOCUMENT_CONTENT,
                 {"id": document_id, "contenu": contenu_json}
             )
+        
+    async def fetch_all_deepcourses(self, user_id: str):
+        """Récupère tous les deepcourses pour un utilisateur donné."""
+        async with self.engine.begin() as conn:
+            result = await conn.execute(FETCH_ALL_DEEPCOURSES, {"user_id": user_id})
+            deepcourses = [dict(row._mapping) for row in result.fetchall()]
+        return deepcourses
 
     async def get_deepcourse_and_chapter_with_id(self,deepcourse_id):
         async with self.engine.begin() as conn:
@@ -388,14 +382,15 @@ class DBManager:
                     }
                 )
         
-
-    async def rename_chat(self, session_id: str, title: str):
-        """Renomme une session de chat donnée."""
+    async def delete_deepcourse(self, user_id: str, deepcourse_id: str):
+        """Supprime un deepcourse complet pour un utilisateur donné (avec les docs associés)."""
+        
         async with self.engine.begin() as conn:
             await conn.execute(
-                RENAME_CHAT,
-                {"title": title, "session_id": session_id}
+                DELETE_DEEPCOURSE,
+                {"id": deepcourse_id, "google_sub": user_id}
             )
+
 
     async def delete_chat(self, session_id: str):
         """Supprime une session de chat donnée."""
@@ -408,6 +403,23 @@ class DBManager:
                 DELETE_DOCUMENTS,
                 {"session_id": session_id}
             )
+
+    async def fetch_all_chapters(self, deepcourse_id: str):
+        """Récupère tous les chapitres pour un deepcourse donné."""
+        async with self.engine.begin() as conn:
+            result = await conn.execute(FETCH_ALL_CHAPTERS, {"deep_course_id": deepcourse_id})
+            chapters = [dict(row._mapping) for row in result.fetchall()]
+        return chapters
+
+    async def fetch_chapter_documents(self, chapter_id: str):
+        """Récupère les sessions des documents d'un chapitre donné."""
+        async with self.engine.begin() as conn:
+            result = await conn.execute(
+                FETCH_CHAPTER_DOCUMENTS,
+                {"chapter_id": chapter_id}
+            )
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
         
     async def rename_chapter(self, chapter_id: str, title: str):
         """Renomme un chapitre donné."""
@@ -444,17 +456,8 @@ class DBManager:
                 {"chapter_id": chapter_id}
             )
 
-    async def delete_session_title(self, session_id: str):
-        """Supprime le titre d'une session donnée."""
-        async with self.engine.begin() as conn:
-            await conn.execute(
-                DELETE_SESSION_TITLE,
-                {"session_id": session_id}
-            )
-
     async def mark_chapter_complete(self, chapter_id: str):
         """Marque un chapitre comme complété pour un utilisateur donné."""
-        # Implémentation fictive (à adapter selon le schéma réel)
         async with self.engine.begin() as conn:
             await conn.execute(
                 MARK_CHAPTER_COMPLETE,
@@ -463,15 +466,14 @@ class DBManager:
     
     async def mark_chapter_uncomplete(self, chapter_id: str):
         """Marque un chapitre comme non complété pour un utilisateur donné."""
-        # Implémentation fictive (à adapter selon le schéma réel)
         async with self.engine.begin() as conn:
             await conn.execute(
                 MARK_CHAPTER_UNCOMPLETE,
                 {"chapter_id": chapter_id}
             )
 
-    async def change_settings(self, user_id: str, new_given_name: Union[str, None], new_family_name: Union[str, None], 
-                              new_notion_url: Union[str, None], new_drive_url: Union[str, None]):
+    async def change_settings(self, user_id: str, new_given_name: Union[str, None], new_niveau_etude: Union[str, None], 
+                              new_notion_token: Union[str, None]):
         """Change les paramètres utilisateur."""
         # Implémentation fictive (à adapter selon le schéma réel)
         async with self.engine.begin() as conn:
@@ -480,9 +482,8 @@ class DBManager:
                 {
                     "user_id": user_id, 
                     "new_given_name": new_given_name, 
-                    "new_family_name": new_family_name, 
-                    "new_notion_url": new_notion_url, 
-                    "new_drive_url": new_drive_url
+                    "new_niveau_etude": new_niveau_etude, 
+                    "new_notion_token": new_notion_token
                 }
             )
 
@@ -495,13 +496,28 @@ class DBManager:
             row = result.fetchone()
             return dict(row._mapping) if row else None
 
-    async def signup_user(self, google_sub: str, email: str, given_name: str = "", family_name: str = ""):
+    async def signup_user(
+        self,
+        google_sub: str,
+        email: str,
+        name: str = "",
+        notion_token: str = "",
+        study: str = "",
+    ):
         async with self.engine.begin() as conn:
             result = await conn.execute(
                 SIGNUP_USER,
-                {"google_sub": google_sub, "email": email, "given_name": given_name, "family_name": family_name}
+                {
+                    "google_sub": google_sub,
+                    "email": email,
+                    "created_at": datetime.now(),
+                    "name": name,
+                    "notion_token": notion_token,
+                    "study": study,
+                },
             )
-            return result.fetchone()
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
         
 
     async def correct_plain_question(self, doc_id: str, id_question: str, is_correct: bool, answer: str):

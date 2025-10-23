@@ -31,15 +31,6 @@ async def generate_courses(course_synthesis: CourseSynthesis) -> Union[dict, Any
     if isinstance(course_synthesis, dict):
         course_synthesis = CourseSynthesis(**course_synthesis)
 
-    logger.info(f"[GENERATE_COURSES] Début génération cours avec Quad LLM")
-    logger.info(
-        f"[GENERATE_COURSES] Description: {course_synthesis.description[:100]}..."
-    )
-    logger.info(
-        f"[GENERATE_COURSES] Difficulté: {course_synthesis.difficulty}, Détail: {course_synthesis.level_detail}"
-    )
-
-    # Utiliser le pipeline Quad LLM intégré
     result = await generate_courses_quad_llm(course_synthesis)
 
     logger.info(f"[GENERATE_COURSES] ✅ Cours généré avec succès")

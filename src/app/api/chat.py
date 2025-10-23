@@ -20,6 +20,7 @@ from google.adk.sessions.database_session_service import DatabaseSessionService
 from google.genai import types
 from google.genai.types import Part
 import logging
+import time 
 
 from dotenv import load_dotenv
 from src.utils import get_gemini_files
@@ -50,6 +51,7 @@ async def chat(
     deep_course_id: Optional[str] = Form(None),
 ):
     """Traite un message utilisateur via une session ADK."""
+    start_time = time.monotonic()
 
     final_response: Optional[
         Union[str, dict, list, ExerciseOutput, CourseOutput, DeepCourseOutput, Chapter]
@@ -77,16 +79,10 @@ async def chat(
                 current_session_service = db_session_service
 
         elif not session_id:
-            logger.info(
-                f"🆕 Création d'une nouvelle session pour l'utilisateur {user_id}"
-            )
             session = await inmemory_service.create_session(
                 app_name=settings.APP_NAME, user_id=user_id
             )
             session_id = session.id
-            logger.info(
-                f"✅ Nouvelle session créée : {session_id} pour l'utilisateur {user_id} et stockée dans inmemory_service."
-            )
             current_session_service = inmemory_service
 
     except Exception as e:
@@ -128,8 +124,6 @@ async def chat(
             if event.is_final_response():
                 if event.content and event.content.parts:
                     txt_reponse = event.content.parts[0].text
-
-                    logger.info(f"✅ Réponse finale reçue pour la session {session_id}")
                 break
 
             # --- Sortie d’un outil (tool output) ---
@@ -141,7 +135,6 @@ async def chat(
                         tool_resp = fr.response
                         if tool_name and tool_resp:
                             if tool_name == "generate_exercises":
-                                logger.info("✅ Tool 'generate_exercises' détecté")
                                 if _validate_exercise_output(tool_resp):
                                     copilote_session_id = str(uuid4())
                                     await db_session_service.create_session(
@@ -153,9 +146,6 @@ async def chat(
                                         tool_resp
                                     )
                                     if isinstance(final_response, ExerciseOutput):
-                                        logger.info(
-                                            f"✅ ExerciseOutput validé pour la session {session_id}"
-                                        )
                                         await bdd_manager.store_basic_document(
                                             content=final_response,
                                             session_id=copilote_session_id,
@@ -165,7 +155,6 @@ async def chat(
                                         redirect_id = copilote_session_id
 
                             elif tool_name == "generate_courses":
-                                logger.info("✅ Tool 'generate_courses' détecté")
                                 if _validate_course_output(tool_resp):
                                     copilote_session_id = str(uuid4())
                                     await db_session_service.create_session(
@@ -175,9 +164,6 @@ async def chat(
                                     )
                                     final_response = _validate_course_output(tool_resp)
                                     if isinstance(final_response, CourseOutput):
-                                        logger.info(
-                                            f"✅ CourseOutput validé pour la session {session_id}"
-                                        )
                                         await bdd_manager.store_basic_document(
                                             content=final_response,
                                             session_id=copilote_session_id,
@@ -187,75 +173,71 @@ async def chat(
                                         redirect_id = copilote_session_id
 
                             elif tool_name == "modify_course":
-                                logger.info("✅ Tool 'modify_course' détecté")
                                 if _validate_course_output(tool_resp):
                                     final_response = _validate_course_output(tool_resp)
                                     if isinstance(final_response, CourseOutput):
-                                        logger.info(
-                                            f"✅ CourseOutput validé pour la session {session_id}"
-                                        )
                                         await bdd_manager.update_document(
                                             document_id=session_id,
                                             new_content=final_response,
                                         )
 
                             elif tool_name == "delete_course":
-                                logger.info("✅ Tool 'delete_course' détecté")
                                 await bdd_manager.delete_document(
                                     document_id=session_id
                                 )
 
                             elif tool_name == "generate_deepcourse":
-                                logger.info("✅ Tool 'generate_deepcourse' détecté")
-                                logger.debug(
-                                    f"📦 tool_resp type: {type(tool_resp)}, keys: {list(tool_resp.keys()) if isinstance(tool_resp, dict) else 'N/A'}"
-                                )
                                 validated = _validate_deepcourse_output(tool_resp)
                                 if validated:
                                     final_response = validated
                                     if isinstance(final_response, DeepCourseOutput):
-                                        logger.info(
-                                            f"✅ DeepCourseOutput validé pour la session {session_id}"
-                                        )
 
-                                        # Créer les sessions et mapper les IDs pour chaque chapitre
-                                        dict_session: List[Dict[str, str]] = []
+                                        try:
+                                            # Créer les sessions et mapper les IDs pour chaque chapitre
+                                            dict_session: List[Dict[str, str]] = []
 
-                                        for chapter in final_response.chapters:
-                                            session_exercise = (
-                                                await db_session_service.create_session(
-                                                    app_name=settings.APP_NAME,
-                                                    user_id=user_id,
-                                                )
-                                            )
-                                            session_course = (
-                                                await db_session_service.create_session(
-                                                    app_name=settings.APP_NAME,
-                                                    user_id=user_id,
-                                                )
-                                            )
-                                            session_evaluation = (
-                                                await db_session_service.create_session(
-                                                    app_name=settings.APP_NAME,
-                                                    user_id=user_id,
-                                                )
-                                            )
- 
-                                            chapter_sessions = {
-                                                "id_chapter": chapter.id_chapter,
-                                                "session_id_exercise": session_exercise.id,
-                                                "session_id_course": session_course.id,
-                                                "session_id_evaluation": session_evaluation.id,
-                                            }
-                                            dict_session.append(chapter_sessions)
+                                            for chapter in final_response.chapters:
+                                                try:
+                                                    session_exercise = await db_session_service.create_session(
+                                                        app_name=settings.APP_NAME,
+                                                        user_id=user_id,
+                                                    )
+                                                    session_course = await db_session_service.create_session(
+                                                        app_name=settings.APP_NAME,
+                                                        user_id=user_id,
+                                                    )
+                                                    session_evaluation = await db_session_service.create_session(
+                                                        app_name=settings.APP_NAME,
+                                                        user_id=user_id,
+                                                    )
 
-                                        await bdd_manager.store_deepcourse(
-                                            user_id=user_id,
-                                            content=final_response,
-                                            dict_session=dict_session,
-                                        )
-                                        agent = "deep-course"
-                                        redirect_id = final_response.id
+                                                    chapter_sessions = {
+                                                        "id_chapter": chapter.id_chapter,
+                                                        "session_id_exercise": session_exercise.id,
+                                                        "session_id_course": session_course.id,
+                                                        "session_id_evaluation": session_evaluation.id,
+                                                    }
+                                                    dict_session.append(
+                                                        chapter_sessions
+                                                    )
+                                                except Exception as e:
+                                                    logger.error(
+                                                        f"❌ Erreur lors de la création des sessions pour le chapitre {chapter.id_chapter}: {e}"
+                                                    )
+                                                    raise
+
+                                            await bdd_manager.store_deepcourse(
+                                                user_id=user_id,
+                                                content=final_response,
+                                                dict_session=dict_session,
+                                            )
+                                            agent = "deep-course"
+                                            redirect_id = final_response.id
+                                        except Exception as e:
+                                            logger.error(
+                                                f"❌ Erreur lors du stockage du deepcourse: {e}"
+                                            )
+                                            raise
 
                             elif tool_name == "call_generate_new_chapter":
                                 logger.info("✅ Tool 'call_generate_new_chapter' détecté")
@@ -308,6 +290,11 @@ async def chat(
 
     if not txt_reponse:
         txt_reponse = ""
+
+    print("--- Chat API Timing ---")
+    end_time = time.monotonic()
+    duration = end_time - start_time
+    print(f"Durée totale: {duration:.2f} secondes")
 
     output = ChatResponse(
         session_id=session_id,

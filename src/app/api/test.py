@@ -306,7 +306,7 @@ async def fetch_exercise(
 
     if not exo_data or "answer" not in exo_data:
         logger.error("❌ Failed to load exercise data")
-        return ExerciseOutput(id=session_id, exercises=[])
+        return ExerciseOutput(id=session_id, exercises=[],title="")
 
     # Extraire l'exercice de la réponse
     exercise_data = exo_data.get("answer", {})

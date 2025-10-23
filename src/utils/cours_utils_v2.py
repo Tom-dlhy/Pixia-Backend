@@ -6,8 +6,8 @@ Architecture optimisée: 1 LLM pour générer contenu + Mermaid d'un coup.
 from src.config import gemini_settings
 from src.models.cours_models import (
     CourseSynthesis,
-    CourseOutputWithMermaid,
-    CoursePartWithMermaid,
+    CourseOutput,
+    Part,
 )
 from src.prompts import SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE
 from src.utils.mermaid_validator import MermaidValidator
@@ -34,8 +34,8 @@ logger.setLevel(logging.DEBUG)
 from src.config import gemini_settings
 from src.models.cours_models import (
     CourseSynthesis,
-    CourseOutputWithMermaid,
-    CoursePartWithMermaid,
+    CourseOutput,
+    Part,
 )
 from src.prompts import SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE
 from src.utils.mermaid_validator import MermaidValidator
@@ -151,7 +151,7 @@ def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
 
 def generate_complete_course(
     synthesis: CourseSynthesis,
-) -> Optional[CourseOutputWithMermaid]:
+) -> Optional[CourseOutput]:
     """
     Génère un cours COMPLET avec contenu + Mermaid d'un seul appel LLM.
 
@@ -159,7 +159,7 @@ def generate_complete_course(
         synthesis: Synthèse contenant description, difficulté, niveau de détail
 
     Returns:
-        Optional[CourseOutputWithMermaid]: Cours généré avec tous les Mermaid, ou None en cas d'erreur
+        Optional[CourseOutput]: Cours généré avec tous les Mermaid, ou None en cas d'erreur
     """
     try:
         logger.debug(f"[LLM-START] Validation synthèse d'entrée")
@@ -185,7 +185,7 @@ def generate_complete_course(
                 config={
                     "system_instruction": SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE,
                     "response_mime_type": "application/json",
-                    "response_schema": CourseOutputWithMermaid,
+                    "response_schema": CourseOutput,
                 },
             )
         except Exception as gemini_err:
@@ -203,10 +203,10 @@ def generate_complete_course(
 
         if isinstance(course_output, str):
             logger.debug(f"[LLM-PARSE] Parsing JSON string...")
-            course_output = CourseOutputWithMermaid.model_validate_json(course_output)
+            course_output = CourseOutput.model_validate_json(course_output)
         elif isinstance(course_output, dict):
             logger.debug(f"[LLM-PARSE] Validation dict...")
-            course_output = CourseOutputWithMermaid.model_validate(course_output)
+            course_output = CourseOutput.model_validate(course_output)
 
         logger.debug(f"[LLM-VALIDATE] Ajout IDs manquants")
 
@@ -231,8 +231,8 @@ def generate_complete_course(
 
 
 async def generate_all_schemas(
-    course_output: CourseOutputWithMermaid,
-) -> CourseOutputWithMermaid:
+    course_output: CourseOutput,
+) -> CourseOutput:
     """
     Génère tous les schémas Mermaid en parallèle (VRAIMENT async).
 
@@ -240,7 +240,7 @@ async def generate_all_schemas(
         course_output: Cours avec code Mermaid (texte)
 
     Returns:
-        CourseOutputWithMermaid: Cours avec schémas générés (base64)
+        CourseOutput: Cours avec schémas générés (base64)
     """
     try:
         logger.info(
@@ -282,7 +282,6 @@ async def generate_all_schemas(
                         f"[ASYNC-EMPTY-{i}] Schéma {i+1} vide (Kroki échoué)"
                     )
 
-        logger.info(f"[ASYNC-COMPLETE] Génération des schémas complétée")
         return course_output
 
     except Exception as e:

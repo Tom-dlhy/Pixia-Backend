@@ -6,7 +6,6 @@ from .renamechapter import RenameChapterRequest, RenameChapterResponse
 from .deletechapter import DeleteChapterRequest
 from .correctplainquestion import CorrectPlainQuestionRequest, CorrectPlainQuestionResponse
 from .markchapter import MarkChapterRequest, MarkChapterResponse
-from .changesettings import ChangeSettingsRequest, ChangeSettingsResponse
 from .login import LoginRequest, LoginResponse
 from .signup import SignupRequest, SignupResponse
 from .markcorrectedQCM import MarkIsCorrectedQCMRequest, MarkIsCorrectedQCMResponse
