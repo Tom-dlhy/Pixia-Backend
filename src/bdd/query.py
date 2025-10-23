@@ -175,7 +175,7 @@ WHERE chapter_id = :chapter_id
 
 LOGIN_USER = text(
     """
-SELECT google_sub, email, given_name, family_name
+SELECT google_sub, email, name, notion_token, study
 FROM users
 WHERE email = :email
 """

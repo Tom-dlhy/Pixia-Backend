@@ -13,15 +13,11 @@ async def login(req: LoginRequest):
 
     logger.info(f"id: {user['google_sub'] if user else 'N/A'}, email: {user['email'] if user else 'N/A'} logged in.")
 
-    notion_token = "fake_notion_token_12345"  # Placeholder for actual token retrieval logic
-
-    study = "Master 2 de Data. et IA"  # Placeholder for actual study retrieval logic
-
     return LoginResponse(
         existing_user=bool(user),
         user_id=(user["google_sub"] if user else None),  
         email=(user["email"] if user else None),
-        nom=(user["given_name"] if user else None),
-        notion_token=notion_token,
-        study=study,
+        nom=(user["name"] if user else None),
+        notion_token=(user["notion_token"] if user else None),
+        study=(user["study"] if user else None),
     )
