@@ -45,6 +45,7 @@ async def chat(
     message: str = Form(...),
     session_id: Optional[str] = Form(None),
     files: Optional[List[UploadFile]] = File(None),
+    deep_course_id: Optional[str] = Form(None),
 ):
     """Traite un message utilisateur via une session ADK."""
 
