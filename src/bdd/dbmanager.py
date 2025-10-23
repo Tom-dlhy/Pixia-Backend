@@ -368,7 +368,6 @@ class DBManager:
 
     async def mark_chapter_complete(self, chapter_id: str):
         """Marque un chapitre comme complété pour un utilisateur donné."""
-        # Implémentation fictive (à adapter selon le schéma réel)
         async with self.engine.begin() as conn:
             await conn.execute(
                 MARK_CHAPTER_COMPLETE,
