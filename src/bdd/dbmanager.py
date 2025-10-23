@@ -26,7 +26,8 @@ from src.bdd.query import (
     CREATE_CHAPTER,
     CREATE_DEEPCOURSE,
     UPDATE_DOCUMENT_CONTENT,
-    FETCH_DOCUMENT_BY_SESSION
+    FETCH_DOCUMENT_BY_SESSION,
+    GET_DEEPCOURSE_AND_CHAPTER_FROM_ID
 )
 from src.config import database_settings
 from typing import Union,List,Dict,Any
@@ -196,6 +197,92 @@ class DBManager:
                 {"id": document_id, "contenu": contenu_json}
             )
 
+    async def get_deepcourse_and_chapter_with_id(self,deepcourse_id):
+        async with self.engine.begin() as conn:
+            result = await conn.execute(
+                GET_DEEPCOURSE_AND_CHAPTER_FROM_ID,
+                {"deepcourse_id": deepcourse_id}
+            )
+            chapters = [dict(row._mapping) for row in result.fetchall()]
+        return chapters
+
+
+    async def store_chapter(
+            self,
+            title,
+            user_id, 
+            deepcourse_id, 
+            chapter_id, 
+            session_exercise,
+            session_course,
+            session_evaluation,
+            exercice,
+            course,
+            evaluation,
+            ):
+        """Store un chapitre d'un deepcourse"""
+
+        now = datetime.now()
+
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                CREATE_CHAPTER,
+                {
+                    "id": chapter_id,
+                    "deep_course_id": deepcourse_id,
+                    "titre": title,
+                    "is_complete": False
+                }
+            )
+            exercise_json = json.dumps(
+                    exercice.model_dump() if hasattr(exercice, "model_dump") else exercice
+                )
+            await conn.execute(
+                        STORE_BASIC_DOCUMENT,
+                        {
+                            "id": exercice.id,
+                            "google_sub": user_id,
+                            "session_id": session_exercise,
+                            "chapter_id": chapter_id,
+                            "document_type": "exercise",
+                            "contenu": exercise_json,
+                            "created_at": now,
+                            "updated_at": now
+                        }
+                    )
+            course_json = json.dumps(
+                    course.model_dump() if hasattr(course, "model_dump") else course
+                )
+            await conn.execute(
+                        STORE_BASIC_DOCUMENT,
+                        {
+                            "id": course.id,
+                            "google_sub": user_id,
+                            "session_id": session_course,
+                            "chapter_id": chapter_id,
+                            "document_type": "course",
+                            "contenu": course_json,
+                            "created_at": now,
+                            "updated_at": now
+                        }
+                    )
+            evaluation_json = json.dumps(
+                    evaluation.model_dump() if hasattr(evaluation, "model_dump") else evaluation
+                )
+            await conn.execute(
+                        STORE_BASIC_DOCUMENT,
+                        {
+                            "id": evaluation.id,
+                            "google_sub": user_id,
+                            "session_id": session_evaluation,
+                            "chapter_id": chapter_id,
+                            "document_type": "evaluation",
+                            "contenu": evaluation_json,
+                            "created_at": now,
+                            "updated_at": now
+                        }
+                    )
+
     async def store_deepcourse(self, user_id: str, 
                                 content: DeepCourseOutput, 
                                 dict_session: List[Dict[str, str]]):
@@ -218,7 +305,6 @@ class DBManager:
         deepcourse_id = content.id or str(uuid4())
         
         async with self.engine.begin() as conn:
-            # 1️⃣ Créer le deepcourse
             await conn.execute(
                 CREATE_DEEPCOURSE,
                 {
@@ -228,11 +314,9 @@ class DBManager:
                 }
             )
             
-            # 2️⃣ Pour chaque chapitre : créer le chapitre et stocker ses documents
             for idx, chapter in enumerate(content.chapters):
                 chapter_id = chapter.id_chapter or str(uuid4())
                 
-                # Créer le chapitre
                 await conn.execute(
                     CREATE_CHAPTER,
                     {
@@ -243,16 +327,13 @@ class DBManager:
                     }
                 )
                 
-                # Récupérer les sessions pour ce chapitre
                 chapter_sessions = dict_session[idx]
                 session_exercise = chapter_sessions["session_id_exercise"]
                 session_course = chapter_sessions["session_id_course"]
                 session_evaluation = chapter_sessions["session_id_evaluation"]
                 
-                # Créer les 3 documents (exercice, cours, évaluation)
                 now = datetime.now()
                 
-                # 🎯 Stocker l'EXERCICE
                 exercise_id = chapter.exercice.id or str(uuid4())
                 exercise_json = json.dumps(
                     chapter.exercice.model_dump() if hasattr(chapter.exercice, "model_dump") else chapter.exercice
@@ -271,7 +352,6 @@ class DBManager:
                     }
                 )
                 
-                # 📚 Stocker le COURS
                 course_id = chapter.course.id or str(uuid4())
                 course_json = json.dumps(
                     chapter.course.model_dump() if hasattr(chapter.course, "model_dump") else chapter.course
@@ -290,7 +370,6 @@ class DBManager:
                     }
                 )
                 
-                # ✅ Stocker l'ÉVALUATION (aussi un ExerciseOutput)
                 evaluation_id = chapter.evaluation.id or str(uuid4())
                 evaluation_json = json.dumps(
                     chapter.evaluation.model_dump() if hasattr(chapter.evaluation, "model_dump") else chapter.evaluation

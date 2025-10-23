@@ -298,3 +298,11 @@ FROM public.document
 WHERE session_id = :session_id
 """
 )
+
+GET_DEEPCOURSE_AND_CHAPTER_FROM_ID = text("""
+SELECT c.titre as chapter_title, d.titre as deepcourse_title
+FROM chapter c 
+LEFT JOIN deepcourse d 
+ON c.deep_course_id = d.id
+WHERE d.id = :deepcourse_id
+       """)

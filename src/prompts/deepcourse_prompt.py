@@ -68,7 +68,7 @@ SYSTEM_PROMPT_GENERATE_NEW_CHAPTER="""
 
     Tes objectifs :
     À partir :
-    - de la liste des titres et descriptions des chapitres déjà présents dans le deepcourse existants,
+    - du titre du cours approfondi et des titres 
     - et du sujet du nouveau chapitre souhaité par l’utilisateur,
 
     tu dois **produire un nouvel objet `ChapterSynthesis`** complet, prêt à être intégré au deepcourse, en respectant la structure et la cohérence globale du cours.

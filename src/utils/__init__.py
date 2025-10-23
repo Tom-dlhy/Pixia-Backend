@@ -35,7 +35,7 @@ from .session_context import (
 
 from .generate_title import generate_title_from_messages
 from .correct_plain_question import agent_correct_plain_question
-
+from .deepcourse_utils import generate_new_chapter
 
 __all__ = [
     "generate_plain",
@@ -58,4 +58,5 @@ __all__ = [
     "clear_session",
     "generate_title_from_messages",
     "agent_correct_plain_question",
+    "generate_new_chapter",
 ]

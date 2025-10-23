@@ -10,6 +10,7 @@ from src.models import (
 )
 from src.bdd import DBManager
 from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput, Chapter
+from src.utils import generate_new_chapter
 
 from typing import List, Optional, Union, Dict
 from uuid import uuid4
@@ -46,11 +47,12 @@ async def chat(
     message: str = Form(...),
     session_id: Optional[str] = Form(None),
     files: Optional[List[UploadFile]] = File(None),
+    deep_course_id: Optional[str] = Form(None),
 ):
     """Traite un message utilisateur via une session ADK."""
 
     final_response: Optional[
-        Union[str, dict, list, ExerciseOutput, CourseOutput, DeepCourseOutput]
+        Union[str, dict, list, ExerciseOutput, CourseOutput, DeepCourseOutput, Chapter]
     ] = None
     txt_reponse: Optional[str] = None
     agent = None
@@ -255,9 +257,12 @@ async def chat(
                                         agent = "deep-course"
                                         redirect_id = final_response.id
 
-                            elif tool_name == "generate_new_chapter":
-                                logger.info("✅ Tool 'generate_new_chapter' détecté")
-                                validated = _validate_chapter_output(tool_resp)
+                            elif tool_name == "call_generate_new_chapter":
+                                logger.info("✅ Tool 'call_generate_new_chapter' détecté")
+    
+                                chapter=generate_new_chapter(deep_course_id)
+
+                                validated = _validate_chapter_output(chapter)
                                 if validated:
                                     final_response = validated
                                     if isinstance(final_response, Chapter):
@@ -283,17 +288,17 @@ async def chat(
                                             )
                                         )
                                         await bdd_manager.store_chapter(
+                                            title=final_response.title,
                                             user_id=user_id,
+                                            deepcourse_id=deep_course_id,
+                                            chapter_id=final_response.id_chapter,
                                             session_exercise=session_exercise,
                                             session_course=session_course,
                                             session_evaluation=session_evaluation,
-                                            deep_course_id=deep_course_id,
-                                        )   
-                                #TODO créer la fonction store_chapter 
-                                # recup l'id du deep course 
-                                # créer les 3 sessions : exercice cour eval
-                                # créer l'id du chapitre
-                                # tout foutre dans store chapter
+                                            exercice=final_response.exercice,
+                                            course=final_response.course,
+                                            evaluation=final_response.evaluation,
+                                        )  
 
                             
 
