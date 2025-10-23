@@ -19,7 +19,7 @@ async def generate_courses(course_synthesis: CourseSynthesis) -> Union[dict, Any
     3. Génération PARALLÈLE de toutes les parties avec Quad LLM:
        - LLM #1: Contenu markdown + sélection type diagramme (4 types)
        - LLM #2 (spécialisé): Code diagramme selon le type (max 3 retries)
-       - Kroki: Conversion en SVG base64
+       - Kroki: Conversion en PNG base64
     4. Retour du CourseOutput avec contenu markdown + diagrammes
 
     Args:
