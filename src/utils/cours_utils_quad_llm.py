@@ -87,7 +87,7 @@ def generate_course_with_diagram_types(
     Returns:
         Dict avec structure: { title, parts: [{ title, content, diagram_type }, ...] }
     """
-    max_retries = 3
+    max_retries = 1
     for attempt in range(max_retries):
         try:
             logger.info(
@@ -132,49 +132,6 @@ Niveau de détail: {synthesis.level_detail}""",
                 exc_info=False,
             )
             return None
-
-
-# ============================================================================
-# ÉTAPE 1.5: Sélection du type de diagramme (4 types seulement)
-# ============================================================================
-
-
-def select_diagram_type(title: str, content: str) -> str:
-    """
-    LLM intermédiaire: Demande à Gemini de choisir parmi les 4 types.
-    """
-    try:
-        logger.debug(f"[DIAGRAM-SELECT] Sélection type pour: {title[:40]}")
-
-        prompt = PROMPT_SELECT_DIAGRAM_TYPE_V2.replace("{title}", title[:100]).replace(
-            "{content}", content[:500]
-        )
-
-        response = gemini_settings.CLIENT.models.generate_content(
-            model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
-            contents=prompt,
-            config={"response_mime_type": "application/json"},
-        )
-
-        result = json.loads(response.text)
-        diagram_type = result.get("type", "mermaid").lower()
-
-        # Valide que c'est l'un des 4 types
-        valid_types = ["mermaid", "plantuml", "graphviz", "vegalite"]
-        if diagram_type not in valid_types:
-            logger.warning(
-                f"[DIAGRAM-SELECT] Type invalide: {diagram_type}, défaut: mermaid"
-            )
-            diagram_type = "mermaid"
-
-        logger.info(
-            f"[DIAGRAM-SELECT-SUCCESS] Type sélectionné: {diagram_type} pour '{title[:40]}'"
-        )
-        return diagram_type
-
-    except Exception as e:
-        logger.error(f"[DIAGRAM-SELECT-ERROR] Erreur: {e}, défaut: mermaid")
-        return "mermaid"
 
 
 # ============================================================================
@@ -248,7 +205,7 @@ def _test_kroki(diagram_code: str, diagram_type: str) -> Optional[str]:
 
 
 def generate_diagram_code_with_retry(
-    diagram_type: str, content: str, max_retries: int = 3
+    diagram_type: str, content: str, max_retries: int = 1
 ) -> Optional[str]:
     """
     LLM #2 avec retry intelligent: génère code → teste Kroki → si erreur, feedback au LLM.
@@ -473,7 +430,7 @@ async def process_course_part(part_data: Dict[str, Any], index: int) -> Optional
         logger.info(f"[PART-{index}] Traitement: {title[:40]}")
 
         # Étape 1: Sélectionne le type (4 types)
-        diagram_type = await asyncio.to_thread(select_diagram_type, title, content)
+        diagram_type = part_data.get("diagram_type", "mermaid")
 
         # Étape 2: Génère le code (spécialisé) AVEC RETRY MAX 3
         diagram_code = await asyncio.to_thread(

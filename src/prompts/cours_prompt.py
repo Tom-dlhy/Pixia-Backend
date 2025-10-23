@@ -191,7 +191,7 @@ SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE = """
     2. Pour CHAQUE partie :
        - Titre clair et pédagogique
        - Contenu détaillé, structuré et sans digressions
-       - Code Mermaid VALIDE pour illustrer la partie
+       - Type de diagramme recommandé (mermaid, plantuml, graphviz ou vegalite)
        - Description courte du schéma visuel
 
     ===== CONTRAINTES CRITIQUES =====
@@ -203,14 +203,13 @@ SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE = """
     - Aucune équation LaTeX, aucun HTML
     - Pas de "Section 1", "Partie 2" dans le texte
     
-    📊 MERMAID (TRÈS IMPORTANT) :
-    - Génère du code Mermaid VALIDE ET TESTABLE
-    - Commence directement par le type : graph TD, sequenceDiagram, classDiagram, etc.
-    - JAMAIS de backticks (```), JAMAIS de commentaires (%%)
-    - Identifiants alphanumériques + underscore uniquement
-    - Remplace espaces par underscore, supprime accents dans les IDs
-    - Limite : ≤ 50 nœuds par diagramme
-    - Si doute sur validité → utilise graph TD par défaut
+    📊 TYPE DE DIAGRAMME (À CHOISIR, PAS À GÉNÉRER) :
+    - mermaid: Pour flowcharts, mindmaps, timelines, class diagrams, sequence diagrams
+    - plantuml: Pour UML complet, diagrammes d'activité, architecture C4
+    - graphviz: Pour graphes de relations, dépendances, structures hiérarchiques
+    - vegalite: Pour graphiques de données, statistiques, visualisations quantitatives
+    
+    ⚠️ IMPORTANT : NE GÉNÈRE PAS le code du diagramme ! Choisir seulement le TYPE.
     
     🔗 COHÉRENCE ENTRE LES PARTIES :
     - Les Mermaid doivent illustrer progressivement les concepts
@@ -267,7 +266,7 @@ SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE = """
           "title": "Titre de la partie 1",
           "content": "Contenu structuré, pédagogique...",
           "schema_description": "Description courte du schéma (1-2 phrases max)",
-          "mermaid_syntax": "graph TD\nA[Concept] --> B[Concept]"
+          "diagram_type": "mermaid"
         }
       ]
     }
@@ -287,13 +286,13 @@ SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE = """
           "title": "Qu'est-ce qu'une boucle ?",
           "content": "**Définition**\nUne boucle est une structure de contrôle qui répète un bloc de code tant qu'une condition est vraie...",
           "schema_description": "Cycle de répétition avec vérification de condition",
-          "mermaid_syntax": "graph TD\nA[Début] --> B{Condition ?}\nB -->|Vrai| C[Exécuter bloc]\nC --> B\nB -->|Faux| D[Fin]"
+          "diagram_type": "mermaid"
         },
         {
           "title": "La boucle for",
           "content": "**Syntaxe**\nfor i in range(5):\n    print(i)...",
           "schema_description": "Itération avec collection",
-          "mermaid_syntax": "graph TD\nA[Début] --> B[Initialiser itérateur]\nB --> C[Boucle sur éléments]\nC --> D[Fin]"
+          "diagram_type": "mermaid"
         }
       ]
     }

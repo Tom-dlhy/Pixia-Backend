@@ -5,10 +5,12 @@ from src.tools.cours_tools import generate_courses
 from uuid import uuid4
 import json
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
 async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> DeepCourseOutput:
+    start_time = time.time()
     if isinstance(synthesis, dict):
         synthesis = DeepCourseSynthesis(**synthesis)
     
@@ -75,5 +77,5 @@ async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> DeepCourseOutpu
     )
     
     logger.info(f"✅ DeepCourse généré avec succès: {deepcourse_output.title}")
-    print(json.dumps(deepcourse_output.model_dump(), indent=2, ensure_ascii=False))
+    logger.info(f"⏱️ Temps total de génération: {time.time() - start_time:.2f} secondes")
     return deepcourse_output

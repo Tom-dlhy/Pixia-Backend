@@ -221,44 +221,52 @@ async def chat(
                                             f"✅ DeepCourseOutput validé pour la session {session_id}"
                                         )
 
-                                        # Créer les sessions et mapper les IDs pour chaque chapitre
-                                        dict_session: List[Dict[str, str]] = []
+                                        try:
+                                            # Créer les sessions et mapper les IDs pour chaque chapitre
+                                            dict_session: List[Dict[str, str]] = []
 
-                                        for chapter in final_response.chapters:
-                                            session_exercise = (
-                                                await db_session_service.create_session(
-                                                    app_name=settings.APP_NAME,
-                                                    user_id=user_id,
-                                                )
-                                            )
-                                            session_course = (
-                                                await db_session_service.create_session(
-                                                    app_name=settings.APP_NAME,
-                                                    user_id=user_id,
-                                                )
-                                            )
-                                            session_evaluation = (
-                                                await db_session_service.create_session(
-                                                    app_name=settings.APP_NAME,
-                                                    user_id=user_id,
-                                                )
-                                            )
+                                            for chapter in final_response.chapters:
+                                                try:
+                                                    session_exercise = await db_session_service.create_session(
+                                                        app_name=settings.APP_NAME,
+                                                        user_id=user_id,
+                                                    )
+                                                    session_course = await db_session_service.create_session(
+                                                        app_name=settings.APP_NAME,
+                                                        user_id=user_id,
+                                                    )
+                                                    session_evaluation = await db_session_service.create_session(
+                                                        app_name=settings.APP_NAME,
+                                                        user_id=user_id,
+                                                    )
 
-                                            chapter_sessions = {
-                                                "id_chapter": chapter.id_chapter,
-                                                "session_id_exercise": session_exercise.id,
-                                                "session_id_course": session_course.id,
-                                                "session_id_evaluation": session_evaluation.id,
-                                            }
-                                            dict_session.append(chapter_sessions)
+                                                    chapter_sessions = {
+                                                        "id_chapter": chapter.id_chapter,
+                                                        "session_id_exercise": session_exercise.id,
+                                                        "session_id_course": session_course.id,
+                                                        "session_id_evaluation": session_evaluation.id,
+                                                    }
+                                                    dict_session.append(
+                                                        chapter_sessions
+                                                    )
+                                                except Exception as e:
+                                                    logger.error(
+                                                        f"❌ Erreur lors de la création des sessions pour le chapitre {chapter.id_chapter}: {e}"
+                                                    )
+                                                    raise
 
-                                        await bdd_manager.store_deepcourse(
-                                            user_id=user_id,
-                                            content=final_response,
-                                            dict_session=dict_session,
-                                        )
-                                        agent = "deep-course"
-                                        redirect_id = final_response.id
+                                            await bdd_manager.store_deepcourse(
+                                                user_id=user_id,
+                                                content=final_response,
+                                                dict_session=dict_session,
+                                            )
+                                            agent = "deep-course"
+                                            redirect_id = final_response.id
+                                        except Exception as e:
+                                            logger.error(
+                                                f"❌ Erreur lors du stockage du deepcourse: {e}"
+                                            )
+                                            raise
 
     except Exception as e:
         logger.exception("❌ Erreur pendant l'exécution du runner ADK")
