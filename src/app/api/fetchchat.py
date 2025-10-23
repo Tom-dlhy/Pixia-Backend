@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import Form
 from src.config import database_settings, app_settings
 import logging
-from google.adk.events import Event
+from google.adk.sessions import Session
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/fetchchat", tags=["FetchChat"])
@@ -27,6 +27,8 @@ async def fetch_chat(
     session = await db_session_service.get_session(
         app_name=app_settings.APP_NAME, user_id=user_id, session_id=session_id
     )
+
+    logger.info(f"Nombre d'événements dans la session: {len(session.events) if session else 'N/A'}")
 
     if not session:
         logger.warning("❌ Session not found")
@@ -57,6 +59,8 @@ async def fetch_chat(
         )
 
     logger.info(f"✅ Retrieved {len(messages)} events with text")
+    for msg in messages:
+        logger.info(f" - [{msg.type}] {msg.text}")
 
     return FetchChatResponse(
         session_id=session.id, user_id=session.user_id, messages=messages

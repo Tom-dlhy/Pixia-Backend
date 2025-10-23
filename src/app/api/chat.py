@@ -57,6 +57,11 @@ async def chat(
     bdd_manager = DBManager()
     current_session_service = None
 
+    logger.info(message)
+    if session_id:
+        logger.info(f"Session ID reçue: {session_id}")
+    else:
+        logger.info("Aucune Session ID reçue, création d'une nouvelle session.")
     # === Étape 1 : création ou récupération de session ===
     try:
         if session_id:
