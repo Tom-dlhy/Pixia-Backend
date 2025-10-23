@@ -15,7 +15,7 @@ async def login(req: LoginRequest):
 
     notion_token = "fake_notion_token_12345"  # Placeholder for actual token retrieval logic
 
-    study = "Master 2 de Fortnite"
+    study = "Master 2 de Data. et IA"  # Placeholder for actual study retrieval logic
 
     return LoginResponse(
         existing_user=bool(user),
