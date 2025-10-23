@@ -62,21 +62,6 @@ ORDER BY updated_at DESC
 )
 
 
-RENAME_SESSION = text(
-    """
-UPDATE session_titles
-SET title = :title
-WHERE session_id = :session_id
-"""
-)
-
-CREATE_SESSION_TITLE = text(
-    """
-INSERT INTO session_titles (session_id, title, is_deepcourse)
-VALUES (:session_id, :title, :is_deepcourse)
-"""
-)
-
 STORE_BASIC_DOCUMENT = text(
     """
 INSERT INTO public.document (id, google_sub, session_id, chapter_id, document_type, contenu, created_at, updated_at)
@@ -84,20 +69,6 @@ VALUES (:id, :google_sub, :session_id, :chapter_id, :document_type, :contenu, :c
 """
 )
 
-RENAME_CHAT = text(
-    """
-UPDATE session_titles
-SET title = :title
-WHERE session_id = :session_id
-"""
-)
-
-DELETE_SESSION_TITLE = text(
-    """
-DELETE FROM session_titles
-WHERE session_id = :session_id
-"""
-)
 
 DELETE_DOCUMENTS = text(
     """

@@ -6,11 +6,7 @@ from src.bdd.query import (
     CLEAR_ALL_TABLES,
     DROP_ALL_TABLES, 
     FETCH_ALL_CHATS, 
-    RENAME_SESSION,
-    CREATE_SESSION_TITLE, 
     STORE_BASIC_DOCUMENT, 
-    RENAME_CHAT, 
-    DELETE_SESSION_TITLE, 
     DELETE_DOCUMENTS,
     RENAME_CHAPTER, 
     DELETE_CHAPTER,
@@ -145,21 +141,8 @@ class DBManager:
     
     # Route chat
     
-    async def rename_session(self, title:str, session_id:str):
-        """Renomme une session de chat donnée."""
-        async with self.engine.begin() as conn:
-            await conn.execute(
-                RENAME_SESSION,
-                {"title": title, "session_id": session_id}
-            )
+
     
-    async def create_session_title(self, session_id:str, title:str, is_deepcourse:bool=False):
-        """Crée un titre de session."""
-        async with self.engine.begin() as conn:
-            await conn.execute(
-                CREATE_SESSION_TITLE,
-                {"session_id": session_id, "title": title, "is_deepcourse": is_deepcourse}
-            )
 
     async def store_basic_document(self, content:Union[ExerciseOutput, CourseOutput], session_id:str, sub:str, chapter_id:Optional[str]=None):
         """Stocke un document (exercice ou cours) associé à une session."""
@@ -318,13 +301,7 @@ class DBManager:
                 )
         
 
-    async def rename_chat(self, session_id: str, title: str):
-        """Renomme une session de chat donnée."""
-        async with self.engine.begin() as conn:
-            await conn.execute(
-                RENAME_CHAT,
-                {"title": title, "session_id": session_id}
-            )
+
 
     async def delete_chat(self, session_id: str):
         """Supprime une session de chat donnée."""
@@ -371,14 +348,6 @@ class DBManager:
             await conn.execute(
                 DELETE_DOCUMENTS_BY_CHAPTER,
                 {"chapter_id": chapter_id}
-            )
-
-    async def delete_session_title(self, session_id: str):
-        """Supprime le titre d'une session donnée."""
-        async with self.engine.begin() as conn:
-            await conn.execute(
-                DELETE_SESSION_TITLE,
-                {"session_id": session_id}
             )
 
     async def mark_chapter_complete(self, chapter_id: str):
