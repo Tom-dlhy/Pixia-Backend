@@ -98,7 +98,8 @@ AGENT_PROMPT_ExerciseAgent = """
         - "qcm" pour des exercices à choix multiples
         - "questions ouvertes/ questions libres etc." -> "open" pour des exercices ouverts
         - "les 2/ questions ouvertes et QCM" -> "both" pour un mélange des deux types
-
+    - title (le titre global des exercices à générer, c'est toi qui le génère, ne le demande pas à l'utilisateur )
+    
     Voici des exemples de demande de clarification:
     - "Pourriez-vous être plus précis sur le sujet des exercices ?"
     - "Quel niveau de difficulté souhaitez-vous pour les exercices ? (Exemples : 'college 4e', 'lycée terminale', 'débutant', 'intermédiaire', 'avancé')"

@@ -62,21 +62,6 @@ ORDER BY updated_at DESC
 )
 
 
-RENAME_SESSION = text(
-    """
-UPDATE session_titles
-SET title = :title
-WHERE session_id = :session_id
-"""
-)
-
-CREATE_SESSION_TITLE = text(
-    """
-INSERT INTO session_titles (session_id, title, is_deepcourse)
-VALUES (:session_id, :title, :is_deepcourse)
-"""
-)
-
 STORE_BASIC_DOCUMENT = text(
     """
 INSERT INTO public.document (id, google_sub, session_id, chapter_id, document_type, contenu, created_at, updated_at)
@@ -84,25 +69,50 @@ VALUES (:id, :google_sub, :session_id, :chapter_id, :document_type, :contenu, :c
 """
 )
 
-RENAME_CHAT = text(
-    """
-UPDATE session_titles
-SET title = :title
-WHERE session_id = :session_id
-"""
-)
-
-DELETE_SESSION_TITLE = text(
-    """
-DELETE FROM session_titles
-WHERE session_id = :session_id
-"""
-)
 
 DELETE_DOCUMENTS = text(
     """
 DELETE FROM document
 WHERE session_id = :session_id
+"""
+)
+
+DELETE_DEEPCOURSE = text(
+    """
+BEGIN;
+
+-- Récupérer les IDs des sessions associées aux documents des chapitres
+WITH sessions_to_delete AS (
+    SELECT DISTINCT "session_id"
+    FROM "public"."document"
+    WHERE "chapter_id" IN (
+        SELECT "id"
+        FROM "public"."chapter"
+        WHERE "deep_course_id" = :deepcourse_id
+    )
+)
+-- Supprimer les sessions
+DELETE FROM "public"."sessions"
+WHERE "id" IN (SELECT "session_id" FROM sessions_to_delete);
+
+-- Supprimer tous les documents associés aux chapitres du deepcourse
+DELETE FROM "public"."document"
+WHERE "chapter_id" IN (
+    SELECT "id"
+    FROM "public"."chapter"
+    WHERE "deep_course_id" = :deepcourse_id
+);
+
+-- Supprimer tous les chapitres du deepcourse
+DELETE FROM "public"."chapter"
+WHERE "deep_course_id" = :deepcourse_id;
+
+-- Supprimer le deepcourse lui-même
+DELETE FROM "public"."deepcourse"
+WHERE "id" = :deepcourse_id
+  AND "google_sub" = :user_id;
+
+COMMIT;
 """
 )
 
@@ -137,13 +147,24 @@ WHERE id = :chapter_id
 """
 )
 
+FETCH_CHAPTER_DOCUMENTS = text(
+    """
+SELECT 
+    MAX(CASE WHEN "document_type" = 'exercise' THEN "session_id" END) AS exercice_session_id,
+    MAX(CASE WHEN "document_type" = 'course' THEN "session_id" END) AS course_session_id,
+    MAX(CASE WHEN "document_type" = 'eval' THEN "session_id" END) AS evaluation_session_id
+FROM "public"."document"
+WHERE "chapter_id" = :chapter_id
+GROUP BY "chapter_id"
+"""
+)
+
 CHANGE_SETTINGS = text(
     """
 UPDATE users
-SET given_name = COALESCE(:new_given_name, given_name),
-    family_name = COALESCE(:new_family_name, family_name),
-    notion = COALESCE(:new_notion_url, notion),
-    drive = COALESCE(:new_drive_url, drive)
+SET name = COALESCE(:new_given_name, name),
+    notion_token = COALESCE(:new_notion_token, notion_token),
+    study = COALESCE(:new_niveau_etude, study)
 WHERE google_sub = :user_id
 """
 )
@@ -165,7 +186,7 @@ WHERE chapter_id = :chapter_id
 
 LOGIN_USER = text(
     """
-SELECT google_sub, email, given_name, family_name
+SELECT google_sub, email, name, notion_token, study
 FROM users
 WHERE email = :email
 """
@@ -173,8 +194,9 @@ WHERE email = :email
 
 SIGNUP_USER = text(
     """
-INSERT INTO users (google_sub, email, given_name, family_name)
-VALUES (:google_sub, :email, :given_name, :family_name)
+INSERT INTO users (google_sub, email, created_at, name, notion_token, study)
+VALUES (:google_sub, :email, :created_at, :name, :notion_token, :study)
+RETURNING google_sub, email, name, notion_token, study
 """
 )
 
@@ -283,6 +305,14 @@ VALUES (:id, :deep_course_id, :titre, :is_complete)
 """
 )
 
+FETCH_ALL_CHAPTERS = text(
+    """
+SELECT id as chapter_id, titre as title, is_complete
+FROM public.chapter
+WHERE deep_course_id = :deep_course_id
+"""
+)
+
 UPDATE_DOCUMENT_CONTENT = text(
     """
 UPDATE public.document
@@ -298,3 +328,22 @@ FROM public.document
 WHERE session_id = :session_id
 """
 )
+
+FETCH_ALL_DEEPCOURSES = text(
+    """
+SELECT 
+    "d"."id" AS deepcourse_id, 
+    "d"."titre" AS title,
+    ROUND(
+        CAST(SUM(CASE WHEN "c"."is_complete" THEN 1 ELSE 0 END) AS NUMERIC) / 
+        NULLIF(COUNT("c"."id"), 0), 
+        2
+    ) AS completion
+FROM "public"."deepcourse" AS "d"
+JOIN "public"."chapter" AS "c" ON "d"."id" = "c"."deep_course_id"
+WHERE "d"."google_sub" = :user_id
+GROUP BY "d"."id", "d"."titre"
+ORDER BY "d"."id";
+"""
+)
+

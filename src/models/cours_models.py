@@ -83,17 +83,8 @@ class CourseOutput(BaseModel):
     title: str = Field(..., description="Titre du cours généré.")
     parts: List[Part] = Field(
         ...,
-        min_length=1,
         description="Liste des parties générées avec contenu et diagrammes.",
     )
-
-
-# Aliases pour compatibilité rétroactive (legacy - ancien pipeline)
-CoursePartWithMermaid = Part
-CoursePartWithDiagram = Part
-CourseOutputWithMermaid = CourseOutput
-CourseOutputWithDiagram = CourseOutput
-
 
 ################################################
 ### Fonction de validation de l'CourseOutput ###

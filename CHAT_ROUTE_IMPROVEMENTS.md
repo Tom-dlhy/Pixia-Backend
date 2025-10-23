@@ -280,7 +280,7 @@ from typing import Union, Optional
 
 async def generate_deepcourse_with_retry(
     synthesis: DeepCourseSynthesis,
-    max_retries: int = 3,
+    max_retries: int = 0,
     allow_partial: bool = True
 ) -> DeepCourseOutput:
     """Génère un deepcourse avec retry et fallback partiel."""

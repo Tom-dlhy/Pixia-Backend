@@ -19,13 +19,9 @@ class User(Base):
     google_sub = Column(Text, primary_key=True)
     email = Column(Text, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
-    given_name = Column(Text)
-    family_name = Column(Text)
-    picture = Column(Text)
-    locale = Column(Text)
-    notion = Column(Text)
-    drive = Column(Text)
-    niveau_etudes = Column(Text)
+    name = Column(Text)
+    notion_token = Column(Text)
+    study = Column(Text)
 
     documents = relationship("Document", back_populates="user")
 
@@ -64,10 +60,3 @@ class Document(Base):
     user = relationship("User", back_populates="documents")
     chapter = relationship("Chapter")
 
-class SessionTitle(Base):
-    __tablename__ = "session_titles"
-    __table_args__ = {"schema": "public"}
-
-    session_id = Column(String(128), primary_key=True)
-    title = Column(Text, nullable=False)
-    is_deepcourse = Column(Boolean, nullable=False, default=False)

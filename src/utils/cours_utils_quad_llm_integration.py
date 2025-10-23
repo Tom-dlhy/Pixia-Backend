@@ -55,29 +55,25 @@ async def generate_courses_quad_llm(
     if isinstance(course_synthesis, dict):
         course_synthesis = CourseSynthesis(**course_synthesis)
 
-    logger.info(f"[PIPELINE] Début génération cours avec Quad LLM")
-    logger.info(f"[PIPELINE] Description: {course_synthesis.description[:100]}...")
-    logger.info(
-        f"[PIPELINE] Difficulté: {course_synthesis.difficulty}, Détail: {course_synthesis.level_detail}"
-    )
-
     try:
         # Utiliser le pipeline Quad LLM existant (optimisé)
         # Ce pipeline génère déjà la structure complète du cours
         result = await generate_course_complete(course_synthesis)
 
-        if not result or not isinstance(result, CourseOutput):
-            logger.error(f"[PIPELINE] Pipeline Quad LLM a échoué")
-            return {}
+        if not result:
+            logger.error(f"[PIPELINE] Pipeline Quad LLM a échoué - result is None")
+            # Re-lever l'exception pour que le caller la gère
+            raise ValueError("Pipeline Quad LLM failed: no result")
 
-        logger.info(f"[PIPELINE] ✅ Cours généré avec succès")
-        logger.info(
-            f"[PIPELINE]    {len(result.parts)} parties avec contenu markdown + diagrams"
-        )
-        logger.info(f"[PIPELINE]    Titre: {result.title}")
+        if not isinstance(result, CourseOutput):
+            logger.error(
+                f"[PIPELINE] Pipeline Quad LLM a échoué - mauvais type: {type(result)}"
+            )
+            raise ValueError(f"Pipeline Quad LLM failed: wrong type {type(result)}")
 
         return result.model_dump()
 
     except Exception as e:
         logger.error(f"[PIPELINE] ❌ Erreur: {e}", exc_info=True)
-        return {}
+        # Re-lever pour que le caller gère l'erreur proprement
+        raise

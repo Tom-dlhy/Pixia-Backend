@@ -14,6 +14,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Désactiver les loggers verbeux des dépendances
+logging.getLogger("google.genai").setLevel(logging.WARNING)
+logging.getLogger("google.genai.models").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("google.adk").setLevel(logging.WARNING)
+
+
 def create_app() -> FastAPI:
     """Crée et configure l'application FastAPI."""
     app = FastAPI(
@@ -25,12 +32,11 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"], 
+        allow_origins=["http://localhost:3000"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
 
     @app.get("/", tags=["Root"])
     async def root():
@@ -49,7 +55,6 @@ def create_app() -> FastAPI:
     #     app.state.db_pool = await create_db_pool()
     #     logger.info("Database pool initialized and ready.")
 
-
     @app.on_event("startup")
     async def on_startup():
         logger.info("Starting FastAPI application...")
@@ -61,12 +66,13 @@ def create_app() -> FastAPI:
 
         try:
             timeout = int(os.getenv("DB_CONNECT_TIMEOUT", "5"))
-            app.state.db_pool = await asyncio.wait_for(create_db_pool(), timeout=timeout)
+            app.state.db_pool = await asyncio.wait_for(
+                create_db_pool(), timeout=timeout
+            )
             logger.info("Database pool initialized and ready.")
         except Exception as e:
             logger.exception("DB init failed; starting without DB.")
             app.state.db_pool = None
-
 
     @app.on_event("shutdown")
     async def on_shutdown():
@@ -76,6 +82,7 @@ def create_app() -> FastAPI:
         logger.info("Database pool closed successfully.")
 
     return app
+
 
 app = create_app()
 
