@@ -1,11 +1,23 @@
-from fastapi import APIRouter
-from src.dto import ChangeSettingsRequest, ChangeSettingsResponse
+from fastapi import APIRouter, Form
 from src.bdd import DBManager
+from typing import Optional
 
 router = APIRouter(prefix="/changesettings", tags=["ChangeSettings"])
 
-@router.put("", response_model=ChangeSettingsResponse)
-async def change_settings(req: ChangeSettingsRequest):
+@router.put("")
+async def change_settings(
+    user_id: str = Form(...),
+    new_given_name: Optional[str] = Form(None),
+    new_notion_token: Optional[str] = Form(None),
+    new_niveau_etude: Optional[str] = Form(None),
+):
     db_manager = DBManager()
-    await db_manager.change_settings(req.user_id, req.new_given_name, req.new_family_name, req.new_notion_url, req.new_drive_url)
-    return ChangeSettingsResponse(user_id=req.user_id, is_changed=True)
+    await db_manager.change_settings(
+        user_id, 
+        new_given_name, 
+        new_niveau_etude, 
+        new_notion_token
+    )
+    return {"user_id": user_id, "is_changed": True}
+
+    

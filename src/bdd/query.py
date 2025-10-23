@@ -162,10 +162,9 @@ GROUP BY "chapter_id"
 CHANGE_SETTINGS = text(
     """
 UPDATE users
-SET given_name = COALESCE(:new_given_name, given_name),
-    family_name = COALESCE(:new_family_name, family_name),
-    notion = COALESCE(:new_notion_url, notion),
-    drive = COALESCE(:new_drive_url, drive)
+SET name = COALESCE(:new_given_name, name),
+    notion_token = COALESCE(:new_notion_token, notion_token),
+    study = COALESCE(:new_niveau_etude, study)
 WHERE google_sub = :user_id
 """
 )

@@ -393,8 +393,8 @@ class DBManager:
                 {"chapter_id": chapter_id}
             )
 
-    async def change_settings(self, user_id: str, new_given_name: Union[str, None], new_family_name: Union[str, None], 
-                              new_notion_url: Union[str, None], new_drive_url: Union[str, None]):
+    async def change_settings(self, user_id: str, new_given_name: Union[str, None], new_niveau_etude: Union[str, None], 
+                              new_notion_token: Union[str, None]):
         """Change les paramètres utilisateur."""
         # Implémentation fictive (à adapter selon le schéma réel)
         async with self.engine.begin() as conn:
@@ -403,9 +403,8 @@ class DBManager:
                 {
                     "user_id": user_id, 
                     "new_given_name": new_given_name, 
-                    "new_family_name": new_family_name, 
-                    "new_notion_url": new_notion_url, 
-                    "new_drive_url": new_drive_url
+                    "new_niveau_etude": new_niveau_etude, 
+                    "new_notion_token": new_notion_token
                 }
             )
 
