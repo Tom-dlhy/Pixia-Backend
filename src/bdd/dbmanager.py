@@ -327,7 +327,7 @@ class DBManager:
     async def fetch_all_chapters(self, deepcourse_id: str):
         """Récupère tous les chapitres pour un deepcourse donné."""
         async with self.engine.begin() as conn:
-            result = await conn.execute(FETCH_ALL_CHAPTERS, {"deepcourse_id": deepcourse_id})
+            result = await conn.execute(FETCH_ALL_CHAPTERS, {"deep_course_id": deepcourse_id})
             chapters = [dict(row._mapping) for row in result.fetchall()]
         return chapters
         
