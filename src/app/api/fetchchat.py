@@ -63,5 +63,7 @@ async def fetch_chat(
         logger.info(f" - [{msg.type}] {msg.text}")
 
     return FetchChatResponse(
-        session_id=session.id, user_id=session.user_id, messages=messages
+        session_id=session.id, 
+        user_id=session.user_id, 
+        messages=messages
     )
