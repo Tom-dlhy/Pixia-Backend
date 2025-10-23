@@ -298,3 +298,21 @@ FROM public.document
 WHERE session_id = :session_id
 """
 )
+
+FETCH_ALL_DEEPCOURSES = text(
+    """
+SELECT 
+    "d"."id" AS deepcourse_id, 
+    "d"."titre" AS title,
+    ROUND(
+        CAST(SUM(CASE WHEN "c"."is_complete" THEN 1 ELSE 0 END) AS NUMERIC) / 
+        NULLIF(COUNT("c"."id"), 0), 
+        2
+    ) AS completion
+FROM "public"."deepcourse" AS "d"
+JOIN "public"."chapter" AS "c" ON "d"."id" = "c"."deep_course_id"
+WHERE "d"."google_sub" = :user_id
+GROUP BY "d"."id", "d"."titre"
+ORDER BY "d"."id";
+"""
+)

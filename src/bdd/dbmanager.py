@@ -26,7 +26,8 @@ from src.bdd.query import (
     CREATE_CHAPTER,
     CREATE_DEEPCOURSE,
     UPDATE_DOCUMENT_CONTENT,
-    FETCH_DOCUMENT_BY_SESSION
+    FETCH_DOCUMENT_BY_SESSION,
+    FETCH_ALL_DEEPCOURSES
 )
 from src.config import database_settings
 from typing import Union,List,Dict,Any
@@ -195,6 +196,13 @@ class DBManager:
                 UPDATE_DOCUMENT_CONTENT,
                 {"id": document_id, "contenu": contenu_json}
             )
+        
+    async def fetch_all_deepcourses(self, user_id: str):
+        """Récupère tous les deepcourses pour un utilisateur donné."""
+        async with self.engine.begin() as conn:
+            result = await conn.execute(FETCH_ALL_DEEPCOURSES, {"user_id": user_id})
+            deepcourses = [dict(row._mapping) for row in result.fetchall()]
+        return deepcourses
 
     async def store_deepcourse(self, user_id: str, 
                                 content: DeepCourseOutput, 
