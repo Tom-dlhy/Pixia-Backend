@@ -23,7 +23,8 @@ from src.bdd.query import (
     CREATE_DEEPCOURSE,
     UPDATE_DOCUMENT_CONTENT,
     FETCH_DOCUMENT_BY_SESSION,
-    FETCH_ALL_DEEPCOURSES
+    FETCH_ALL_DEEPCOURSES,
+    DELETE_DEEPCOURSE,
 )
 from src.config import database_settings
 from typing import Union,List,Dict,Any
@@ -300,7 +301,14 @@ class DBManager:
                     }
                 )
         
-
+    async def delete_deepcourse(self, user_id: str, deepcourse_id: str):
+        """Supprime un deepcourse complet pour un utilisateur donné (avec les docs associés)."""
+        
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                DELETE_DEEPCOURSE,
+                {"id": deepcourse_id, "google_sub": user_id}
+            )
 
 
     async def delete_chat(self, session_id: str):

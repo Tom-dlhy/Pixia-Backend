@@ -77,6 +77,45 @@ WHERE session_id = :session_id
 """
 )
 
+DELETE_DEEPCOURSE = text(
+    """
+BEGIN;
+
+-- Récupérer les IDs des sessions associées aux documents des chapitres
+WITH sessions_to_delete AS (
+    SELECT DISTINCT "session_id"
+    FROM "public"."document"
+    WHERE "chapter_id" IN (
+        SELECT "id"
+        FROM "public"."chapter"
+        WHERE "deep_course_id" = :deepcourse_id
+    )
+)
+-- Supprimer les sessions
+DELETE FROM "public"."sessions"
+WHERE "id" IN (SELECT "session_id" FROM sessions_to_delete);
+
+-- Supprimer tous les documents associés aux chapitres du deepcourse
+DELETE FROM "public"."document"
+WHERE "chapter_id" IN (
+    SELECT "id"
+    FROM "public"."chapter"
+    WHERE "deep_course_id" = :deepcourse_id
+);
+
+-- Supprimer tous les chapitres du deepcourse
+DELETE FROM "public"."chapter"
+WHERE "deep_course_id" = :deepcourse_id;
+
+-- Supprimer le deepcourse lui-même
+DELETE FROM "public"."deepcourse"
+WHERE "id" = :deepcourse_id
+  AND "google_sub" = :user_id;
+
+COMMIT;
+"""
+)
+
 RENAME_CHAPTER = text(
     """
 UPDATE chapters
