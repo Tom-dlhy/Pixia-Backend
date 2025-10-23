@@ -4,43 +4,54 @@ from src.tools.exercises_tools import generate_exercises
 from src.tools.cours_tools import generate_courses
 from uuid import uuid4
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> DeepCourseOutput:
     if isinstance(synthesis, dict):
         synthesis = DeepCourseSynthesis(**synthesis)
     
     synthesis_chapters = synthesis.synthesis_chapters
+    logger.info(f"🚀 Génération d'un deepcourse avec {len(synthesis_chapters)} chapitres en parallèle")
 
-    tasks = [
-        asyncio.gather(
-            generate_exercises(chapter.synthesis_exercise),
-            generate_courses(chapter.synthesis_course),
-            generate_exercises(chapter.synthesis_evaluation)
-        )
-        for chapter in synthesis_chapters
-    ]
+    # Créer TOUS les tasks en parallèle (pas par chapitre)
+    all_tasks = []
+    for chapter in synthesis_chapters:
+        all_tasks.append(generate_exercises(chapter.synthesis_exercise))
+        all_tasks.append(generate_courses(chapter.synthesis_course))
+        all_tasks.append(generate_exercises(chapter.synthesis_evaluation))
     
-    results = await asyncio.gather(*tasks)
+    logger.info(f"⏳ Exécution de {len(all_tasks)} tâches en parallèle (3 par chapitre)")
+    
+    # Exécuter TOUS les tasks en parallèle
+    all_results = await asyncio.gather(*all_tasks)
+    
+    # Reconstruire les résultats par chapitre
     chapters = []
-    
-    for idx, chapitre in enumerate(results):
+    for idx, chapter_synthesis in enumerate(synthesis_chapters):
         id_chapter = str(uuid4())
-        chapter_title = synthesis_chapters[idx].chapter_title
+        chapter_title = chapter_synthesis.chapter_title
         
-        # Récupérer et valider les objets
-        exercise_result = chapitre[0]
+        # Récupérer les résultats pour ce chapitre (3 tasks par chapitre)
+        base_idx = idx * 3
+        exercise_result = all_results[base_idx]
+        course_result = all_results[base_idx + 1]
+        evaluation_result = all_results[base_idx + 2]
+        
+        logger.debug(f"✓ Chapitre {idx + 1}/{len(synthesis_chapters)}: {chapter_title}")
+        
+        # Valider et convertir les résultats
         if isinstance(exercise_result, dict):
             exercice = ExerciseOutput.model_validate(exercise_result)
         else:
             exercice = exercise_result
             
-        course_result = chapitre[1]
         if isinstance(course_result, dict):
             course = CourseOutput.model_validate(course_result)
         else:
             course = course_result
             
-        evaluation_result = chapitre[2]
         if isinstance(evaluation_result, dict):
             evaluation = ExerciseOutput.model_validate(evaluation_result)
         else:
@@ -62,5 +73,7 @@ async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> DeepCourseOutpu
         title=synthesis.title,
         chapters=chapters
     )
+    
+    logger.info(f"✅ DeepCourse généré avec succès: {deepcourse_output.title}")
     print(json.dumps(deepcourse_output.model_dump(), indent=2, ensure_ascii=False))
     return deepcourse_output
