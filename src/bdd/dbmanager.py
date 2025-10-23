@@ -401,13 +401,28 @@ class DBManager:
             row = result.fetchone()
             return dict(row._mapping) if row else None
 
-    async def signup_user(self, google_sub: str, email: str, given_name: str = "", family_name: str = ""):
+    async def signup_user(
+        self,
+        google_sub: str,
+        email: str,
+        name: str = "",
+        notion_token: str = "",
+        study: str = "",
+    ):
         async with self.engine.begin() as conn:
             result = await conn.execute(
                 SIGNUP_USER,
-                {"google_sub": google_sub, "email": email, "given_name": given_name, "family_name": family_name}
+                {
+                    "google_sub": google_sub,
+                    "email": email,
+                    "created_at": datetime.now(),
+                    "name": name,
+                    "notion_token": notion_token,
+                    "study": study,
+                },
             )
-            return result.fetchone()
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
         
 
     async def correct_plain_question(self, doc_id: str, id_question: str, is_correct: bool, answer: str):

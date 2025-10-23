@@ -183,8 +183,9 @@ WHERE email = :email
 
 SIGNUP_USER = text(
     """
-INSERT INTO users (google_sub, email, given_name, family_name)
-VALUES (:google_sub, :email, :given_name, :family_name)
+INSERT INTO users (google_sub, email, created_at, name, notion_token, study)
+VALUES (:google_sub, :email, :created_at, :name, :notion_token, :study)
+RETURNING google_sub, email, name, notion_token, study
 """
 )
 

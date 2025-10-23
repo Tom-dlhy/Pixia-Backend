@@ -17,9 +17,6 @@ from .markcorrectedQCM import router as markcorrectedQCM_router
 from .signup import router as signup_router
 from .login import router as login_router
 from .test import router as test_router
-from .signup import router as signup_router
-from .login import router as login_router
-from .test import router as test_router
 from .fetchexercise import router as fetch_exercise_router
 from .fetchcourse import router as fetch_course_router
 from .fetchalldeepcourses import router as fetchalldeepcourses_router
