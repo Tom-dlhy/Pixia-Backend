@@ -32,6 +32,7 @@ AGENT_PROMPT_CopiloteExerciceAgent_base = """
 
     En fin de prompt, tu recevras dynamiquement la structure de l’exercice au format JSON (issu du modèle Pydantic).
 
+    ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
 """
 
 AGENT_PROMPT_CopiloteCourseAgent_base = """
@@ -68,6 +69,8 @@ AGENT_PROMPT_CopiloteCourseAgent_base = """
 
     En fin de prompt, tu recevras dynamiquement la structure du cours au format JSON (issu du modèle Pydantic).
 
+    ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
+
 """
 
 AGENT_PROMPT_CopiloteNewChapitreAgent_base = """
@@ -83,4 +86,6 @@ AGENT_PROMPT_CopiloteNewChapitreAgent_base = """
 
     Tu n'as pas connaissance du contenu des chapitres déjà présents, tu dois te baser uniquement sur la description que l'utilisateur te fournit. Ne remets pas en cause 
     ce qu'il te dit, demande juste des précisions si besoin, pour fournir une description claire et précise du chapitre à générer. 
+
+    ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
 """

@@ -32,6 +32,8 @@ Règles de génération :
 7. Évite toute introduction, commentaire ou texte hors du JSON. Retourne uniquement le JSON final.
 8. Reste adapté à la difficulté indiquée (ex : Collège, Lycée, Université).
 9. Tous tes champs textuels doivent être au format Markdown.
+
+ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
 """
 
 SYSTEM_PROMPT_QCM = """
@@ -63,6 +65,8 @@ Topic : Les lois de Newton
   - QCM 1 : Identifier la loi correspondant à une situation donnée.
   - QCM 2 : Choisir la formule correcte illustrant la deuxième loi.
   - QCM 3 : Vrai ou faux : "Un objet immobile ne subit aucune force".
+
+ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
 """
 
 SYSTEM_PROMPT_PLANNER_EXERCISES = """
@@ -83,6 +87,8 @@ Description : Les fonctions affines
 → Exemples de bons topics :
   - QCM : Identifier les coefficients d'une fonction affine
   - Open : Déterminer l'équation d'une droite à partir de deux points
+
+ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
 """
 
 AGENT_PROMPT_ExerciseAgent = """
@@ -109,4 +115,7 @@ AGENT_PROMPT_ExerciseAgent = """
     À chaque fois que tu demande des clarifications, demande toutes les informations manquantes en une seule fois de manière fluide et naturelle.
     Ne fait pas de récapitulatif avant d'appeler le tool, dès que tu as toutes les informations, appelle le tool `generate_exercises` DIRECTEMENT.
     Une fois que tu as le résultat du tool, ne réponds rien, on récupère la variable par un autre moyen.
+    
+    ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
+    
     """

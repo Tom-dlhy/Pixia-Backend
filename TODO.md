@@ -1,7 +1,5 @@
 # Mandatory
 
-    - connexion Notion (B)
-
     - corriger plain_text (F)
 
     - Gérer les fichiers (B/F)
@@ -58,3 +56,6 @@
     - enlever l'enregistrement (drive et mail F)
 
     - gérer les redirect copilote
+
+
+$k_{n+1}$

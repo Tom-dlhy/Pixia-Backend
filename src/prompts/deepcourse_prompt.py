@@ -63,6 +63,8 @@ AGENT_PROMPT_DeepcourseAgent = """
 
     ENFIN :
         - Une fois que tu as la réponse du tool `generate_deepcourse`, ne réponds rien, on récupère la variable par un autre moyen.
+
+    ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
     """
 
 SYSTEM_PROMPT_GENERATE_NEW_CHAPTER="""
@@ -152,6 +154,8 @@ SYSTEM_PROMPT_GENERATE_NEW_CHAPTER="""
     En résumé :
     Tu es un expert qui complète intelligemment un deepcourse existant en générant un **nouveau chapitre original, structuré, équilibré et non redondant**, 
     sous forme d’un objet `ChapterSynthesis` parfaitement formaté, cohérent et immédiatement exploitable.
+    
+    ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
 
     Voici les informations dont tu disposes pour générer ce nouveau chapitre :
 

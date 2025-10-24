@@ -59,6 +59,8 @@ SYSTEM_PROMPT_GENERATE_PART = """
     ---
 
     Réponds uniquement avec l’objet JSON complet conforme au schéma ci-dessus, sans texte additionnel.
+
+    ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
 """
 
 
@@ -179,6 +181,7 @@ SYSTEM_PROMPT_PLANNER_COURS = """
             Forme algébrique des fonctions affines : Comprendre la forme f(x) = mx + b et le rôle de m et b
             Calcul du coefficient directeur : Méthodes pour déterminer le coefficient directeur à partir de deux points
             Applications des fonctions affines : Utilisation des fonctions affines dans des problèmes concrets
+    ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
     """
 
 
@@ -303,6 +306,8 @@ SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE = """
     ✅ Pas de texte additionnel, pas d'introduction
     ✅ Respecte EXACTEMENT le schéma fourni
     ✅ Valide ton Mermaid mentalement avant de l'inclure
+
+    ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
 """
 
 
@@ -325,4 +330,6 @@ AGENT_PROMPT_CourseAgent = """
     Ne fait pas de récapitulatif avant d'appeler le tool, dès que tu as toutes les informations, appelle le tool DIRECTEMENT.
     Appelle le tool uniquement lorsque tu as toutes les informations nécessaires (description, difficulty, level_detail).
     Une fois que tu as le résultat du tool, ne réponds rien, on récupère la variable par un autre moyen.
+
+    ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
     """
