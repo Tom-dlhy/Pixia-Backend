@@ -26,6 +26,8 @@ import time
 from dotenv import load_dotenv
 from src.utils import get_gemini_files
 
+from google.adk.artifacts import InMemoryArtifactService
+
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -37,6 +39,8 @@ settings = app_settings
 db_session_service = DatabaseSessionService(
     db_url=database_settings.dsn,
 )
+
+artifact_service = InMemoryArtifactService()
 
 inmemory_service = InMemorySessionService()
 
@@ -90,10 +94,68 @@ async def chat(
         logger.exception("❌ Erreur pendant la gestion de la session")
         raise HTTPException(status_code=500, detail=f"Erreur de session : {e}")
 
+    # === Étape 1.5 : Sauvegarder les files dans artifact_service ===
+    if files:
+        logger.info(f"📎 {len(files)} fichier(s) reçu(s)")
+        for idx, upload_file in enumerate(files):
+            try:
+                # Lire le contenu du fichier
+                file_bytes = await upload_file.read()
+                file_mime_type = upload_file.content_type or "application/octet-stream"
+                filename = upload_file.filename or f"file_{idx}"
+                
+                logger.info(f"📄 Sauvegarde de {filename} ({file_mime_type}, {len(file_bytes)} bytes)")
+                
+                # Créer un Part artifact avec les bytes
+                artifact_part = types.Part.from_bytes(
+                    data=file_bytes,
+                    mime_type=file_mime_type
+                )
+                
+                # Sauvegarder dans artifact_service
+                version = await artifact_service.save_artifact(
+                    app_name=settings.APP_NAME,
+                    user_id=user_id,
+                    session_id=session_id,
+                    filename=filename,
+                    artifact=artifact_part,
+                )
+                
+                logger.info(f"✅ Artifact sauvegardé: {filename} (version {version})")
+                
+            except Exception as e:
+                logger.error(f"❌ Erreur lors de la sauvegarde du fichier {filename}: {e}")
+                # Continue avec les autres fichiers même en cas d'erreur
+
     # === Étape 2 : exécution du runner ADK ===
     try:
         # Attach session files (PDFs uploaded to Gemini) to the user message
         parts = [Part(text=message)]
+        
+        # Ajouter les artifacts (fichiers uploadés) au message
+        try:
+            artifact_keys = await artifact_service.list_artifact_keys(
+                app_name=settings.APP_NAME,
+                user_id=user_id,
+                session_id=session_id,
+            )
+            
+            if artifact_keys:
+                logger.info(f"📂 Chargement de {len(artifact_keys)} artifact(s) pour le contexte")
+                for artifact_key in artifact_keys:
+                    artifact_part = await artifact_service.load_artifact(
+                        app_name=settings.APP_NAME,
+                        user_id=user_id,
+                        session_id=session_id,
+                        filename=artifact_key,
+                    )
+                    if artifact_part:
+                        parts.append(artifact_part)
+                        logger.info(f"✅ Artifact ajouté au contexte: {artifact_key}")
+        except Exception as e:
+            logger.warning(f"⚠️ Erreur lors du chargement des artifacts: {e}")
+        
+        # Ajouter aussi les anciens fichiers Gemini (si ils existent)
         try:
             for fid in get_gemini_files(session_id):  # type: ignore[arg-type]
                 parts.append(Part.from_uri(file_uri=fid, mime_type="application/pdf"))
@@ -115,6 +177,7 @@ async def chat(
             agent=root_agent,
             app_name=settings.APP_NAME,
             session_service=current_session_service,
+            artifact_service=artifact_service,
         )
 
         async for event in runner.run_async(
