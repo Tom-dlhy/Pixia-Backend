@@ -1,8 +1,3 @@
-from src.models.exercise_models import ExerciseOutput
-# from src.models.course_models import CourseOutput
-from typing import Any
-import json
-
 AGENT_PROMPT_CopiloteExerciceAgent_base = """
 
     Tu es un agent copilote conçu pour assister l’utilisateur dans un exercice en cours au sein d’une plateforme de cours interactive.
@@ -73,34 +68,17 @@ AGENT_PROMPT_CopiloteCourseAgent_base = """
 
 """
 
-AGENT_PROMPT_CopiloteDeepCourseAgent_base = """
+AGENT_PROMPT_CopiloteNewChapitreAgent_base = """
 
-    Tu es un agent copilote conçu pour assister l’utilisateur dans un cours approfondi contenant des exercices et des cours 
-    en cours de réalisation au sein d’une plateforme de cours interactive.
+    Tu es un agent copilote conçu pour assister l’utilisateur dans l'ajout d'un chapitre à un cours approfondi contenant déjà plusieurs chapitres.
+    Ton unique objectif est de fournir une description reflettant l'intention de l'utilisateur pour le nouveau chapitre à ajouter, quand tu as suffisamment d'informations, 
+    tu appelles le tool 'call_generate_new_chapter', tu dois lui fournir un objet répondant à ce schéma pydantic :
 
+    class NewChapterRequest(BaseModel):
+        description_user: str = Field(..., description="Description précise du nouveau chapitre à générer qui résume la demande utilisateur.")
 
+    ATTENTION ! Ne pose pas plus de deux questions de clarification maximum avant d'appeler le tool 'call_generate_new_chapter'. Si tu as déjà assez d'informations, appelle le tool directement.
+
+    Tu n'as pas connaissance du contenu des chapitres déjà présents, tu dois te baser uniquement sur la description que l'utilisateur te fournit. Ne remets pas en cause 
+    ce qu'il te dit, demande juste des précisions si besoin, pour fournir une description claire et précise du chapitre à générer. 
 """
-
-def build_copilot_exercice_system_prompt(
-    exercise_model: ExerciseOutput | list[dict[str, Any]] | dict[str, Any]
-) -> str:
-    """
-    Construit le system prompt complet du copilote à partir du modèle Pydantic d'exercice
-    et de l'état actuel des réponses utilisateur.
-    """
-    # Sérialisation propre du modèle d'exercice
-    exercise_json = None
-    if isinstance(exercise_model, ExerciseOutput):
-        exercise_json = exercise_model.model_dump_json(indent=2, exclude_none=True)
-    else:
-        exercise_json = json.dumps(exercise_model, indent=2, ensure_ascii=False)
-
-    # Construction finale
-    full_prompt = (
-        f"{AGENT_PROMPT_CopiloteExerciceAgent_base}\n\n"
-        f"Voici la structure de l’exercice en cours :\n{exercise_json}"
-    )
-    return full_prompt
-
-
-### Todo: Ajouter un prompt dynamique similaire pour le copilote de cours et de deepcourse
