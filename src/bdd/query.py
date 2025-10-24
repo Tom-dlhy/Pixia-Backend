@@ -44,15 +44,19 @@ ORDER BY table_name;
 """
 )
 
-FETCH_ALL_CHATS = text("""
+FETCH_ALL_CHATS = text(
+    """
 SELECT 
     session_id AS session_id,
     document_type AS document_type,
-    CASE
-        WHEN document_type = 'exercise' THEN 'Exercice'
-        WHEN document_type = 'course' THEN 'Cours'
-        ELSE 'Document'
-    END AS title
+    COALESCE(
+        (contenu::jsonb->>'title'),
+        CASE
+            WHEN document_type = 'exercise' THEN 'Exercice'
+            WHEN document_type = 'course' THEN 'Cours'
+            ELSE 'Document'
+        END
+    ) AS title
 FROM document
 WHERE google_sub = :user_id
   AND chapter_id IS NULL
@@ -329,13 +333,15 @@ WHERE session_id = :session_id
 """
 )
 
-GET_DEEPCOURSE_AND_CHAPTER_FROM_ID = text("""
+GET_DEEPCOURSE_AND_CHAPTER_FROM_ID = text(
+    """
 SELECT c.titre as chapter_title, d.titre as deepcourse_title
 FROM chapter c 
 LEFT JOIN deepcourse d 
 ON c.deep_course_id = d.id
 WHERE d.id = :deepcourse_id
-       """)
+       """
+)
 FETCH_ALL_DEEPCOURSES = text(
     """
 SELECT 
@@ -353,4 +359,3 @@ GROUP BY "d"."id", "d"."titre"
 ORDER BY "d"."id";
 """
 )
-

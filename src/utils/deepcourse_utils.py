@@ -20,14 +20,18 @@ logger = logging.getLogger(__name__)
 
 async def generate_new_chapter(deepcourse_id: str, description_user: str) -> Chapter:
     """Generate a Chapter from a DeepCourse synthesis description."""
-    
+
     db_manager = DBManager()
-    
-    logger.info(f"🔄 Génération d'un nouveau chapitre pour deepcourse_id={deepcourse_id}")
-    
+
+    logger.info(
+        f"🔄 Génération d'un nouveau chapitre pour deepcourse_id={deepcourse_id}"
+    )
+
     # Récupérer les informations du deepcourse et des chapitres existants
     try:
-        deepcourse_data_list: List[Dict[str, Any]] = await db_manager.get_deepcourse_and_chapter_with_id(deepcourse_id)
+        deepcourse_data_list: List[Dict[str, Any]] = (
+            await db_manager.get_deepcourse_and_chapter_with_id(deepcourse_id)
+        )
     except Exception as e:
         logger.error(f"❌ Erreur lors de la récupération du deepcourse: {e}")
         raise
@@ -38,16 +42,22 @@ async def generate_new_chapter(deepcourse_id: str, description_user: str) -> Cha
 
     # Extraire le titre du deepcourse (premier élément) et tous les chapitres
     first_item = deepcourse_data_list[0]
-    deepcourse_title = first_item.get("deepcourse_title", "") if isinstance(first_item, dict) else ""
-    
+    deepcourse_title = (
+        first_item.get("deepcourse_title", "") if isinstance(first_item, dict) else ""
+    )
+
     # Construire le contexte pour Gemini
     lines = [f"Titre du Deepcourse : {deepcourse_title}"]
     for idx, chapter_data in enumerate(deepcourse_data_list, start=1):
-        chapter_title = chapter_data.get("chapter_title", "") if isinstance(chapter_data, dict) else str(chapter_data)
+        chapter_title = (
+            chapter_data.get("chapter_title", "")
+            if isinstance(chapter_data, dict)
+            else str(chapter_data)
+        )
         lines.append(f"Titre du chapitre numero {idx} : {chapter_title}")
-    
+
     context_text = "\n".join(lines)
-    
+
     logger.debug(f"📋 Contexte généré:\n{context_text}")
 
     # Appel à Gemini pour générer la synthèse du chapitre
@@ -69,15 +79,19 @@ async def generate_new_chapter(deepcourse_id: str, description_user: str) -> Cha
                 synthesis_chapter = ChapterSynthesis.model_validate(parsed_data)
             else:
                 # Cast to dict for validation (Gemini returns dict or BaseModel)
-                synthesis_chapter = ChapterSynthesis.model_validate(cast(dict, parsed_data))
+                synthesis_chapter = ChapterSynthesis.model_validate(
+                    cast(dict, parsed_data)
+                )
         else:
             payload = getattr(response, "text", None)
             if isinstance(payload, str):
                 synthesis_chapter = ChapterSynthesis.model_validate_json(payload)
             else:
                 synthesis_chapter = ChapterSynthesis.model_validate(payload)
-        
-        logger.info(f"✅ Synthèse du chapitre générée: {synthesis_chapter.chapter_title}")
+
+        logger.info(
+            f"✅ Synthèse du chapitre générée: {synthesis_chapter.chapter_title}"
+        )
     except Exception as err:
         logger.error(f"❌ Erreur lors de la génération de la synthèse: {err}")
         raise
@@ -88,7 +102,7 @@ async def generate_new_chapter(deepcourse_id: str, description_user: str) -> Cha
         # Import local pour éviter les cycles d'importation
         from src.tools.exercises_tools import generate_exercises
         from src.tools.cours_tools import generate_courses
-        
+
         # Paralléliser les 3 générations
         exercise_result, course_result, evaluation_result = await asyncio.gather(
             generate_exercises(synthesis_chapter.synthesis_exercise),
@@ -101,6 +115,17 @@ async def generate_new_chapter(deepcourse_id: str, description_user: str) -> Cha
 
     # Valider et convertir les résultats
     try:
+        # Vérifier que les résultats ne sont pas vides
+        if isinstance(exercise_result, dict) and not exercise_result:
+            logger.error("❌ exercise_result est vide (génération échouée)")
+            raise ValueError("Exercise generation failed: empty result")
+        if isinstance(course_result, dict) and not course_result:
+            logger.error("❌ course_result est vide (génération échouée)")
+            raise ValueError("Course generation failed: empty result")
+        if isinstance(evaluation_result, dict) and not evaluation_result:
+            logger.error("❌ evaluation_result est vide (génération échouée)")
+            raise ValueError("Evaluation generation failed: empty result")
+
         exercice = (
             ExerciseOutput.model_validate(exercise_result)
             if isinstance(exercise_result, dict)
@@ -130,6 +155,6 @@ async def generate_new_chapter(deepcourse_id: str, description_user: str) -> Cha
         exercice=exercice,
         evaluation=evaluation,
     )
-    
+
     logger.info(f"✅ Chapitre créé avec succès: {chapter_id}")
     return chapter

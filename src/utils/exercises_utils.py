@@ -80,6 +80,7 @@ async def generate_qcm(prompt: str, difficulty: str) -> Union[QCM, dict, Any]:
 
     return data
 
+
 async def planner_exercises_async(
     synthesis: ExerciseSynthesis,
 ) -> Union[ExercisePlan, dict, Any]:
@@ -100,11 +101,13 @@ async def planner_exercises_async(
     )
     try:
         data = response.parsed
+        if not data:
+            logging.error(f"[Planner] response.parsed est None")
+            raise ValueError("Planner returned None")
+        return data
     except Exception as err:
-        logging.error(f"Erreur parsing {err}")
-        data = {}
-
-    return data
+        logging.error(f"[Planner] Erreur parsing {err}")
+        raise
 
 
 async def generate_for_topic(

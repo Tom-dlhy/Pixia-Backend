@@ -81,7 +81,7 @@ def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
 
         # Crée un hash pour le nommage du fichier
         digest = hashlib.sha256(mermaid_code.encode("utf-8")).hexdigest()[:16]
-        out_path = os.path.join(".", f"mermaid_{digest}.svg")
+        out_path = os.path.join(".", f"mermaid_{digest}.png")
 
         logger.debug(f"[KROKI-CALL] Envoi à Kroki avec digest: {digest}")
 
@@ -94,7 +94,7 @@ def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
             "POST",
             "-H",
             "Content-Type: text/plain",
-            "https://kroki.io/mermaid/svg",
+            "https://kroki.io/mermaid/png",
             "--data-binary",
             "@-",
         ]
