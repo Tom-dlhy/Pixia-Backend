@@ -89,9 +89,12 @@ async def generate_new_chapter(deepcourse_id: str, description_user: str) -> Cha
         from src.tools.exercises_tools import generate_exercises
         from src.tools.cours_tools import generate_courses
         
-        exercise_result = await generate_exercises(synthesis_chapter.synthesis_exercise)
-        course_result = await generate_courses(synthesis_chapter.synthesis_course)
-        evaluation_result = await generate_exercises(synthesis_chapter.synthesis_evaluation)
+        # Paralléliser les 3 générations
+        exercise_result, course_result, evaluation_result = await asyncio.gather(
+            generate_exercises(synthesis_chapter.synthesis_exercise),
+            generate_courses(synthesis_chapter.synthesis_course),
+            generate_exercises(synthesis_chapter.synthesis_evaluation),
+        )
     except Exception as e:
         logger.error(f"❌ Erreur lors de la génération des composantes: {e}")
         raise
