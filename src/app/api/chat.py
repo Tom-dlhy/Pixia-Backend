@@ -27,6 +27,7 @@ from dotenv import load_dotenv
 from src.utils import get_gemini_files
 
 from google.adk.artifacts import InMemoryArtifactService
+from src.tools.copilote_tools import set_document_id_context
 
 load_dotenv()
 
@@ -54,6 +55,7 @@ async def chat(
     session_id: Optional[str] = Form(None),
     files: Optional[List[UploadFile]] = File(None),
     deep_course_id: Optional[str] = Form(None),
+    document_id: Optional[str] = Form(None),
 ):
     """Traite un message utilisateur via une session ADK."""
     start_time = time.monotonic()
@@ -82,6 +84,11 @@ async def chat(
                     app_name=settings.APP_NAME, user_id=user_id, session_id=session_id
                 )
                 current_session_service = db_session_service
+                
+                # Si session DB (copilote) et document_id fourni, le stocker dans le contexte
+                if session and document_id:
+                    set_document_id_context(document_id)
+                    logger.info(f"📋 Context configuré avec document_id={document_id}")
 
         elif not session_id:
             session = await inmemory_service.create_session(
@@ -181,7 +188,9 @@ async def chat(
         )
 
         async for event in runner.run_async(
-            user_id=user_id, session_id=session_id, new_message=typed_message
+            user_id=user_id, 
+            session_id=session_id, 
+            new_message=typed_message
         ):
 
             # --- Réponse finale ---

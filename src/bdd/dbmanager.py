@@ -28,6 +28,7 @@ from src.bdd.query import (
     DELETE_DEEPCOURSE,
     FETCH_ALL_CHAPTERS,
     FETCH_CHAPTER_DOCUMENTS,
+    FETCH_DOCUMENT_CONTENT_BY_ID,
 )
 from src.config import database_settings
 from typing import Union, List, Dict, Any
@@ -413,12 +414,6 @@ class DBManager:
                 DELETE_DEEPCOURSE, {"id": deepcourse_id, "google_sub": user_id}
             )
 
-    async def delete_chat(self, session_id: str):
-        """Supprime une session de chat donnée."""
-        async with self.engine.begin() as conn:
-            await conn.execute(DELETE_SESSION_TITLE, {"session_id": session_id})
-            await conn.execute(DELETE_DOCUMENTS, {"session_id": session_id})
-
     async def fetch_all_chapters(self, deepcourse_id: str):
         """Récupère tous les chapitres pour un deepcourse donné."""
         async with self.engine.begin() as conn:
@@ -548,11 +543,11 @@ class DBManager:
                 MARK_IS_CORRECTED_QCM, {"doc_id": doc_id, "id_question": question_id}
             )
 
-    async def get_document(self, sesssion_id: str):
-        """Récupère un document par session_id."""
+    async def get_document_by_id(self, document_id: str):
+        """Récupère un document par document_id."""
         async with self.engine.begin() as conn:
             result = await conn.execute(
-                FETCH_DOCUMENT_BY_SESSION, {"session_id": sesssion_id}
+                FETCH_DOCUMENT_CONTENT_BY_ID, {"document_id": document_id}
             )
             row = result.fetchone()
             return dict(row._mapping) if row else None

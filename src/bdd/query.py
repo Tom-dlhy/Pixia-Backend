@@ -333,6 +333,64 @@ WHERE session_id = :session_id
 """
 )
 
+FETCH_DOCUMENT_CONTENT_BY_ID = text(
+    """
+SELECT
+    d.id,
+    d.document_type,
+    (d.contenu::jsonb) ->> 'title' AS title,
+
+    CASE
+        WHEN d.document_type = 'exercise' THEN
+            jsonb_build_object(
+                'title', (d.contenu::jsonb) ->> 'title',
+                'exercises',
+                (
+                    SELECT jsonb_agg(
+                        jsonb_build_object(
+                            'type', e ->> 'type',
+                            'topic', e ->> 'topic',
+                            'questions',
+                                (
+                                    SELECT jsonb_agg(
+                                        jsonb_build_object(
+                                            'question', q ->> 'question',
+                                            'answers', q -> 'answers',
+                                            'explanation', q ->> 'explanation'
+                                        )
+                                    )
+                                    FROM jsonb_array_elements(e -> 'questions') q
+                                )
+                        )
+                    )
+                    FROM jsonb_array_elements((d.contenu::jsonb) -> 'exercises') e
+                )
+            )
+
+        WHEN d.document_type = 'course' THEN
+            jsonb_build_object(
+                'title', (d.contenu::jsonb) ->> 'title',
+                'parts',
+                (
+                    SELECT jsonb_agg(
+                        jsonb_build_object(
+                      
+                            'title', p ->> 'title',
+                            'content', p ->> 'content',
+                            'schema_description', p ->> 'schema_description'
+                        )
+                    )
+                    FROM jsonb_array_elements((d.contenu::jsonb) -> 'parts') p
+                )
+            )
+    END AS parsed_content
+
+FROM document d
+WHERE d.id = :document_id;
+
+"""
+)
+
 GET_DEEPCOURSE_AND_CHAPTER_FROM_ID = text(
     """
 SELECT c.titre as chapter_title, d.titre as deepcourse_title
