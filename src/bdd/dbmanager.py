@@ -552,6 +552,15 @@ class DBManager:
             row = result.fetchone()
             return dict(row._mapping) if row else None
 
+    async def get_document_by_session_id(self, session_id: str):
+        """Récupère un document par session_id."""
+        async with self.engine.begin() as conn:
+            result = await conn.execute(
+                FETCH_DOCUMENT_BY_SESSION, {"session_id": session_id}
+            )
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
+
 
 # =========================================================
 # SCRIPT DE TEST / DEBUG DIRECT

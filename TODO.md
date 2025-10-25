@@ -2,17 +2,13 @@
 
     - corriger plain_text (F)
 
-    - Gérer les fichiers (B/F)
+    - gérer les $k_{n+1}$ dans le front
 
     - gérer le fait pourquoi ca prend mille ans apres (B)
 
     - augmenter le temps de FASTAPI pour pas se faire shutdown (pas oublier de le configurer sur cloud run )
 
     - faire en sorte que l'image soit aussi sur le pdf (F)
-
-    - que quelqu'un envoie message à Delphin pour lui dire que ca fonctionne pas (Tom)
-
-    - Faire un checking en mode si c'est un agent copilote pour la premiere fois on envoie en context tout le cours ou tout l'exo (ou alors un tool pour lui permettre d'aller fetch l'info (plus stylé)) (B) // PIERRE 
 
     - ajouter chapitre et le mettre en async (B)
 
@@ -25,8 +21,6 @@
     - supprimer l'agent discussion (F)
 
     - revoir le prompt engeneering de tout mais surout de l'agent generate deep_course (trop long à appeler le tool et apres renvoyer None)
-
-    - préciser de à tous les agents de faire diu format markdown (B)
 
     - CODE CLEANING (B ++++++ /// F ++++++++)
 
