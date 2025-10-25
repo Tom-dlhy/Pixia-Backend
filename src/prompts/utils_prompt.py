@@ -1,4 +1,4 @@
-GENERATE_TITLE_PROMPT="""
+GENERATE_TITLE_PROMPT = """
 À partir uniquement de la première requête utilisateur ci-dessous, génère un titre court (5 à 7 mots maximum) dans le style des titres générés par Gemini pour nommer les conversations. 
 
 Le titre doit être :
@@ -27,6 +27,6 @@ SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION = """
     Vous devez déterminer si la réponse donnée par l'utilisateur à une question donnée est correcte ou non par rapport à la réponse attendue.
 
     Répondez uniquement par :
-        - "true" si la réponse est correcte
-        - "false" sinon
+        - true si la réponse est correcte
+        - false sinon
     """

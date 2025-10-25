@@ -1,11 +1,10 @@
 from src.config import gemini_settings
 from src.prompts import SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION
 import logging
-from google.genai import types
 from pydantic import BaseModel
 
 
-class isCorrectResponse(BaseModel):
+class IsCorrectResponse(BaseModel):
     is_correct: bool
 
 
@@ -21,12 +20,14 @@ async def agent_correct_plain_question(
         config={
             "system_instruction": SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION,
             "response_mime_type": "application/json",
-            "response_schema": isCorrectResponse,
+            "response_schema": IsCorrectResponse,
         },
     )
+    print(f"Réponse de l'API Gemini: {api_response}")
+
     try:
         parsed = api_response.parsed
-        if isinstance(parsed, isCorrectResponse):
+        if isinstance(parsed, IsCorrectResponse):
             return parsed.is_correct
         else:
             logging.error(f"Erreur parsing: réponse inattendue")
