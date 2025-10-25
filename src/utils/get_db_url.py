@@ -18,7 +18,6 @@ async def create_db_pool(min_size: int = 1, max_size: int = 10) -> Pool:
             max_size=max_size,
             command_timeout=60,
         )
-        logger.info(f"✅ Database pool created successfully ({min_size}-{max_size})")
         return pool
 
     except Exception as e:

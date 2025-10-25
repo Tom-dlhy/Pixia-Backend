@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Literal, List, Optional
-
+import json
 
 ##################################################
 ### Modèle Pydantic pour la Synthèse de Cours ####
@@ -65,9 +65,7 @@ class Part(BaseModel):
     )
 
 
-# Alias pour compatibilité rétroactive (legacy)
 PartSchema = Part
-
 
 ###############################################
 ### Modèle Pydantic pour l'Output du Cours ####
@@ -98,13 +96,10 @@ def _validate_course_output(data: dict | str) -> CourseOutput | None:
         if isinstance(data, CourseOutput):
             return data
         elif isinstance(data, dict):
-            # Si les données sont imbriquées dans une clé 'result', les extraire
             if "result" in data and isinstance(data["result"], dict):
                 data = data["result"]
             return CourseOutput.model_validate(data)
         elif isinstance(data, str):
-            # Essayer de parser en JSON d'abord
-            import json
 
             try:
                 parsed = json.loads(data)
@@ -112,7 +107,6 @@ def _validate_course_output(data: dict | str) -> CourseOutput | None:
                     parsed = parsed["result"]
                 return CourseOutput.model_validate(parsed)
             except (json.JSONDecodeError, ValueError):
-                # Si ce n'est pas du JSON valide, essayer la validation directe
                 return CourseOutput.model_validate_json(data)
         else:
             return None

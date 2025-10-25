@@ -33,6 +33,4 @@ async def generate_courses(course_synthesis: CourseSynthesis) -> Union[dict, Any
 
     result = await generate_courses_quad_llm(course_synthesis)
 
-    logger.info(f"[GENERATE_COURSES] ✅ Cours généré avec succès")
-
     return result

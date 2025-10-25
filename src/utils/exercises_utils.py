@@ -12,9 +12,8 @@ from src.prompts import (
     SYSTEM_PROMPT_QCM,
     SYSTEM_PROMPT_PLANNER_EXERCISES,
 )
-import logging, asyncio, uuid
+import logging
 from typing import Any, Union
-from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO)
 

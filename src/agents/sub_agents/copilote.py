@@ -2,14 +2,9 @@ from google.adk.agents import LlmAgent
 from src.prompts import AGENT_PROMPT_CopiloteExerciceAgent_base, AGENT_PROMPT_CopiloteCourseAgent_base, AGENT_PROMPT_CopiloteNewChapitreAgent_base
 from src.config import gemini_settings
 from src.tools.deepcourse_tools import call_generate_new_chapter
-from google import genai
-from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 from src.tools.copilote_tools import fetch_context_tool
-# from google.genai.types import MCPToolset  # OAuth needed
 from google.adk.tools.mcp_tool import MCPToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
-
-
 
 
 copilote_exercice_agent = LlmAgent(

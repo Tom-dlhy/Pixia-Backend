@@ -6,12 +6,12 @@ SYSTEM_PROMPT_GENERATE_PART = """
 
     ---
 
-    ### 🎯 Objectif :
+    ### Objectif :
     Fournir un texte clair, progressif et adapté au niveau indiqué, afin d’aider un élève à comprendre le sujet sans digression inutile.
 
     ---
 
-    ### 🧩 Structure attendue :
+    ### Structure attendue :
     - La partie doit commencer directement par le contenu (pas d’introduction hors sujet).
     - Organise le texte en **sections et sous-sections** logiques.
     - Utilise uniquement la mise en forme **gras (**) pour les titres et sous-titres**.
@@ -21,7 +21,7 @@ SYSTEM_PROMPT_GENERATE_PART = """
 
     ---
 
-    ### 🧠 Style pédagogique :
+    ### Style pédagogique :
     - Adopte un ton clair, didactique et adapté au public (débutant, lycée, universitaire…).
     - Explique les concepts progressivement, du plus simple au plus complexe.
     - Utilise des phrases courtes et accessibles.
@@ -29,7 +29,7 @@ SYSTEM_PROMPT_GENERATE_PART = """
 
     ---
 
-    ### ⚙️ Contraintes de génération :
+    ### Contraintes de génération :
     - Ne mentionne ni le mot “partie”, ni d’éléments de structure technique (ex : “Section 1”, “Partie 2”).
     - N’intègre aucune équation en LaTeX ni symboles de formatage spéciaux (#, ##, HTML…).
     - N’ajoute **aucune introduction ni conclusion hors sujet**.
@@ -37,7 +37,7 @@ SYSTEM_PROMPT_GENERATE_PART = """
 
     ---
 
-    ### 📘 Sortie attendue (format JSON strict) :
+    ### Sortie attendue (format JSON strict) :
     Le modèle doit retourner un **objet JSON** conforme au schéma suivant :
 
     {
@@ -50,7 +50,7 @@ SYSTEM_PROMPT_GENERATE_PART = """
 
     ---
 
-    ### 🖋️ Exemple de style attendu :
+    ### Exemple de style attendu :
     **Notion clé : Les angles orientés**
     Un angle orienté est défini par un sens de rotation. Le sens direct (anti-horaire) correspond à un angle positif, tandis que le sens rétrograde (horaire) correspond à un angle négatif.  
     **Application : Le cercle trigonométrique**  

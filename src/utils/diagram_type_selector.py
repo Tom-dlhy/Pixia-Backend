@@ -1,16 +1,3 @@
-"""
-Sélecteur intelligent du type de diagramme le plus pertinent pour chaque partie du cours.
-Utilise Gemini pour analyser le contenu et recommander le format optimal.
-
-Types supportés par Kroki:
-- Mermaid: Flowcharts, sequences, class diagrams, state machines
-- PlantUML: UML complet (class, sequence, activity, component)
-- C4: Architecture/Context diagrams
-- GraphViz: Directed graphs et visualisations complexes
-- D2: Modern diagrams avec syntax simple
-- Ditaa: ASCII diagrams
-"""
-
 from enum import Enum
 from typing import Optional, Dict, Any
 import logging
@@ -25,7 +12,7 @@ class DiagramType(str, Enum):
 
     MERMAID = "mermaid"
     PLANTUML = "plantuml"
-    C4 = "c4"  # Via PlantUML
+    C4 = "c4"  
     GRAPHVIZ = "graphviz"
     D2 = "d2"
     DITAA = "ditaa"
@@ -141,7 +128,7 @@ class DiagramTypeSelector:
             prompt = DIAGRAM_TYPE_SELECTOR_PROMPT.format(
                 title=title,
                 description=description,
-                content=content[:500],  # Limite pour économiser tokens
+                content=content[:500],  
             )
 
             logger.debug(f"[DIAGRAM-SELECT] Analyse du type optimal pour: {title[:40]}")
@@ -172,7 +159,6 @@ class DiagramTypeSelector:
 
         except Exception as e:
             logger.error(f"[DIAGRAM-SELECT-ERROR] Erreur sélection: {e}", exc_info=True)
-            # Default à Mermaid en cas d'erreur
             return {
                 "diagram_type": DiagramType.MERMAID,
                 "reasoning": "Type par défaut (erreur lors de la sélection)",
@@ -212,7 +198,6 @@ class DiagramTypeSelector:
 
             code = response.text.strip()
 
-            # Nettoyage des backticks si présentes
             if code.startswith("```"):
                 code = code.split("```", 2)[1]
                 if code.startswith(diagram_type.value):

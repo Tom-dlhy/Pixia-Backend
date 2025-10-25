@@ -1,13 +1,11 @@
 from src.config import gemini_settings
 from src.prompts import SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION
 import logging
-from google.genai import types
 from pydantic import BaseModel
 
 
 class isCorrectResponse(BaseModel):
     is_correct: bool
-
 
 async def agent_correct_plain_question(
     answer: str, question: str, response: str

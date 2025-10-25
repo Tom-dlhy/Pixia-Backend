@@ -17,20 +17,17 @@ def recevoir_et_lire_pdf(payload: Dict[str, Any]) -> Dict[str, Any]:
     try:
         data = EntreeRecevoirEtLirePDF(**payload)
 
-        # Chemin obligatoire et validation minimale
         chemin_source = data.file_path
         if not chemin_source or not os.path.exists(chemin_source):
             return SortieRecevoirEtLirePDF(ok=False, message="Fichier introuvable ou chemin invalide").model_dump()
         if not chemin_source.lower().endswith(".pdf"):
             return SortieRecevoirEtLirePDF(ok=False, message="Le fichier doit être un PDF").model_dump()
 
-        # Upload vers Gemini
-        uploaded_file = upload_file(chemin_source)  # type: ignore
+        uploaded_file = upload_file(chemin_source)  
         file_id = getattr(uploaded_file, "name", None)
         file_state = getattr(uploaded_file, "state", None)
         file_uri = getattr(uploaded_file, "uri", None)
 
-        # Conserver en contexte la ressource exploitable par le modèle (URI)
         if file_uri:
             add_gemini_file(data.session_id, file_uri)
         if file_id:
