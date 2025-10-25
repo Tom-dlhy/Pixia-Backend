@@ -1,52 +1,44 @@
 from google.adk.agents import LlmAgent
-from src.prompts import AGENT_PROMPT_CopiloteExerciceAgent_base, AGENT_PROMPT_CopiloteCourseAgent_base, AGENT_PROMPT_CopiloteDeepCourseAgent_base
+from src.prompts import AGENT_PROMPT_CopiloteExerciceAgent_base, AGENT_PROMPT_CopiloteCourseAgent_base, AGENT_PROMPT_CopiloteNewChapitreAgent_base
 from src.config import gemini_settings
-from google.adk.tools import google_search
-from src.tools.import_fichier_tools import recevoir_et_lire_pdf, resumer_pdfs_session, repondre_question_pdf
+from src.tools.deepcourse_tools import call_generate_new_chapter
+from google import genai
+from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
+from src.tools.copilote_tools import fetch_context_tool
+# from google.genai.types import MCPToolset  # OAuth needed
+from google.adk.tools.mcp_tool import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
-PDF_TOOLS_POLICY = (
-    "\n\nPolitique outils (PDF):\n"
-    "- Si la demande concerne un document PDF en contexte (résumer, trouver des infos, expliquer), utilise les outils :\n"
-    "  * repondre_question_pdf pour les questions ciblées avec références.\n"
-    "  * resumer_pdfs_session pour produire un résumé concis.\n"
-    "- Pour les questions de suivi sur le même document, continue d'utiliser ces outils (ne redemande pas le fichier)."
-)
+
+
 
 copilote_exercice_agent = LlmAgent(
     name="CopiloteExerciceAgent",
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
     description="Agent spécialisé dans l'assistance à la réalisation d'exercices pour l'utilisateur.",
-    instruction=AGENT_PROMPT_CopiloteExerciceAgent_base + PDF_TOOLS_POLICY,
-    tools=[
-        recevoir_et_lire_pdf,
-        resumer_pdfs_session,
-        repondre_question_pdf,
-    ],
-    # tools=[google_search]
+    instruction=AGENT_PROMPT_CopiloteExerciceAgent_base,
+    tools=[fetch_context_tool],
 )
 
 copilote_cours_agent = LlmAgent(
     name="CopiloteCoursAgent",
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
     description="Agent spécialisé dans l'assistance à un cours pour l'utilisateur.",
-    instruction=AGENT_PROMPT_CopiloteCourseAgent_base + PDF_TOOLS_POLICY,
+    instruction=AGENT_PROMPT_CopiloteCourseAgent_base,
     tools=[
-        recevoir_et_lire_pdf,
-        resumer_pdfs_session,
-        repondre_question_pdf,
+        fetch_context_tool,
+        MCPToolset(
+            connection_params=StreamableHTTPConnectionParams(
+                url="https://learn.microsoft.com/api/mcp",
+            ),
+        )
     ],
-    # tools=[google_search]
 )
 
-copilote_deep_course_agent = LlmAgent(
-    name="CopiloteDeepCourseAgent",
+copilote_new_chapitre_agent = LlmAgent(
+    name="CopiloteNewChapitreAgent",
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
-    description="Agent spécialisé dans l'assistance à la réalisation de cours approfondis pour l'utilisateur (exercices + cours).",
-    instruction=AGENT_PROMPT_CopiloteDeepCourseAgent_base + PDF_TOOLS_POLICY,
-    # tools=[google_search]
-    tools=[
-        recevoir_et_lire_pdf,
-        resumer_pdfs_session,
-        repondre_question_pdf,
-    ],
+    description="Agent spécialisé dans l'assistance à la réalisation de nouveaux chapitres pour l'utilisateur.",
+    instruction=AGENT_PROMPT_CopiloteNewChapitreAgent_base,
+    tools=[call_generate_new_chapter],
 )

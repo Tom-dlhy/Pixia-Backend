@@ -18,8 +18,7 @@ from .normal_agent_prompt import AGENT_PROMPT_NORMAL_AGENT
 from .copilote_prompt import (
     AGENT_PROMPT_CopiloteExerciceAgent_base,
     AGENT_PROMPT_CopiloteCourseAgent_base,
-    AGENT_PROMPT_CopiloteDeepCourseAgent_base,
-    build_copilot_exercice_system_prompt,
+    AGENT_PROMPT_CopiloteNewChapitreAgent_base
 )
 
 from .deepcourse_prompt import AGENT_PROMPT_DeepcourseAgent, SYSTEM_PROMPT_GENERATE_NEW_CHAPTER
@@ -34,9 +33,8 @@ __all__ = [
     "AGENT_PROMPT_ORCHESTRATOR",
     "AGENT_PROMPT_ExerciseAgent",
     "AGENT_PROMPT_CopiloteExerciceAgent_base",
-    "build_copilot_exercice_system_prompt",
     "AGENT_PROMPT_CopiloteCourseAgent_base",
-    "AGENT_PROMPT_CopiloteDeepCourseAgent_base",
+    "AGENT_PROMPT_CopiloteNewChapitreAgent_base",
     "AGENT_PROMPT_NORMAL_AGENT",
     "SYSTEM_PROMPT_GENERATE_PART",
     "SYSTEM_PROMPT_GENERATE_MERMAID_CODE",
@@ -45,4 +43,5 @@ __all__ = [
     "AGENT_PROMPT_CourseAgent",
     "SYSTEM_PROMPT_CORRECT_PLAIN_QUESTION",
     "AGENT_PROMPT_DeepcourseAgent",
+    "SYSTEM_PROMPT_GENERATE_NEW_CHAPTER",
 ]

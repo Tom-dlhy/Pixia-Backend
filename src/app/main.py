@@ -32,7 +32,8 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"],
+        # allow_origins=["http://localhost:3000"],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -65,7 +66,7 @@ def create_app() -> FastAPI:
             return
 
         try:
-            timeout = int(os.getenv("DB_CONNECT_TIMEOUT", "5"))
+            timeout = int(os.getenv("DB_CONNECT_TIMEOUT", "30"))
             app.state.db_pool = await asyncio.wait_for(
                 create_db_pool(), timeout=timeout
             )
@@ -95,6 +96,7 @@ def dev_server():
         port=app_settings.PORT,
         reload=True,
         log_level="info",
+        timeout_keep_alive=65,  # ✅ Keep-alive timeout
     )
 
 
@@ -106,6 +108,8 @@ def prod_server():
         port=app_settings.PORT,
         reload=False,
         log_level="info",
+        timeout_keep_alive=240,  # ✅ 4 min keep-alive (pour les requêtes longues)
+        timeout_graceful_shutdown=240,  # ✅ 4 min graceful shutdown (pour les requêtes longues)
     )
 
 
