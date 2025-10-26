@@ -21,6 +21,7 @@ from .fetchcourse import router as fetch_course_router
 from .fetchalldeepcourses import router as fetchalldeepcourses_router
 from .fetchallchapters import router as fetchallchapters_router
 from .fetchchapterdocuments import router as fetchchapterdocuments_router
+from .correctallquestions import router as correctallquestions_router
 
 
 api_router = APIRouter()
@@ -46,8 +47,7 @@ api_router.include_router(fetch_course_router)
 api_router.include_router(fetchalldeepcourses_router)
 api_router.include_router(fetchallchapters_router)
 api_router.include_router(fetchchapterdocuments_router)
-
-
+api_router.include_router(correctallquestions_router)
 
 __all__ = [
     "health_router",
@@ -73,5 +73,6 @@ __all__ = [
     "fetchalldeepcourses_router",
     "fetchallchapters_router",
     "fetchchapterdocuments_router",
+    "correctallquestions_router",
 ]
 
