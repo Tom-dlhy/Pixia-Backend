@@ -5,16 +5,30 @@ from uuid import uuid4
 from typing import Any, Union
 
 from src.models.exercise_models import ExercisePlan, ExerciseOutput, ExerciseSynthesis
-from src.utils import generate_for_topic
-from src.utils import planner_exercises_async
+from src.utils import generate_for_topic, planner_exercises_async, get_user_id
 from src.utils.timing import Timer
 
+from src.config import database_settings, app_settings
+from google.adk.sessions.database_session_service import DatabaseSessionService
+from src.bdd import DBManager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+from src.models import GenerativeToolOutput
 
-async def generate_exercises(synthesis: ExerciseSynthesis) -> Union[dict, Any]:
+
+async def generate_exercises(is_called_by_agent:bool ,synthesis: ExerciseSynthesis) -> Union[GenerativeToolOutput, ExerciseOutput]:
+    
+    db_session_service = DatabaseSessionService(
+        db_url=database_settings.dsn,
+    )
+    bdd_manager = DBManager()
+
+    agent = "exercise"
+    redirect_id = None
+    completed = False
+
     if isinstance(synthesis, dict):
         synthesis = ExerciseSynthesis(**synthesis)
 
@@ -36,7 +50,7 @@ async def generate_exercises(synthesis: ExerciseSynthesis) -> Union[dict, Any]:
 
         except Exception as err:
             logger.error(f"Erreur de validation du plan d'exercice: {err}")
-            return plan_json if isinstance(plan_json, dict) else {}
+            return GenerativeToolOutput(agent=agent, redirect_id=redirect_id, completed=completed)
 
         # Création des tâches pour tous les exercices du plan
         tasks = [generate_for_topic(ex, synthesis.difficulty) for ex in plan.exercises]
@@ -61,4 +75,34 @@ async def generate_exercises(synthesis: ExerciseSynthesis) -> Union[dict, Any]:
             id=str(uuid4()), exercises=generated_exercises, title=synthesis.title
         )
 
-        return exercise_output.model_dump()
+        ### Storage
+
+
+        if is_called_by_agent:
+
+            if user_id := get_user_id():
+                copilote_session_id = str(uuid4())
+                await db_session_service.create_session(
+                    session_id=copilote_session_id,
+                    app_name=app_settings.APP_NAME,
+                    user_id=user_id,
+                )
+                
+                if isinstance(exercise_output, ExerciseOutput):
+                    await bdd_manager.store_basic_document(
+                        content=exercise_output,
+                        session_id=copilote_session_id,
+                        sub=user_id,
+                    )
+                
+                    redirect_id = copilote_session_id
+                    completed = bool(generated_exercises)
+
+            return GenerativeToolOutput(
+                agent=agent,
+                redirect_id=redirect_id,
+                completed=completed
+            )
+
+        else:
+            return exercise_output
