@@ -7,7 +7,6 @@ from pydantic import BaseModel
 class IsCorrectResponse(BaseModel):
     is_correct: bool
 
-
 async def agent_correct_plain_question(
     answer: str, question: str, response: str
 ) -> bool:

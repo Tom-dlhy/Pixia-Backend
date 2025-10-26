@@ -1,4 +1,3 @@
-# src/db/schemas_sql.py
 from sqlalchemy import (
     Column, Integer, String, Text, Boolean, TIMESTAMP, JSON, ForeignKey, Enum, text
 )

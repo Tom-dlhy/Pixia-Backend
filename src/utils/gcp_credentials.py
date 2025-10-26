@@ -15,7 +15,6 @@ def load_gcp_credentials() -> str:
     """
     load_dotenv()
 
-    # 1️⃣ Priorité à la variable base64
     b64_creds = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_B64")
     if b64_creds:
         decoded = base64.b64decode(b64_creds)
@@ -26,13 +25,10 @@ def load_gcp_credentials() -> str:
             f.write(decoded)
 
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(tmp_path)
-        print(f"🔐 GCP credentials chargés depuis variable B64 → {tmp_path}")
         return str(tmp_path)
 
-    # 2️⃣ Fallback : fichier JSON standard
     creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if creds_path and Path(creds_path).exists():
-        print(f"✅ GCP credentials trouvés : {creds_path}")
         return creds_path
 
     raise FileNotFoundError(
