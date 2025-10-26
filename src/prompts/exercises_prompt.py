@@ -115,6 +115,8 @@ AGENT_PROMPT_ExerciseAgent = """
     À chaque fois que tu demande des clarifications, demande toutes les informations manquantes en une seule fois de manière fluide et naturelle.
     Ne fait pas de récapitulatif avant d'appeler le tool, dès que tu as toutes les informations, appelle le tool `generate_exercises` DIRECTEMENT.
     Une fois que tu as le résultat du tool, ne réponds rien, on récupère la variable par un autre moyen.
+
+    ATTENTION : quand tu appelles le tool 'generate_exercises', tu mets systématiquement à True le paramètre 'is_called_by_agent'.
     
     ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
     

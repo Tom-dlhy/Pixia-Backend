@@ -1,18 +1,10 @@
 """Tool pour récupérer le contexte d'un document (exercise ou cours)."""
 import logging
 import json
-from contextvars import ContextVar
 from src.bdd import DBManager
+from src.utils import get_document_id
 
 logger = logging.getLogger(__name__)
-
-# Context variable pour stocker le document_id
-_document_id_context: ContextVar[str] = ContextVar('document_id', default='')
-
-
-def set_document_id_context(document_id: str):
-    """Définit le document_id dans le contexte de la requête."""
-    _document_id_context.set(document_id)
 
 
 async def fetch_context_tool() -> str:
@@ -25,7 +17,7 @@ async def fetch_context_tool() -> str:
         Le contenu du document en format JSON string ou un message d'erreur
     """
     # Récupérer le document_id depuis le contexte
-    document_id = _document_id_context.get()
+    document_id = get_document_id()
     
     if not document_id:
         logger.error("❌ document_id manquant dans le contexte")

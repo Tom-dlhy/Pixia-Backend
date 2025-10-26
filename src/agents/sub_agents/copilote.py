@@ -1,10 +1,10 @@
 from google.adk.agents import LlmAgent
 from src.prompts import AGENT_PROMPT_CopiloteExerciceAgent_base, AGENT_PROMPT_CopiloteCourseAgent_base, AGENT_PROMPT_CopiloteNewChapitreAgent_base
 from src.config import gemini_settings
-from src.tools.deepcourse_tools import call_generate_new_chapter
+from src.tools.deepcourse_tools import generate_new_chapter
 from google import genai
 from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
-from src.tools.copilote_tools import fetch_context_tool
+from src.tools.copilote_tools import fetch_context_tool, fetch_context_deep_course_tool
 # from google.genai.types import MCPToolset  # OAuth needed
 from google.adk.tools.mcp_tool import MCPToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
@@ -40,5 +40,6 @@ copilote_new_chapitre_agent = LlmAgent(
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
     description="Agent spécialisé dans l'assistance à la réalisation de nouveaux chapitres pour l'utilisateur.",
     instruction=AGENT_PROMPT_CopiloteNewChapitreAgent_base,
-    tools=[call_generate_new_chapter],
+    tools=[fetch_context_deep_course_tool, generate_new_chapter],
+    
 )

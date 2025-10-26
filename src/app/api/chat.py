@@ -9,9 +9,7 @@ from src.models import (
     _validate_deepcourse_output,
 )
 from src.bdd import DBManager
-from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput, Chapter
-from src.utils import generate_new_chapter
-from src.tools.deepcourse_tools import NewChapterRequest
+from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput, Chapter, GenerativeToolOutput
 
 from typing import List, Optional, Union, Dict
 from uuid import uuid4
@@ -27,7 +25,7 @@ from dotenv import load_dotenv
 from src.utils import get_gemini_files
 
 from google.adk.artifacts import InMemoryArtifactService
-from src.tools.copilote_tools import set_document_id_context
+from src.utils import set_request_context
 
 load_dotenv()
 
@@ -60,6 +58,14 @@ async def chat(
     """Traite un message utilisateur via une session ADK."""
     start_time = time.monotonic()
 
+    # Initialiser le contexte de la requête avec toutes les infos disponibles
+    set_request_context(
+        document_id=document_id,
+        session_id=session_id,
+        user_id=user_id,
+        deep_course_id=deep_course_id,
+    )
+
     final_response: Optional[
         Union[str, dict, list, ExerciseOutput, CourseOutput, DeepCourseOutput, Chapter]
     ] = None
@@ -84,11 +90,6 @@ async def chat(
                     app_name=settings.APP_NAME, user_id=user_id, session_id=session_id
                 )
                 current_session_service = db_session_service
-                
-                # Si session DB (copilote) et document_id fourni, le stocker dans le contexte
-                if session and document_id:
-                    set_document_id_context(document_id)
-                    logger.info(f"📋 Context configuré avec document_id={document_id}")
 
         elif not session_id:
             session = await inmemory_service.create_session(
@@ -207,45 +208,13 @@ async def chat(
                         tool_name = fr.name
                         tool_resp = fr.response
                         if tool_name and tool_resp:
-                            if tool_name == "generate_exercises":
-                                if _validate_exercise_output(tool_resp):
-                                    copilote_session_id = str(uuid4())
-                                    await db_session_service.create_session(
-                                        session_id=copilote_session_id,
-                                        app_name=settings.APP_NAME,
-                                        user_id=user_id,
-                                    )
-                                    final_response = _validate_exercise_output(
-                                        tool_resp
-                                    )
-                                    if isinstance(final_response, ExerciseOutput):
-                                        await bdd_manager.store_basic_document(
-                                            content=final_response,
-                                            session_id=copilote_session_id,
-                                            sub=user_id,
-                                        )
-                                        agent = "exercise"
-                                        redirect_id = copilote_session_id
+                            tool_result = tool_resp.get("result")
+                            if tool_name in ("generate_exercises", "generate_courses", "generate_new_chapter", "generate_deepcourse"):
+                                if isinstance(tool_result, GenerativeToolOutput):
+                                    agent = tool_result.agent
+                                    redirect_id = tool_result.redirect_id
 
-                            elif tool_name == "generate_courses":
-                                if _validate_course_output(tool_resp):
-                                    copilote_session_id = str(uuid4())
-                                    await db_session_service.create_session(
-                                        session_id=copilote_session_id,
-                                        app_name=settings.APP_NAME,
-                                        user_id=user_id,
-                                    )
-                                    final_response = _validate_course_output(tool_resp)
-                                    if isinstance(final_response, CourseOutput):
-                                        await bdd_manager.store_basic_document(
-                                            content=final_response,
-                                            session_id=copilote_session_id,
-                                            sub=user_id,
-                                        )
-                                        agent = "course"
-                                        redirect_id = copilote_session_id
-
-                            elif tool_name == "modify_course":
+                            elif tool_name == "modify_course": # extra à dev
                                 if _validate_course_output(tool_resp):
                                     final_response = _validate_course_output(tool_resp)
                                     if isinstance(final_response, CourseOutput):
@@ -254,135 +223,12 @@ async def chat(
                                             new_content=final_response,
                                         )
 
-                            elif tool_name == "delete_course":
+                            elif tool_name == "delete_course": # extra à dev
                                 await bdd_manager.delete_document(
                                     document_id=session_id
                                 )
 
-                            elif tool_name == "generate_deepcourse":
-                                validated = _validate_deepcourse_output(tool_resp)
-                                if validated:
-                                    final_response = validated
-                                    if isinstance(final_response, DeepCourseOutput):
-
-                                        try:
-                                            # Créer les sessions et mapper les IDs pour chaque chapitre
-                                            dict_session: List[Dict[str, str]] = []
-
-                                            for chapter in final_response.chapters:
-                                                try:
-                                                    session_exercise = await db_session_service.create_session(
-                                                        app_name=settings.APP_NAME,
-                                                        user_id=user_id,
-                                                    )
-                                                    session_course = await db_session_service.create_session(
-                                                        app_name=settings.APP_NAME,
-                                                        user_id=user_id,
-                                                    )
-                                                    session_evaluation = await db_session_service.create_session(
-                                                        app_name=settings.APP_NAME,
-                                                        user_id=user_id,
-                                                    )
-
-                                                    chapter_sessions = {
-                                                        "id_chapter": chapter.id_chapter,
-                                                        "session_id_exercise": session_exercise.id,
-                                                        "session_id_course": session_course.id,
-                                                        "session_id_evaluation": session_evaluation.id,
-                                                    }
-                                                    dict_session.append(
-                                                        chapter_sessions
-                                                    )
-                                                except Exception as e:
-                                                    logger.error(
-                                                        f"❌ Erreur lors de la création des sessions pour le chapitre {chapter.id_chapter}: {e}"
-                                                    )
-                                                    raise
-
-                                            await bdd_manager.store_deepcourse(
-                                                user_id=user_id,
-                                                content=final_response,
-                                                dict_session=dict_session,
-                                            )
-                                            agent = "deep-course"
-                                            redirect_id = final_response.id
-                                        except Exception as e:
-                                            logger.error(
-                                                f"❌ Erreur lors du stockage du deepcourse: {e}"
-                                            )
-                                            raise
-
-                            elif tool_name == "call_generate_new_chapter":
-                                if isinstance(tool_resp, NewChapterRequest):
-                                    description_user = tool_resp.description_user
-                                elif isinstance(tool_resp, dict):
-                                    description_user = tool_resp.get("description_user", "")
-                                else:
-                                    description_user = ""
-                                logger.info("✅ Tool 'call_generate_new_chapter' détecté")
-                                if isinstance(deep_course_id, str):
-                                    chapter = await generate_new_chapter(deepcourse_id=deep_course_id, description_user=description_user)
-
-                                    validated = _validate_chapter_output(chapter)
-                                    if validated:
-                                        final_response = validated
-                                        if isinstance(final_response, Chapter):
-                                            logger.info(
-                                                f"✅ Chapter validé pour la session {session_id}"
-                                            )
-                                            try:
-                                                session_exercise = (
-                                                    await db_session_service.create_session(
-                                                        app_name=settings.APP_NAME,
-                                                        user_id=user_id,
-                                                    )
-                                                )
-                                                session_course = (
-                                                    await db_session_service.create_session(
-                                                        app_name=settings.APP_NAME,
-                                                        user_id=user_id,
-                                                    )
-                                                )
-                                                session_evaluation = (
-                                                    await db_session_service.create_session(
-                                                        app_name=settings.APP_NAME,
-                                                        user_id=user_id,
-                                                    )
-                                                )
-                                                await bdd_manager.store_chapter(
-                                                    title=final_response.title,
-                                                    user_id=user_id,
-                                                    deepcourse_id=deep_course_id,
-                                                    chapter_id=final_response.id_chapter,
-                                                    session_exercise=session_exercise.id,
-                                                    session_course=session_course.id,
-                                                    session_evaluation=session_evaluation.id,
-                                                    exercice=final_response.exercice,
-                                                    course=final_response.course,
-                                                    evaluation=final_response.evaluation,
-                                                )
-                                                agent = "deep-course"
-                                                redirect_id = final_response.id_chapter
-                                                logger.info(
-                                                    f"✅ Chapter stocké avec succès : {final_response.id_chapter}"
-                                                )
-                                            except Exception as e:
-                                                logger.error(
-                                                    f"❌ Erreur lors du stockage du chapitre: {e}"
-                                                )
-                                                raise
-                                        else:
-                                            logger.warning(
-                                                f"⚠️ Chapter validé mais pas une instance de Chapter"
-                                            )
-                                    else:
-                                        logger.warning(
-                                            f"⚠️ Impossible de valider le Chapter"
-                                        )
-                                else:
-                                    logger.warning(
-                                        f"⚠️ deep_course_id non fourni ou invalide"
-                                    )                            
+                            
 
     except Exception as e:
         logger.exception("❌ Erreur pendant l'exécution du runner ADK")
@@ -395,6 +241,8 @@ async def chat(
     end_time = time.monotonic()
     duration = end_time - start_time
     print(f"Durée totale: {duration:.2f} secondes")
+
+    logger.info(f"agent={agent}")
 
     output = ChatResponse(
         session_id=session_id,

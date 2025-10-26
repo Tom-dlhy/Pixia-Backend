@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 async def generate_courses_quad_llm(
     course_synthesis: Any,
     planner_func=None,
-) -> Union[dict, Any]:
+) -> CourseOutput:
     """
     Génère un cours complet avec le pipeline Quad LLM dual-LLM spécialisé.
 
@@ -71,7 +71,7 @@ async def generate_courses_quad_llm(
             )
             raise ValueError(f"Pipeline Quad LLM failed: wrong type {type(result)}")
 
-        return result.model_dump()
+        return result
 
     except Exception as e:
         logger.error(f"[PIPELINE] ❌ Erreur: {e}", exc_info=True)

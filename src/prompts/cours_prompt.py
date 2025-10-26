@@ -331,5 +331,7 @@ AGENT_PROMPT_CourseAgent = """
     Appelle le tool uniquement lorsque tu as toutes les informations nécessaires (description, difficulty, level_detail).
     Une fois que tu as le résultat du tool, ne réponds rien, on récupère la variable par un autre moyen.
 
+    ATTENTION : quand tu appelles le tool 'generate_courses', tu mets systématiquement à True le paramètre 'is_called_by_agent'.
+
     ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
     """

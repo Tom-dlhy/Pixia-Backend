@@ -40,6 +40,8 @@ from .deepcourse_models import (
     _validate_deepcourse_output,
 )
 
+from .tool_models import GenerativeToolOutput
+
 __all__ = [
     "QCM",
     "Open",
@@ -72,4 +74,5 @@ __all__ = [
     "DeepCourseOutput",
     "_validate_chapter_output",
     "_validate_deepcourse_output",
+    "GenerativeToolOutput",
 ]
