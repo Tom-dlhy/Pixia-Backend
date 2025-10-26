@@ -1,18 +1,20 @@
-FROM python:3.12-slim
+FROM python:3.12-slim-trixie
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# uv (si vous l’utilisez)
-RUN pip install --no-cache-dir uv
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Dépendances
-COPY pyproject.toml uv.lock* ./
-RUN uv sync --frozen --no-install-project
+RUN --mount=type=cache,target=/root/.cache/uv \
+  --mount=type=bind,source=uv.lock,target=uv.lock \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  uv sync --locked --no-install-project
 
-# Code
-COPY . .
+ADD . /app
 
-EXPOSE 8000
+RUN --mount=type=cache,target=/root/.cache/uv \
+  uv sync --locked --no-editable --compile-bytecode
 
-# Dev: hot reload (à utiliser avec un volume monté)
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+EXPOSE 8080
+
+CMD ["uv", "run","prod", "--port=8080", "--host=0.0.0.0"]
