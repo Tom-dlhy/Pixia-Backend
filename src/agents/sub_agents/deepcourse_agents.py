@@ -10,5 +10,4 @@ deepcourse_agent = LlmAgent(
     description="Agent spécialisé dans la génération de deepcourses.",
     instruction=AGENT_PROMPT_DeepcourseAgent,
     tools=[generate_deepcourse],
-    disallow_transfer_to_parent=True,
 )
