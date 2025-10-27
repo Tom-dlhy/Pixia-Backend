@@ -1,15 +1,10 @@
 from fastapi import APIRouter, Form
 from src.bdd import DBManager
-from pydantic import BaseModel
-from typing import List
 import logging
 
 logger = logging.getLogger(__name__)
 
-
 router = APIRouter(prefix="/deletedeepcourse", tags=["DeleteDeepCourse"])
-
-
 
 @router.delete("", status_code=204)
 async def delete_deepcourse(user_id: str = Form(...), deepcourse_id: str = Form(...)):

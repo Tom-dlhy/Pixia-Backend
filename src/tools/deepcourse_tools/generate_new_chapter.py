@@ -81,6 +81,7 @@ async def generate_new_chapter(description_user: str) -> GenerativeToolOutput:
                 "response_mime_type": "application/json",
                 "response_schema": ChapterSynthesis,
             },
+            
         )
 
         if hasattr(response, "parsed") and response.parsed:
@@ -140,7 +141,7 @@ async def generate_new_chapter(description_user: str) -> GenerativeToolOutput:
         evaluation=evaluation,
     )
 
-    agent = "deep-course"
+    agent = "deep-course-chapter"
     redirect_id = None
     completed = False
 

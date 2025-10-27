@@ -16,16 +16,12 @@ import sys
 from typing import Optional, Dict, Any, Union
 from uuid import uuid4
 import base64
-import hashlib
 import subprocess
-import os
-import time
 
 from src.config import gemini_settings
 from src.models.cours_models import CourseSynthesis, Part, CourseOutput
 from src.prompts import SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE
 from src.prompts.diagram_agents_prompts import (
-    PROMPT_SELECT_DIAGRAM_TYPE_V2,
     SYSTEM_PROMPTS,
     SPECIALIZED_PROMPTS,
 )

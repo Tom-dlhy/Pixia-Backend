@@ -98,5 +98,5 @@ class OAuthSettings(BaseSettings):
 # Instances des settings
 app_settings = AppSettings()  # type: ignore
 gemini_settings = GeminiSettings()
-database_settings = DatabaseSettings()
-oauth_settings = OAuthSettings()
+database_settings = DatabaseSettings()  # type: ignore
+oauth_settings = OAuthSettings()  # type: ignore
