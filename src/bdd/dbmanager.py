@@ -543,11 +543,11 @@ class DBManager:
                 MARK_IS_CORRECTED_QCM, {"doc_id": doc_id, "id_question": question_id}
             )
 
-    async def get_document_by_id(self, document_id: str):
-        """Récupère un document par document_id."""
+    async def get_document_by_id(self, session_id: str):
+        """Récupère un document pour le contexte de copilote par session_id."""
         async with self.engine.begin() as conn:
             result = await conn.execute(
-                FETCH_DOCUMENT_CONTENT_BY_ID, {"document_id": document_id}
+                FETCH_DOCUMENT_CONTENT_BY_ID, {"session_id": session_id}
             )
             row = result.fetchone()
             return dict(row._mapping) if row else None

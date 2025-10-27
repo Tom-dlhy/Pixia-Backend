@@ -386,7 +386,7 @@ SELECT
     END AS parsed_content
 
 FROM document d
-WHERE d.id = :document_id;
+WHERE d.session_id = :session_id;
 
 """
 )
