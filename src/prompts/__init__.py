@@ -14,7 +14,6 @@ from .cours_prompt import (
 )
 
 from .orchestrator_prompt import AGENT_PROMPT_ORCHESTRATOR
-from .normal_agent_prompt import AGENT_PROMPT_NORMAL_AGENT
 from .copilote_prompt import (
     AGENT_PROMPT_CopiloteExerciceAgent_base,
     AGENT_PROMPT_CopiloteCourseAgent_base,
@@ -35,7 +34,6 @@ __all__ = [
     "AGENT_PROMPT_CopiloteExerciceAgent_base",
     "AGENT_PROMPT_CopiloteCourseAgent_base",
     "AGENT_PROMPT_CopiloteNewChapitreAgent_base",
-    "AGENT_PROMPT_NORMAL_AGENT",
     "SYSTEM_PROMPT_GENERATE_PART",
     "SYSTEM_PROMPT_GENERATE_MERMAID_CODE",
     "SYSTEM_PROMPT_PLANNER_COURS",

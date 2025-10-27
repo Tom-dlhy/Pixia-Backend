@@ -15,10 +15,6 @@ from .cours_models import (
     Part,
     CourseOutput,
     PartSchema,
-    Part,
-    Part,
-    CourseOutput,
-    CourseOutput,
 )
 
 from .deepcourse_models import (
@@ -44,10 +40,6 @@ __all__ = [
     "Part",
     "CourseOutput",
     "PartSchema",
-    "Part",
-    "Part",
-    "CourseOutput",
-    "CourseOutput",
     "Chapter",
     "ChapterSynthesis",
     "DeepCourseSynthesis",
