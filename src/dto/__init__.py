@@ -4,7 +4,7 @@ from .renamechat import RenameChatRequest, RenameChatResponse
 from .deletechat import DeleteChatRequest
 from .renamechapter import RenameChapterRequest, RenameChapterResponse
 from .deletechapter import DeleteChapterRequest
-from .correctplainquestion import CorrectPlainQuestionRequest, CorrectPlainQuestionResponse
+from .correctplainquestion import CorrectPlainQuestionResponse, CorrectQuestionRequest, CorrectMultipleQuestionsRequest
 from .markchapter import MarkChapterRequest, MarkChapterResponse
 from .login import LoginRequest, LoginResponse
 from .signup import SignupRequest, SignupResponse
@@ -25,7 +25,6 @@ __all__ = [
     "RenameChapterRequest",
     "RenameChapterResponse",
     "DeleteChapterRequest",
-    "CorrectPlainQuestionRequest",
     "CorrectPlainQuestionResponse",
     "MarkChapterRequest",
     "MarkChapterResponse",
@@ -36,4 +35,6 @@ __all__ = [
     "MarkIsCorrectedQCMRequest",
     "MarkIsCorrectedQCMResponse",
     "EventMessage",
+    "CorrectQuestionRequest",
+    "CorrectMultipleQuestionsRequest"
 ]

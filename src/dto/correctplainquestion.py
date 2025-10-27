@@ -1,15 +1,13 @@
 from pydantic import BaseModel
-from typing import Optional
-
-
-class CorrectPlainQuestionRequest(BaseModel):
-    question: str
-    user_answer: str
-    expected_answer: str
-    doc_id: Optional[str] = None
-    id_question: Optional[str] = None
-
+from typing import List
 
 class CorrectPlainQuestionResponse(BaseModel):
     is_correct: bool
-    feedback: Optional[str] = None
+
+class CorrectQuestionRequest(BaseModel):
+    question: str
+    user_answer: str
+    expected_answer: str
+
+class CorrectMultipleQuestionsRequest(BaseModel):
+    questions: List[CorrectQuestionRequest]
