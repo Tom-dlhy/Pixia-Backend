@@ -140,7 +140,7 @@ async def generate_new_chapter(description_user: str) -> GenerativeToolOutput:
         evaluation=evaluation,
     )
 
-    agent = "deep-course"
+    agent = "deep-course-chapter"
     redirect_id = None
     completed = False
 
