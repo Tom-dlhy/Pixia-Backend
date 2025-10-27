@@ -95,15 +95,28 @@ async def generate_exercises(is_called_by_agent:bool ,synthesis: ExerciseSynthes
 
         # Filtrage et conversion des résultats valides
         generated_exercises = []
-        for r in results:
-            if r is not None:
-                # Convertir en dict si nécessaire pour la validation
-                if isinstance(r, dict):
-                    generated_exercises.append(r)
-                elif hasattr(r, "model_dump"):
-                    generated_exercises.append(r.model_dump())
-                else:
-                    generated_exercises.append(r)
+        for idx, r in enumerate(results):
+            if r is None:
+                logger.warning(f"⚠️ Exercice {idx + 1}/{len(results)} est None, ignoré")
+                continue
+            
+            # Ignorer les dictionnaires vides
+            if isinstance(r, dict):
+                if not r or 'type' not in r:
+                    logger.warning(f"⚠️ Exercice {idx + 1}/{len(results)} est un dict vide ou sans 'type', ignoré")
+                    continue
+                generated_exercises.append(r)
+            elif hasattr(r, "model_dump"):
+                generated_exercises.append(r.model_dump())
+            else:
+                generated_exercises.append(r)
+        
+        # Vérifier qu'il reste au moins un exercice valide
+        if not generated_exercises:
+            logger.error(f"❌ Aucun exercice valide généré sur {len(results)} tentatives")
+            return GenerativeToolOutput(agent=agent, redirect_id=redirect_id, completed=False)
+        
+        logger.info(f"✅ {len(generated_exercises)}/{len(results)} exercices valides générés")
 
         exercise_output = ExerciseOutput(
             id=str(uuid4()), exercises=generated_exercises, title=synthesis.title

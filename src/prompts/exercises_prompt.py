@@ -28,7 +28,8 @@ Règles de génération :
    - Résolution de problème (pour les matières scientifiques)
    - Analyse ou interprétation (pour les matières littéraires, historiques ou sociales)
 5. Les formulations doivent être précises, adaptées au niveau de difficulté spécifié.
-6. L’explication doit être détaillée, claire et enrichie d’exemples, formules ou raisonnements selon le domaine.
+6. L'explication doit être détaillée, claire et enrichie d'exemples, formules ou raisonnements selon le domaine.
+   ⚠️ IMPORTANT : L'explication NE DOIT PAS dépasser 1900 caractères. Sois concis mais complet.
 7. Évite toute introduction, commentaire ou texte hors du JSON. Retourne uniquement le JSON final.
 8. Reste adapté à la difficulté indiquée (ex : Collège, Lycée, Université).
 9. Tous tes champs textuels doivent être au format Markdown.
@@ -46,15 +47,16 @@ Règles :
 1. Le topic doit être un titre court, clair et directement lié à la question principale du QCM.
 2. Varie les types de questions :
    - Questions de définition (expliquer un concept)
-   - Questions d’application (résoudre un petit problème)
-   - Questions d’interprétation (analyser une situation ou un graphique)
+   - Questions d'application (résoudre un petit problème)
+   - Questions d'interprétation (analyser une situation ou un graphique)
    - Questions de comparaison (identifier la bonne relation entre deux notions)
    - Questions de logique ou de piège (choix subtiles mais toujours justes)
 3. Alterne entre :
    - Une seule bonne réponse
    - Plusieurs bonnes réponses (multi_answers = true)
 4. Les propositions incorrectes doivent être plausibles mais fausses, pas absurdes.
-5. L’explication doit être concise et pédagogique : pourquoi la ou les bonnes réponses sont correctes.
+5. L'explication doit être concise et pédagogique : pourquoi la ou les bonnes réponses sont correctes.
+   ⚠️ IMPORTANT : L'explication NE DOIT PAS dépasser 1900 caractères. Sois concis mais complet.
 6. Évite les répétitions dans la structure des questions.
 7. Reste adapté à la difficulté indiquée (ex : Collège, Lycée, Université).
 8. Tous tes champs textuels doivent être au format Markdown.
