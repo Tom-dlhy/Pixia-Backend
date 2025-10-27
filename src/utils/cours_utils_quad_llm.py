@@ -1,20 +1,37 @@
+"""
+Pipeline DUAL LLM v2: 4 agents spécialisés - UNE SEULE TENTATIVE PAR PARTIE.
+
+Workflow:
+1. LLM #1: Génère contenu du cours + sélectionne le type de diagramme
+2. LLM #2 (spécialisé): Génère le code du diagramme - pas de retry
+3. Kroki: Convertit en PNG - pas de test préalable
+4. Si erreur: on continue sans le schéma pour cette partie
+5. Async: Parallélisation complète de toutes les parties
+"""
+
 import asyncio
+import json
 import logging
 import sys
 from typing import Optional, Dict, Any, Union
 from uuid import uuid4
 import base64
+import hashlib
 import subprocess
+import os
+import time
 
 from src.config import gemini_settings
 from src.models.cours_models import CourseSynthesis, Part, CourseOutput
 from src.prompts import SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE
 from src.prompts.diagram_agents_prompts import (
+    PROMPT_SELECT_DIAGRAM_TYPE_V2,
     SYSTEM_PROMPTS,
     SPECIALIZED_PROMPTS,
 )
 from src.utils.timing import Timer
 
+# Setup logging
 logging.basicConfig(
     level=logging.DEBUG,
     format="[%(asctime)s] %(levelname)s - %(name)s - %(message)s",
@@ -57,6 +74,12 @@ Niveau de détail: {synthesis.level_detail}""",
         logging.error(f"[LLM #1] Erreur parsing {err}")
         return None
 
+
+# ============================================================================
+# ÉTAPE 2: LLM #2 (spécialisé) - Génère code du diagramme
+# ============================================================================
+
+
 async def generate_diagram_code(diagram_type: str, content: str) -> Optional[str]:
     """
     LLM #2: Génère le code du diagramme - UNE SEULE TENTATIVE, SANS RETRY.
@@ -69,9 +92,11 @@ async def generate_diagram_code(diagram_type: str, content: str) -> Optional[str
                 logger.error(f"[DIAGRAM-GEN] Type non supporté: {diagram_type}")
                 return None
 
+            # Génération unique
             base_prompt = SPECIALIZED_PROMPTS[diagram_type]
             full_prompt = base_prompt.replace("%%CONTENT_PLACEHOLDER%%", content[:800])
 
+            # LLM #2: Appel spécialisé avec CLIENT.aio (async)
             response = await gemini_settings.CLIENT.aio.models.generate_content(
                 model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
                 contents=full_prompt,
@@ -82,6 +107,7 @@ async def generate_diagram_code(diagram_type: str, content: str) -> Optional[str
 
             code = response.text.strip()
 
+            # Nettoyage des backticks
             if code.startswith("```"):
                 parts = code.split("```")
                 if len(parts) >= 2:
@@ -99,6 +125,12 @@ async def generate_diagram_code(diagram_type: str, content: str) -> Optional[str
         except Exception as e:
             logger.error(f"[DIAGRAM-GEN-ERROR] Erreur: {e}", exc_info=False)
             return None
+
+
+# ============================================================================
+# ÉTAPE 3: Kroki - Convertir en PNG
+# ============================================================================
+
 
 def generate_schema_png(diagram_code: str, diagram_type: str) -> Optional[str]:
     """
@@ -159,6 +191,12 @@ def generate_schema_png(diagram_code: str, diagram_type: str) -> Optional[str]:
             logger.error(f"[KROKI-EXCEPTION] Erreur: {e}")
             return None
 
+
+# ============================================================================
+# ÉTAPE 4: Pipeline complet pour UNE partie (async)
+# ============================================================================
+
+
 async def process_course_part(part_data: Dict[str, Any], index: int) -> Optional[Part]:
     """
     Traite UNE partie du cours:
@@ -172,18 +210,22 @@ async def process_course_part(part_data: Dict[str, Any], index: int) -> Optional
             title = part_data.get("title", f"Partie {index}")
             content = part_data.get("content", "")
 
+            # Étape 1: Sélectionne le type (4 types)
             diagram_type = part_data.get("diagram_type", "mermaid")
 
+            # Étape 2: Génère le code (spécialisé) - UNE SEULE TENTATIVE async
             diagram_code = await generate_diagram_code(diagram_type, content)
 
             if not diagram_code:
                 logger.warning(f"[PART-{index}] Code diagramme non généré, PNG ignoré")
                 img_base64 = None
             else:
+                # Étape 3: Génère PNG
                 img_base64 = await asyncio.to_thread(
                     generate_schema_png, diagram_code, diagram_type
                 )
 
+            # Crée l'objet Part avec tous les champs (contenu + diagram_type + code + PNG)
             part = Part(
                 id_part=str(uuid4()),
                 id_schema=str(uuid4()),
@@ -200,6 +242,12 @@ async def process_course_part(part_data: Dict[str, Any], index: int) -> Optional
         except Exception as e:
             logger.error(f"[PART-{index}] Erreur: {e}", exc_info=True)
             return None
+
+
+# ============================================================================
+# PIPELINE PRINCIPAL - Orchestration complète
+# ============================================================================
+
 
 async def generate_course_complete(
     synthesis: CourseSynthesis,
@@ -218,6 +266,7 @@ async def generate_course_complete(
     with Timer("TOTAL Cours complet"):
         try:
 
+            # ÉTAPE 1: LLM #1 - Génère le contenu + type
             with Timer("LLM #1 - Contenu + types"):
                 course_data = await generate_course_with_diagram_types_async(synthesis)
 
@@ -230,20 +279,24 @@ async def generate_course_complete(
             else:
                 parts_data = course_data.get("parts", [])
 
+            # Crée les tâches async pour TOUTES les parties EN PARALLÈLE
             tasks = [
                 process_course_part(part_data, i)
                 for i, part_data in enumerate(parts_data, 1)
             ]
 
+            # Exécute en parallèle
             with Timer(f"Parties EN PARALLÈLE ({len(parts_data)} parts)"):
                 parts = await asyncio.gather(*tasks, return_exceptions=False)
 
+            # Filtre les None (erreurs)
             parts = [p for p in parts if p is not None]
 
             if not parts:
                 logger.error("[PIPELINE] Aucune partie générée")
                 return None
 
+            # Crée le CourseOutput final
             course_output = CourseOutput(
                 id=str(uuid4()),
                 title=(

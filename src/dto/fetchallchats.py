@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-from typing import List
+from typing import Optional, List, Literal, Union
 from datetime import datetime
-
+from src.models import ExerciseOutput
+from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 class DisplaySessionsMain(BaseModel):
     session_id: str
@@ -13,3 +14,4 @@ class FetchAllChatsRequest(BaseModel):
 
 class FetchAllChatsResponse(BaseModel):
     sessions: List[DisplaySessionsMain] 
+     # À adapter selon la structure des sessions renvoyées

@@ -1,3 +1,7 @@
+"""
+Utilitaire de timing minimaliste pour tracer la performance.
+"""
+
 import time
 import logging
 

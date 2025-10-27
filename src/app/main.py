@@ -14,6 +14,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Désactiver les loggers verbeux des dépendances
+logging.getLogger("google.genai").setLevel(logging.WARNING)
+logging.getLogger("google.genai.models").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("google.adk").setLevel(logging.WARNING)
+
 
 def create_app() -> FastAPI:
     """Crée et configure l'application FastAPI."""
@@ -26,7 +32,8 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[app_settings.FRONT_ORIGINS,"http://localhost:3000"],
+        # allow_origins=["http://localhost:3000"],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -41,6 +48,13 @@ def create_app() -> FastAPI:
         }
 
     app.include_router(api_router, prefix="/api")
+
+    # @app.on_event("startup")
+    # async def on_startup():
+    #     """Initialise les ressources au démarrage de l'application."""
+    #     logger.info("Starting FastAPI application...")
+    #     app.state.db_pool = await create_db_pool()
+    #     logger.info("Database pool initialized and ready.")
 
     @app.on_event("startup")
     async def on_startup():
@@ -82,7 +96,7 @@ def dev_server():
         port=app_settings.PORT,
         reload=True,
         log_level="info",
-        timeout_keep_alive=65,  
+        timeout_keep_alive=65,  # ✅ Keep-alive timeout
     )
 
 
@@ -94,8 +108,8 @@ def prod_server():
         port=app_settings.PORT,
         reload=False,
         log_level="info",
-        timeout_keep_alive=240,  
-        timeout_graceful_shutdown=240,
+        timeout_keep_alive=240,  # ✅ 4 min keep-alive (pour les requêtes longues)
+        timeout_graceful_shutdown=240,  # ✅ 4 min graceful shutdown (pour les requêtes longues)
     )
 
 

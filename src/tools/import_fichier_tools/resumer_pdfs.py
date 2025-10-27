@@ -1,7 +1,12 @@
 from typing import Dict, Any, List
+import logging
+
 from src.config import gemini_settings
 from src.models.pdf_summary_models import EntreeResumerPDFs, SortieResumerPDFs
 from src.utils import get_gemini_files
+
+logger = logging.getLogger(__name__)
+
 
 def resumer_pdfs_session(payload: Dict[str, Any]) -> Dict[str, Any]:
     """Génère un résumé concis des PDF présents dans le contexte de session (Gemini files)."""
@@ -9,6 +14,7 @@ def resumer_pdfs_session(payload: Dict[str, Any]) -> Dict[str, Any]:
         data = EntreeResumerPDFs(**payload)
         file_ids: List[str] = data.file_ids or get_gemini_files(data.session_id)
 
+        # Compatibility: if older entries stored names like "files/abc", resolve to URIs
         uris: List[str] = []
         for fid in file_ids:
             if isinstance(fid, str) and fid.startswith("files/"):
@@ -30,6 +36,7 @@ def resumer_pdfs_session(payload: Dict[str, Any]) -> Dict[str, Any]:
                 summary=None,
             ).model_dump()
 
+        # Construire la demande avec les fichiers en pièces
         instruction = (
             "Tu es un assistant qui résume des documents PDF. "
             "Procède par: (1) survol global, (2) détection des titres/sections, (3) extraction des passages clés, "
@@ -38,6 +45,7 @@ def resumer_pdfs_session(payload: Dict[str, Any]) -> Dict[str, Any]:
         )
         user_parts = [{"file_data": {"file_uri": uri}} for uri in file_ids[:5]]
 
+        # Première tentative
         try:
             response = gemini_settings.CLIENT.models.generate_content(
                 model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
@@ -53,6 +61,7 @@ def resumer_pdfs_session(payload: Dict[str, Any]) -> Dict[str, Any]:
         except Exception:
             pass
 
+        # Fallback image/file-capable model si dispo
         model_image = getattr(gemini_settings, "GEMINI_MODEL_2_5_FLASH_IMAGE", None)
         if model_image:
             response = gemini_settings.CLIENT.models.generate_content(
@@ -69,7 +78,15 @@ def resumer_pdfs_session(payload: Dict[str, Any]) -> Dict[str, Any]:
 
         return SortieResumerPDFs(ok=False, message="Impossible de générer un résumé fiable.", summary=None).model_dump()
 
+        summary = getattr(response, "text", None) or getattr(response, "parsed", None)
+        return SortieResumerPDFs(
+            ok=True,
+            message="Résumé généré avec succès.",
+            summary=summary if isinstance(summary, str) else str(summary),
+        ).model_dump()
+
     except Exception as e:
+        logger.exception("Erreur resumer_pdfs_session")
         return SortieResumerPDFs(
             ok=False,
             message=f"Erreur lors du résumé: {e}",
