@@ -43,6 +43,7 @@ from .request_context import (
     get_session_id,
 )
 
+from .save_files import save_course_as_pdf
 
 __all__ = [
     "generate_plain",
@@ -69,4 +70,5 @@ __all__ = [
     "get_user_id",
     "get_deep_course_id",
     "get_session_id",
+    "save_course_as_pdf",
 ]
