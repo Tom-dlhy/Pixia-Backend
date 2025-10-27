@@ -28,7 +28,7 @@ async def fetch_all_chats(data: FetchAllChatRequest):
     logger.info(f"📖 Fetching all chats for user_id={data.user_id}")
     db_manager = DBManager()
     sessions = await db_manager.fetch_all_chats(data.user_id)
-    listed_sessions = [Session(**session) for session in sessions]
+    listed_sessions = [Session.model_validate(session) for session in sessions]
     logger.info(
         f"✅ Retrieved {len(listed_sessions)} sessions for user_id={data.user_id}"
     )

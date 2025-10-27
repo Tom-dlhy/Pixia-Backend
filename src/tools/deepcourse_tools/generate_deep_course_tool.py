@@ -33,13 +33,14 @@ async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> GenerativeToolO
     )
     bdd_manager = DBManager()
 
+    if isinstance(synthesis, dict):
+        synthesis = DeepCourseSynthesis.model_validate(synthesis)
+
     agent = "deep-course"
     redirect_id = None
     completed = False
 
     start_time = time.time()
-    if isinstance(synthesis, dict):
-        synthesis = DeepCourseSynthesis(**synthesis)
 
     synthesis_chapters = synthesis.synthesis_chapters
     num_chapters = len(synthesis_chapters)
@@ -49,9 +50,21 @@ async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> GenerativeToolO
     all_tasks = []
     for chapter in synthesis_chapters:
         # Créer les coroutines SANS les attendre
-        all_tasks.append(generate_exercises(is_called_by_agent=False,synthesis=chapter.synthesis_exercise))
-        all_tasks.append(generate_courses(is_called_by_agent=False,course_synthesis=chapter.synthesis_course))
-        all_tasks.append(generate_exercises(is_called_by_agent=False,synthesis=chapter.synthesis_evaluation))
+        all_tasks.append(
+            generate_exercises(
+                is_called_by_agent=False, synthesis=chapter.synthesis_exercise
+            )
+        )
+        all_tasks.append(
+            generate_courses(
+                is_called_by_agent=False, course_synthesis=chapter.synthesis_course
+            )
+        )
+        all_tasks.append(
+            generate_exercises(
+                is_called_by_agent=False, synthesis=chapter.synthesis_evaluation
+            )
+        )
     task_creation_time = time.time() - task_creation_start
 
     # Exécuter TOUS les tasks en parallèle
@@ -128,7 +141,6 @@ async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> GenerativeToolO
     logger.info(f"  ║     └─ Finalisation: {final_time:.3f}s")
     logger.info(f"  ╚═══════════════════════════════════════════════════════════╝\n")
 
-
     ### Storage
 
     if user_id := get_user_id():
@@ -158,9 +170,7 @@ async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> GenerativeToolO
                         "session_id_course": session_course.id,
                         "session_id_evaluation": session_evaluation.id,
                     }
-                    dict_session.append(
-                        chapter_sessions
-                    )
+                    dict_session.append(chapter_sessions)
                 except Exception as e:
                     logger.error(
                         f"❌ Erreur lors de la création des sessions pour le chapitre {chapter.id_chapter}: {e}"
@@ -175,13 +185,9 @@ async def generate_deepcourse(synthesis: DeepCourseSynthesis) -> GenerativeToolO
             redirect_id = deepcourse_output.id
             completed = True
         except Exception as e:
-            logger.error(
-                f"❌ Erreur lors du stockage du deepcourse: {e}"
-            )
+            logger.error(f"❌ Erreur lors du stockage du deepcourse: {e}")
             raise
 
     return GenerativeToolOutput(
-        agent=agent,
-        completed=completed,
-        redirect_id=redirect_id
+        agent=agent, completed=completed, redirect_id=redirect_id
     )

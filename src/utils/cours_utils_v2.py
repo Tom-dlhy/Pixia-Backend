@@ -167,7 +167,7 @@ def generate_complete_course(
         # Validation d'entrée
         if isinstance(synthesis, dict):
             logger.debug(f"[LLM-CONVERT] Conversion dict → CourseSynthesis")
-            synthesis = CourseSynthesis(**synthesis)
+            synthesis = CourseSynthesis.model_validate(synthesis)
 
         logger.info(
             f"[LLM-CALL] Génération: {synthesis.description[:50]}... (Diff: {synthesis.difficulty})"

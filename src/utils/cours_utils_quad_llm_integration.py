@@ -53,7 +53,7 @@ async def generate_courses_quad_llm(
         CourseOutput.model_dump() avec toutes les parties générées
     """
     if isinstance(course_synthesis, dict):
-        course_synthesis = CourseSynthesis(**course_synthesis)
+        course_synthesis = CourseSynthesis.model_validate(course_synthesis)
 
     try:
         # Utiliser le pipeline Quad LLM existant (optimisé)

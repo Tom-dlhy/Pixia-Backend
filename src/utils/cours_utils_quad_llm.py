@@ -165,7 +165,7 @@ def generate_schema_png(diagram_code: str, diagram_type: str) -> Optional[str]:
                 input=diagram_code.encode("utf-8"),
                 capture_output=True,
                 check=False,
-                timeout=15,
+                timeout=30,
             )
 
             if proc.returncode != 0:
@@ -201,43 +201,42 @@ async def process_course_part(part_data: Dict[str, Any], index: int) -> Optional
     3. Convertit en PNG (Kroki)
     4. Retourne l'objet Part complet
     """
-    with Timer(f"[PART-{index}] Traitement complet"):
-        try:
-            title = part_data.get("title", f"Partie {index}")
-            content = part_data.get("content", "")
+    try:
+        title = part_data.get("title", f"Partie {index}")
+        content = part_data.get("content", "")
 
-            # Étape 1: Sélectionne le type (4 types)
-            diagram_type = part_data.get("diagram_type", "mermaid")
+        # Étape 1: Sélectionne le type (4 types)
+        diagram_type = part_data.get("diagram_type", "mermaid")
 
-            # Étape 2: Génère le code (spécialisé) - UNE SEULE TENTATIVE async
-            diagram_code = await generate_diagram_code(diagram_type, content)
+        # Étape 2: Génère le code (spécialisé) - UNE SEULE TENTATIVE async
+        diagram_code = await generate_diagram_code(diagram_type, content)
 
-            if not diagram_code:
-                logger.warning(f"[PART-{index}] Code diagramme non généré, PNG ignoré")
-                img_base64 = None
-            else:
-                # Étape 3: Génère PNG
-                img_base64 = await asyncio.to_thread(
-                    generate_schema_png, diagram_code, diagram_type
-                )
-
-            # Crée l'objet Part avec tous les champs (contenu + diagram_type + code + PNG)
-            part = Part(
-                id_part=str(uuid4()),
-                id_schema=str(uuid4()),
-                title=title,
-                content=content,
-                schema_description=part_data.get("schema_description", ""),
-                diagram_type=diagram_type,
-                diagram_code=diagram_code,
-                img_base64=img_base64,
+        if not diagram_code:
+            logger.warning(f"[PART-{index}] Code diagramme non généré, PNG ignoré")
+            img_base64 = None
+        else:
+            # Étape 3: Génère PNG
+            img_base64 = await asyncio.to_thread(
+                generate_schema_png, diagram_code, diagram_type
             )
 
-            return part
+        # Crée l'objet Part avec tous les champs (contenu + diagram_type + code + PNG)
+        part = Part(
+            id_part=str(uuid4()),
+            id_schema=str(uuid4()),
+            title=title,
+            content=content,
+            schema_description=part_data.get("schema_description", ""),
+            diagram_type=diagram_type,
+            diagram_code=diagram_code,
+            img_base64=img_base64,
+        )
 
-        except Exception as e:
-            logger.error(f"[PART-{index}] Erreur: {e}", exc_info=True)
-            return None
+        return part
+
+    except Exception as e:
+        logger.error(f"[PART-{index}] Erreur: {e}", exc_info=True)
+        return None
 
 
 # ============================================================================
@@ -262,9 +261,7 @@ async def generate_course_complete(
     with Timer("TOTAL Cours complet"):
         try:
 
-            # ÉTAPE 1: LLM #1 - Génère le contenu + type
-            with Timer("LLM #1 - Contenu + types"):
-                course_data = await generate_course_with_diagram_types_async(synthesis)
+            course_data = await generate_course_with_diagram_types_async(synthesis)
 
             if not course_data:
                 logger.error("[PIPELINE] LLM #1 échoué")
@@ -281,9 +278,7 @@ async def generate_course_complete(
                 for i, part_data in enumerate(parts_data, 1)
             ]
 
-            # Exécute en parallèle
-            with Timer(f"Parties EN PARALLÈLE ({len(parts_data)} parts)"):
-                parts = await asyncio.gather(*tasks, return_exceptions=False)
+            parts = await asyncio.gather(*tasks, return_exceptions=False)
 
             # Filtre les None (erreurs)
             parts = [p for p in parts if p is not None]
