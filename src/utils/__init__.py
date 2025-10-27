@@ -20,19 +20,6 @@ from .cours_utils_quad_llm_integration import (
 
 from .mermaid_validator import MermaidValidator
 
-from .gemini_files import (
-    upload_file,
-    delete_file,
-)
-
-from .session_context import (
-    add_gemini_file,
-    add_gemini_file_name,
-    get_gemini_files,
-    get_gemini_file_names,
-    clear_session,
-)
-
 from .correct_plain_question import agent_correct_plain_question
 
 from .request_context import (
@@ -56,13 +43,6 @@ __all__ = [
     "generate_schema_mermaid",
     "generate_courses_quad_llm",
     "MermaidValidator",
-    "upload_file",
-    "delete_file",
-    "add_gemini_file",
-    "add_gemini_file_name",
-    "get_gemini_files",
-    "get_gemini_file_names",
-    "clear_session",
     "agent_correct_plain_question",
     "planner_exercises_async",
     "set_request_context",

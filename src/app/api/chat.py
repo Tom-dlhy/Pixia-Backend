@@ -2,23 +2,16 @@ from fastapi import APIRouter, HTTPException, UploadFile, Form, File
 from src.dto import ChatResponse
 from src.config import database_settings, app_settings
 from src.agents.root_agent import root_agent
-
-from src.bdd import DBManager
-from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput, Chapter, GenerativeToolOutput
-
-from typing import List, Optional, Union, Dict
-from uuid import uuid4
-from google.adk.sessions import Session, InMemorySessionService
+from src.models import GenerativeToolOutput
+from typing import List, Optional, Union
+from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
 from google.adk.sessions.database_session_service import DatabaseSessionService
 from google.genai import types
 from google.genai.types import Part
 import logging
 import time 
-
 from dotenv import load_dotenv
-from src.utils import get_gemini_files
-
 from google.adk.artifacts import InMemoryArtifactService
 from src.utils import set_request_context
 
@@ -61,13 +54,9 @@ async def chat(
         deep_course_id=deep_course_id,
     )
 
-    final_response: Optional[
-        Union[str, dict, list, ExerciseOutput, CourseOutput, DeepCourseOutput, Chapter]
-    ] = None
     txt_reponse: Optional[str] = None
     agent = None
     redirect_id = None
-    bdd_manager = DBManager()
     current_session_service = None
 
     # === Étape 1 : création ou récupération de session ===

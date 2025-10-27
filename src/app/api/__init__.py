@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from .health import router as health_router
 from .chat import router as chat_router
-from .files import router as files_router
 from .fetchallchats import router as fetchallchats_router
 from .fetchchat import router as fetchchat_router
 from .renamechat import router as renamechat_router
@@ -26,7 +25,6 @@ from .downloadcourse import router as downloadcourse_router
 api_router = APIRouter()
 api_router.include_router(health_router)
 api_router.include_router(chat_router)
-api_router.include_router(files_router)
 api_router.include_router(fetchallchats_router)
 api_router.include_router(fetchchat_router)
 api_router.include_router(renamechat_router)
@@ -53,7 +51,6 @@ __all__ = [
     "health_router",
     "chat_router",
     "api_router",
-    "files_router",
     "fetchallchats_router",
     "fetchchat_router",
     "renamechat_router",
