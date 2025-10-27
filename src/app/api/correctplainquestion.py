@@ -4,7 +4,6 @@ from src.utils import agent_correct_plain_question
 
 router = APIRouter(prefix="/correctplainquestion", tags=["CorrectPlainQuestion"])
 
-
 @router.post("", response_model=CorrectPlainQuestionResponse)
 async def correct_plain_question(
     question: str = Form(...),

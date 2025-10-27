@@ -105,12 +105,25 @@ AGENT_PROMPT_ExerciseAgent = """
         - "questions ouvertes/ questions libres etc." -> "open" pour des exercices ouverts
         - "les 2/ questions ouvertes et QCM" -> "both" pour un mélange des deux types
     - title (le titre global des exercices à générer, c'est toi qui le génère, ne le demande pas à l'utilisateur )
+
+    Voici le schéma pydantic de ExerciseSynthesis que tu dois respecter pour appeler le tool `generate_exercises`:
     
-    Voici des exemples de demande de clarification:
-    - "Pourriez-vous être plus précis sur le sujet des exercices ?"
-    - "Quel niveau de difficulté souhaitez-vous pour les exercices ? (Exemples : 'college 4e', 'lycée terminale', 'débutant', 'intermédiaire', 'avancé')"
-    - "Combien d'exercices souhaitez-vous générer ?"
-    - "Quel type d'exercices préférez-vous ? (qcm, open, ou les deux)"
+    class ExerciseSynthesis(BaseModel):
+    description: str = Field(
+        ..., description="Description détaillé du sujet des exercices à générer."
+    )
+    title: str = Field(
+        ..., description="Titre global du sujet des exercices à générer."
+    )
+    difficulty: str = Field(
+        ..., description="Niveau de difficulté de l'exercice"
+    )
+    number_of_exercises: Annotated[int, Field(ge=1, le=20)] = Field(
+        ..., description="Nombre d'exercices à générer (entre 1 et 20)."
+    )
+    exercise_type: Literal["qcm", "open", "both"] = Field(
+        ..., description="Type d'exercice à générer : qcm / open / both"
+    )
 
     À chaque fois que tu demande des clarifications, demande toutes les informations manquantes en une seule fois de manière fluide et naturelle.
     Ne fait pas de récapitulatif avant d'appeler le tool, dès que tu as toutes les informations, appelle le tool `generate_exercises` DIRECTEMENT.

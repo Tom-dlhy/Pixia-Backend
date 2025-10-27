@@ -1,10 +1,9 @@
 import asyncio
-import json
 import logging
 from uuid import uuid4
-from typing import Any, Union
+from typing import Union
 
-from src.models.exercise_models import ExercisePlan, ExerciseOutput, ExerciseSynthesis
+from src.models import ExercisePlan, ExerciseOutput, ExerciseSynthesis, GenerativeToolOutput
 from src.utils import generate_for_topic, planner_exercises_async, get_user_id
 from src.utils.timing import Timer
 
@@ -15,7 +14,7 @@ from src.bdd import DBManager
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from src.models import GenerativeToolOutput
+
 
 
 async def generate_exercises(is_called_by_agent:bool ,synthesis: ExerciseSynthesis) -> Union[GenerativeToolOutput, ExerciseOutput]:

@@ -15,7 +15,6 @@ from .changesettings import router as changesettings_router
 from .markcorrectedQCM import router as markcorrectedQCM_router
 from .signup import router as signup_router
 from .login import router as login_router
-from .test import router as test_router
 from .fetchexercise import router as fetch_exercise_router
 from .fetchcourse import router as fetch_course_router
 from .fetchalldeepcourses import router as fetchalldeepcourses_router
@@ -41,7 +40,6 @@ api_router.include_router(changesettings_router)
 api_router.include_router(markcorrectedQCM_router)
 api_router.include_router(signup_router)
 api_router.include_router(login_router)
-api_router.include_router(test_router)
 api_router.include_router(fetch_exercise_router)
 api_router.include_router(fetch_course_router)
 api_router.include_router(fetchalldeepcourses_router)
@@ -69,7 +67,6 @@ __all__ = [
     "markcorrectedQCM_router",
     "signup_router",
     "login_router",
-    "test_router",
     "fetch_exercise_router",
     "fetch_course_router",
     "fetchalldeepcourses_router",

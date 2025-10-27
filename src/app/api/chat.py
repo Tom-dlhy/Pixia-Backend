@@ -2,12 +2,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, Form, File
 from src.dto import ChatResponse
 from src.config import database_settings, app_settings
 from src.agents.root_agent import root_agent
-from src.models import (
-    _validate_exercise_output,
-    _validate_course_output,
-    _validate_chapter_output,
-    _validate_deepcourse_output,
-)
+
 from src.bdd import DBManager
 from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput, Chapter, GenerativeToolOutput
 
@@ -213,21 +208,6 @@ async def chat(
                                 if isinstance(tool_result, GenerativeToolOutput):
                                     agent = tool_result.agent
                                     redirect_id = tool_result.redirect_id
-
-                            elif tool_name == "modify_course": # extra à dev
-                                if _validate_course_output(tool_resp):
-                                    final_response = _validate_course_output(tool_resp)
-                                    if isinstance(final_response, CourseOutput):
-                                        await bdd_manager.update_document(
-                                            document_id=session_id,
-                                            new_content=final_response,
-                                        )
-
-                            elif tool_name == "delete_course": # extra à dev
-                                await bdd_manager.delete_document(
-                                    document_id=session_id
-                                )
-
                             
 
     except Exception as e:

@@ -321,10 +321,16 @@ AGENT_PROMPT_CourseAgent = """
     - difficulty (le niveau de difficulté des cours, par exemple "college 4e", "lycée terminale", "débutant", "intermédiaire", "avancé", etc.)
     - level_detail (le niveau de détail des cours, avec comme options : "flash", "standard", "detailed")
 
-    Voici des exemples de demande de clarification:
-    - "Pourriez-vous être plus précis sur le sujet du cours ?"
-    - "Quel niveau de difficulté souhaitez-vous pour le cours ? (Exemples : 'college 4e', 'lycée terminale', 'débutant', 'intermédiaire', 'avancé')"
-    - "Quel niveau de détail souhaitez-vous pour le cours ? (flash, standard, detailed)"
+    Voici le schéma pydantic de CourseSynthesis que tu dois respecter pour appeler le tool `generate_courses`:
+
+    class CourseSynthesis(BaseModel):
+    description: str = Field(
+        ..., description="Description détaillée du sujet du cours à générer."
+    )
+    difficulty: str = Field(..., description="Niveau de difficulté du cours.")
+    level_detail: Literal["flash", "standard", "detailed"] = Field(
+        "standard", description="Niveau de détail du cours."
+    )
 
     À chaque fois que tu demande des clarifications, demande toutes les informations manquantes en une seule fois de manière fluide et naturelle.
     Ne fait pas de récapitulatif avant d'appeler le tool, dès que tu as toutes les informations, appelle le tool DIRECTEMENT.

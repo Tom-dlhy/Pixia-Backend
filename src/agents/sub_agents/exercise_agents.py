@@ -3,7 +3,6 @@ from src.prompts import AGENT_PROMPT_ExerciseAgent
 from src.config import gemini_settings
 from src.tools.exercises_tools import generate_exercises
 
-
 exercise_agent = LlmAgent(
     name="ExerciseAgent",
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
