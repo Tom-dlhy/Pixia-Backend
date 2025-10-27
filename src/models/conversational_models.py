@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Optional, Literal
+from pydantic import BaseModel, Field, StringConstraints
+from typing import Annotated, List, Union, Optional, Literal
 
 class SynthesisOutput(BaseModel):
     id: Optional[str] = Field(None, description="Identifiant unique de la sortie de synthèse")

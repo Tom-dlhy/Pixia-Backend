@@ -37,17 +37,14 @@ from datetime import datetime
 import json
 from uuid import uuid4
 from typing import Optional
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 # =========================================================
 # CONFIGURATION DES DSN
 # =========================================================
-
 DATABASE_URL_SYNC = database_settings.dsn
 
+# 🔧 Conversion propre vers un DSN async
 if "+asyncpg" not in DATABASE_URL_SYNC:
     if "+psycopg2" in DATABASE_URL_SYNC:
         DATABASE_URL_ASYNC = DATABASE_URL_SYNC.replace("+psycopg2", "+asyncpg")
@@ -58,13 +55,12 @@ if "+asyncpg" not in DATABASE_URL_SYNC:
 else:
     DATABASE_URL_ASYNC = DATABASE_URL_SYNC
 
-logger.info(f"DSN async utilisé : {DATABASE_URL_ASYNC}")
+print("🧩 DSN async utilisé :", DATABASE_URL_ASYNC)
 
 
 # =========================================================
 # CLASSE DBManager ASYNCHRONE
 # =========================================================
-
 class DBManager:
     """
     Gestionnaire asynchrone de base de données :
@@ -73,11 +69,12 @@ class DBManager:
     """
 
     def __init__(self):
+        # 🔹 moteur async standard pour le backend
         self.engine = create_async_engine(DATABASE_URL_ASYNC, echo=False, future=True)
         self.SessionLocal = async_sessionmaker(
             self.engine, expire_on_commit=False, class_=AsyncSession
         )
-        logger.info("Moteur async initialisé (backend)")
+        print("⚙️  Moteur async initialisé (backend).")
 
     # -----------------------------------------------------
     # CRÉATION COMPLÈTE DE LA BASE VIA ADK
@@ -89,19 +86,22 @@ class DBManager:
         - Crée ensuite les tables métier sur le même moteur
         - Recrée ensuite le moteur async du backend
         """
-        logger.info("Intialisation complète de la base via ADK")
+        print("🚀 Initialisation complète de la base via ADK...")
 
+        # 1️⃣ Lancer ADK (sync) → crée ses propres tables
         adk_service = DatabaseSessionService(db_url=DATABASE_URL_SYNC)
         adk_engine = adk_service.db_engine
 
+        # 2️⃣ Créer les tables métiers sur le moteur ADK
         Base.metadata.create_all(bind=adk_engine)
-        logger.info("Tables ADK + tables métiers créées (via moteur sync ADK).")
+        print("✅ Tables ADK + tables métiers créées (via moteur sync ADK).")
+
+        # 3️⃣ Recréer le moteur async pour le backend
         self.engine = create_async_engine(DATABASE_URL_ASYNC, echo=False, future=True)
         self.SessionLocal = async_sessionmaker(
             self.engine, expire_on_commit=False, class_=AsyncSession
         )
-
-        logger.info("Moteur async restauré pour le backend")
+        print("🔄 Moteur async restauré pour le backend.")
 
     # -----------------------------------------------------
     # CONTEXT MANAGER ASYNC (FastAPI compatible)
@@ -118,32 +118,35 @@ class DBManager:
         """Vide toutes les tables sans les supprimer."""
         async with self.engine.begin() as conn:
             await conn.execute(CLEAR_ALL_TABLES)
-        logger.info("Tables vidées")
+        print("🧹 Tables vidées.")
 
     async def clear_db(self):
         """Supprime toutes les tables (ADK + métiers)."""
         async with self.engine.begin() as conn:
             await conn.execute(DROP_ALL_TABLES)
-        logger.info("Toutes les tables supprimées.")
+        print("💣 Toutes les tables supprimées.")
 
     async def test_db(self):
         """Teste la connexion et liste les tables existantes."""
         async with self.engine.begin() as conn:
             result = await conn.execute(CHECK_TABLES)
             tables = [row[0] for row in result.fetchall()]
-        logger.info(f"Tables existantes : {tables}")
+        print("📋 Tables existantes :", tables)
         return tables
 
     # -----------------------------------------------------
     # REQUÊTES MÉTIER ASYNC
     # -----------------------------------------------------
 
+    # Route fetchallchats
     async def fetch_all_chats(self, user_id: str):
         """Récupère toutes les sessions de chat pour un utilisateur donné."""
         async with self.engine.begin() as conn:
             result = await conn.execute(FETCH_ALL_CHATS, {"user_id": user_id})
             sessions = [dict(row._mapping) for row in result.fetchall()]
         return sessions
+
+    # Route chat
 
     async def store_basic_document(
         self,
@@ -431,6 +434,7 @@ class DBManager:
 
     async def rename_chapter(self, chapter_id: str, title: str):
         """Renomme un chapitre donné."""
+        # Implémentation fictive (à adapter selon le schéma réel)
         async with self.engine.begin() as conn:
             await conn.execute(
                 RENAME_CHAPTER, {"title": title, "chapter_id": chapter_id}
@@ -438,6 +442,7 @@ class DBManager:
 
     async def delete_chapter(self, chapter_id: str):
         """Supprime un chapitre donné."""
+        # Implémentation fictive (à adapter selon le schéma réel)
         async with self.engine.begin() as conn:
             await conn.execute(DELETE_CHAPTER, {"chapter_id": chapter_id})
 
@@ -473,6 +478,7 @@ class DBManager:
         new_notion_token: Union[str, None],
     ):
         """Change les paramètres utilisateur."""
+        # Implémentation fictive (à adapter selon le schéma réel)
         async with self.engine.begin() as conn:
             await conn.execute(
                 CHANGE_SETTINGS,
@@ -517,6 +523,7 @@ class DBManager:
         self, doc_id: str, id_question: str, is_correct: bool, answer: str
     ):
         """Met à jour le statut de correction d'une question dans un document."""
+        # Implémentation fictive (à adapter selon le schéma réel)
         async with self.engine.begin() as conn:
             await conn.execute(
                 CORRECT_PLAIN_QUESTION,
@@ -530,6 +537,7 @@ class DBManager:
 
     async def mark_is_corrected_qcm(self, doc_id: str, question_id: str):
         """Marque une question QCM comme corrigée dans un document."""
+        # Implémentation fictive (à adapter selon le schéma réel)
         async with self.engine.begin() as conn:
             await conn.execute(
                 MARK_IS_CORRECTED_QCM, {"doc_id": doc_id, "id_question": question_id}

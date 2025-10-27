@@ -57,6 +57,7 @@ def repondre_question_pdf(payload: Dict[str, Any]) -> Dict[str, Any]:
     try:
         data = EntreeQuestionPDF(**payload)
 
+        # Déterminer le fichier cible
         file_uri = data.file_uri
         if not file_uri:
             session_uris: List[str] = get_gemini_files(data.session_id)
@@ -66,6 +67,7 @@ def repondre_question_pdf(payload: Dict[str, Any]) -> Dict[str, Any]:
                 return SortieQuestionPDF(ok=False, message="Plusieurs PDFs en contexte - précisez 'file_uri'.").model_dump()
             file_uri = session_uris[0]
 
+        # Première tentative sur FLASH
         try:
             response = _ask_with_file(file_uri, data.question, data.max_answer_words)
             parsed = _parse_json_response(response)
@@ -76,6 +78,7 @@ def repondre_question_pdf(payload: Dict[str, Any]) -> Dict[str, Any]:
         except Exception:
             pass
 
+        # Fallback: si réponse vide/fragile, réessayer avec le modèle image/fichier si dispo
         try:
             model_image = getattr(gemini_settings, "GEMINI_MODEL_2_5_FLASH_IMAGE", None)
             if model_image:

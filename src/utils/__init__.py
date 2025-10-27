@@ -5,6 +5,7 @@ from .exercises_utils import (
     planner_exercises_async
 )
 
+
 from .get_db_url import create_db_pool, get_connection
 
 from .cours_utils_v2 import (
