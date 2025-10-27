@@ -10,7 +10,8 @@ from google.adk.sessions.database_session_service import DatabaseSessionService
 from google.genai import types
 from google.genai.types import Part
 import logging
-import time 
+import time
+from datetime import datetime
 from dotenv import load_dotenv
 from google.adk.artifacts import InMemoryArtifactService
 from src.utils import set_request_context
@@ -95,15 +96,11 @@ async def chat(
                 file_bytes = await upload_file.read()
                 file_mime_type = upload_file.content_type or "application/octet-stream"
                 filename = upload_file.filename or f"file_{idx}"
-                
-                logger.info(f"📄 Sauvegarde de {filename} ({file_mime_type}, {len(file_bytes)} bytes)")
-                
                 # Créer un Part artifact avec les bytes
                 artifact_part = types.Part.from_bytes(
-                    data=file_bytes,
-                    mime_type=file_mime_type
+                    data=file_bytes, mime_type=file_mime_type
                 )
-                
+
                 # Sauvegarder dans artifact_service
                 version = await artifact_service.save_artifact(
                     app_name=settings.APP_NAME,
@@ -112,18 +109,20 @@ async def chat(
                     filename=filename,
                     artifact=artifact_part,
                 )
-                
+
                 logger.info(f"✅ Artifact sauvegardé: {filename} (version {version})")
-                
+
             except Exception as e:
-                logger.error(f"❌ Erreur lors de la sauvegarde du fichier {filename}: {e}")
+                logger.error(
+                    f"❌ Erreur lors de la sauvegarde du fichier {filename}: {e}"
+                )
                 # Continue avec les autres fichiers même en cas d'erreur
 
     # === Étape 2 : exécution du runner ADK ===
     try:
         # Attach session files (PDFs uploaded to Gemini) to the user message
         parts = [Part(text=message)]
-        
+
         # Ajouter les artifacts (fichiers uploadés) au message
         try:
             artifact_keys = await artifact_service.list_artifact_keys(
@@ -131,9 +130,11 @@ async def chat(
                 user_id=user_id,
                 session_id=session_id,
             )
-            
+
             if artifact_keys:
-                logger.info(f"📂 Chargement de {len(artifact_keys)} artifact(s) pour le contexte")
+                logger.info(
+                    f"📂 Chargement de {len(artifact_keys)} artifact(s) pour le contexte"
+                )
                 for artifact_key in artifact_keys:
                     artifact_part = await artifact_service.load_artifact(
                         app_name=settings.APP_NAME,
@@ -146,7 +147,7 @@ async def chat(
                         logger.info(f"✅ Artifact ajouté au contexte: {artifact_key}")
         except Exception as e:
             logger.warning(f"⚠️ Erreur lors du chargement des artifacts: {e}")
-        
+
         # Ajouter aussi les anciens fichiers Gemini (si ils existent)
         try:
             for fid in get_gemini_files(session_id):  # type: ignore[arg-type]
@@ -173,19 +174,11 @@ async def chat(
         )
 
         async for event in runner.run_async(
-            user_id=user_id, 
-            session_id=session_id, 
-            new_message=typed_message
+            user_id=user_id, session_id=session_id, new_message=typed_message
         ):
 
-            # --- Réponse finale ---
-            if event.is_final_response():
-                if event.content and event.content.parts:
-                    txt_reponse = event.content.parts[0].text
-                break
-
-            # --- Sortie d’un outil (tool output) ---
-            elif hasattr(event, "get_function_responses"):
+            # --- Sortie d'un outil (tool output) ---
+            if hasattr(event, "get_function_responses"):
                 func_responses = event.get_function_responses()
                 if func_responses:
                     for fr in func_responses:
@@ -193,26 +186,38 @@ async def chat(
                         tool_resp = fr.response
                         if tool_name and tool_resp:
                             tool_result = tool_resp.get("result")
-                            if tool_name in ("generate_exercises", "generate_courses", "generate_new_chapter", "generate_deepcourse"):
+
+                            if tool_name in (
+                                "generate_exercises",
+                                "generate_courses",
+                                "generate_new_chapter",
+                                "generate_deepcourse",
+                            ):
                                 if isinstance(tool_result, GenerativeToolOutput):
                                     agent = tool_result.agent
                                     redirect_id = tool_result.redirect_id
-                            
+
+            # --- Réponse finale ---
+            if event.is_final_response():
+                if event.content and event.content.parts:
+                    txt_reponse = event.content.parts[0].text
+                break
 
     except Exception as e:
         logger.exception("❌ Erreur pendant l'exécution du runner ADK")
         raise HTTPException(status_code=500, detail=f"Erreur agent : {e}")
 
-    if not txt_reponse:
-        txt_reponse = ""
+    if not txt_reponse and (agent is None and redirect_id is None):
+        txt_reponse = "Votre document a été généré avec succès."
+    elif not txt_reponse:
+        txt_reponse = "une erreur est survenue lors de la génération de la réponse."
 
-    print("--- Chat API Timing ---")
+
     end_time = time.monotonic()
     duration = end_time - start_time
     print(f"Durée totale: {duration:.2f} secondes")
 
     logger.info(f"agent={agent}")
-
     output = ChatResponse(
         session_id=session_id,
         answer=txt_reponse,

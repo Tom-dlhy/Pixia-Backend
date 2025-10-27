@@ -12,11 +12,35 @@ from src.prompts import (
     SYSTEM_PROMPT_QCM,
     SYSTEM_PROMPT_PLANNER_EXERCISES,
 )
-import logging, asyncio, uuid
+import logging, asyncio, uuid, re
 from typing import Any, Union
 from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO)
+
+
+def _truncate_json_explanations(json_text: str, max_length: int = 1500) -> str:
+    """Tronque les explications JSON trop longues pour éviter les corruptions.
+
+    Cherche les champs 'explanation' et les tronque s'ils dépassent max_length.
+    """
+    try:
+        # Pattern pour trouver "explanation": "..."
+        pattern = r'"explanation"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"'
+
+        def truncate_match(match):
+            full_match = match.group(0)
+            explanation = match.group(1)
+            if len(explanation) > max_length:
+                truncated = explanation[: max_length - 3] + "..."
+                return f'"explanation": "{truncated}"'
+            return full_match
+
+        truncated_json = re.sub(pattern, truncate_match, json_text)
+        return truncated_json
+    except Exception as e:
+        logging.warning(f"Erreur lors de la troncature JSON: {e}")
+        return json_text
 
 
 async def generate_plain(prompt: str, difficulty: str) -> Union[Open, dict, Any]:
@@ -42,28 +66,30 @@ async def generate_plain(prompt: str, difficulty: str) -> Union[Open, dict, Any]
                 "response_schema": Open,
             },
         )
-        
+
         if not response:
             logging.error(f"[generate_plain] Response est None")
             return {}
-            
+
         data = response.parsed
         if not data:
-            logging.warning(f"[generate_plain] response.parsed est None, tentative avec response.text")
-            if hasattr(response, 'text') and response.text:
+            logging.warning(
+                f"[generate_plain] response.parsed est None, tentative avec response.text"
+            )
+            if hasattr(response, "text") and response.text:
                 try:
-                    # Tenter de parser le JSON brut
                     import json
-                    raw_data = json.loads(response.text)
-                    
-                    # Tronquer les explications trop longues AVANT validation
-                    if 'questions' in raw_data:
-                        for question in raw_data['questions']:
-                            if 'explanation' in question and len(question['explanation']) > 2000:
-                                logging.warning(f"[generate_plain] Troncature d'une explication de {len(question['explanation'])} → 2000 chars")
-                                question['explanation'] = question['explanation'][:1997] + "..."
-                    
+
+                    raw_text = response.text
+
+                    # Tronquer les explications TRÈS longues AVANT de parser le JSON
+                    # pour éviter les corruptions
+                    raw_text = _truncate_json_explanations(raw_text, max_length=1500)
+
+                    # Tenter de parser le JSON nettoyé
+                    raw_data = json.loads(raw_text)
                     data = Open.model_validate(raw_data)
+
                 except json.JSONDecodeError as json_err:
                     logging.error(f"[generate_plain] JSON invalide: {json_err}")
                     return None
@@ -73,16 +99,9 @@ async def generate_plain(prompt: str, difficulty: str) -> Union[Open, dict, Any]
             else:
                 logging.error(f"[generate_plain] Aucune donnée valide dans response")
                 return None
-        
-        # Vérifier et tronquer même si response.parsed a fonctionné
-        if data and isinstance(data, Open) and hasattr(data, 'questions'):
-            for question in data.questions:
-                if hasattr(question, 'explanation') and len(question.explanation) > 2000:
-                    logging.warning(f"[generate_plain] Troncature post-parsing: {len(question.explanation)} → 2000 chars")
-                    question.explanation = question.explanation[:1997] + "..."
-                
+
         return data
-        
+
     except Exception as err:
         logging.error(f"[generate_plain] Erreur: {err}")
         return None
@@ -111,28 +130,29 @@ async def generate_qcm(prompt: str, difficulty: str) -> Union[QCM, dict, Any]:
                 "response_schema": QCM,
             },
         )
-        
+
         if not response:
             logging.error(f"[generate_qcm] Response est None")
             return {}
-            
+
         data = response.parsed
         if not data:
-            logging.warning(f"[generate_qcm] response.parsed est None, tentative avec response.text")
-            if hasattr(response, 'text') and response.text:
+            logging.warning(
+                f"[generate_qcm] response.parsed est None, tentative avec response.text"
+            )
+            if hasattr(response, "text") and response.text:
                 try:
-                    # Tenter de parser le JSON brut
                     import json
-                    raw_data = json.loads(response.text)
-                    
-                    # Tronquer les explications trop longues AVANT validation
-                    if 'questions' in raw_data:
-                        for question in raw_data['questions']:
-                            if 'explanation' in question and len(question['explanation']) > 2000:
-                                logging.warning(f"[generate_qcm] Troncature d'une explication de {len(question['explanation'])} → 2000 chars")
-                                question['explanation'] = question['explanation'][:1997] + "..."
-                    
+
+                    raw_text = response.text
+
+                    # Tronquer les explications TRÈS longues AVANT de parser le JSON
+                    raw_text = _truncate_json_explanations(raw_text, max_length=1500)
+
+                    # Tenter de parser le JSON nettoyé
+                    raw_data = json.loads(raw_text)
                     data = QCM.model_validate(raw_data)
+
                 except json.JSONDecodeError as json_err:
                     logging.error(f"[generate_qcm] JSON invalide: {json_err}")
                     return None
@@ -142,16 +162,9 @@ async def generate_qcm(prompt: str, difficulty: str) -> Union[QCM, dict, Any]:
             else:
                 logging.error(f"[generate_qcm] Aucune donnée valide dans response")
                 return None
-        
-        # Vérifier et tronquer même si response.parsed a fonctionné
-        if data and isinstance(data, QCM) and hasattr(data, 'questions'):
-            for question in data.questions:
-                if hasattr(question, 'explanation') and len(question.explanation) > 2000:
-                    logging.warning(f"[generate_qcm] Troncature post-parsing: {len(question.explanation)} → 2000 chars")
-                    question.explanation = question.explanation[:1997] + "..."
-                
+
         return data
-        
+
     except Exception as err:
         logging.error(f"[generate_qcm] Erreur: {err}")
         return None
@@ -165,10 +178,12 @@ async def planner_exercises_async(
 
     Génère un plan d'exercice de manière asynchrone sans bloquer le thread.
     """
-    
+
     # Log des données d'entrée pour debug
-    logging.info(f"[Planner] Début génération - Title: {synthesis.title}, Difficulté: {synthesis.difficulty}, Nb exercices: {synthesis.number_of_exercises}")
-    
+    logging.info(
+        f"[Planner] Début génération - Title: {synthesis.title}, Difficulté: {synthesis.difficulty}, Nb exercices: {synthesis.number_of_exercises}"
+    )
+
     try:
         response = await gemini_settings.CLIENT.aio.models.generate_content(
             model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
@@ -182,19 +197,21 @@ async def planner_exercises_async(
     except Exception as err:
         logging.error(f"[Planner] Erreur lors de l'appel API Gemini: {err}")
         raise ValueError(f"Gemini API call failed: {err}")
-    
+
     # Vérification de la réponse
     if not response:
         logging.error(f"[Planner] Response object est None ou vide")
         raise ValueError("Gemini returned empty response")
-    
+
     # Vérification du parsed
     try:
         data = response.parsed
         if not data:
             # Tentative de récupération via response.text
-            logging.warning(f"[Planner] response.parsed est None, tentative avec response.text")
-            if hasattr(response, 'text') and response.text:
+            logging.warning(
+                f"[Planner] response.parsed est None, tentative avec response.text"
+            )
+            if hasattr(response, "text") and response.text:
                 logging.info(f"[Planner] Tentative de parsing manuel du text")
                 try:
                     data = ExercisePlan.model_validate_json(response.text)
@@ -202,19 +219,25 @@ async def planner_exercises_async(
                     return data
                 except Exception as parse_err:
                     logging.error(f"[Planner] Échec du parsing manuel: {parse_err}")
-                    logging.error(f"[Planner] Response text: {response.text[:500]}...")  # Log 500 premiers chars
-            
-            logging.error(f"[Planner] response.parsed est None et aucune alternative valide")
+                    logging.error(
+                        f"[Planner] Response text: {response.text[:500]}..."
+                    )  # Log 500 premiers chars
+
+            logging.error(
+                f"[Planner] response.parsed est None et aucune alternative valide"
+            )
             raise ValueError("Planner returned None - no valid data in response")
-        
+
         logging.info(f"[Planner] Plan généré avec succès")
         return data
-        
+
     except Exception as err:
         logging.error(f"[Planner] Erreur parsing: {err}")
         logging.error(f"[Planner] Type de response: {type(response)}")
-        if hasattr(response, '__dict__'):
-            logging.error(f"[Planner] Attributs de response: {list(response.__dict__.keys())}")
+        if hasattr(response, "__dict__"):
+            logging.error(
+                f"[Planner] Attributs de response: {list(response.__dict__.keys())}"
+            )
         raise
 
 
@@ -227,17 +250,21 @@ async def generate_for_topic(
             result = await generate_qcm(item.topic, difficulty)
         else:
             result = await generate_plain(item.topic, difficulty)
-        
+
         # Vérifier que le résultat est valide
         if result is None:
-            logging.error(f"❌ [{item.type}] Génération échouée pour: {item.topic[:50]}")
+            logging.error(
+                f"❌ [{item.type}] Génération échouée pour: {item.topic[:50]}"
+            )
             return None
-        
+
         # Vérifier que le résultat a un champ 'type'
-        if isinstance(result, dict) and 'type' not in result:
-            logging.error(f"❌ [{item.type}] Résultat sans 'type' pour: {item.topic[:50]}")
+        if isinstance(result, dict) and "type" not in result:
+            logging.error(
+                f"❌ [{item.type}] Résultat sans 'type' pour: {item.topic[:50]}"
+            )
             return None
-            
+
         return result
     except Exception as e:
         logging.error(f"❌ Erreur lors de la génération de '{item.topic[:50]}...': {e}")

@@ -9,11 +9,13 @@ AGENT_PROMPT_DeepcourseAgent = """
     Tu dois obtenir les informations pour donner en paramètre au tool `generate_deepcourse` un objet répondant un modèle Pydantic `DeepCourseSynthesis` qui contient:
 
     class DeepCourseSynthesis(BaseModel):
+        title: str = Field(..., description="Titre du deepcourse à générer")
         synthesis_chapters : List[ChapterSynthesis] = Field(..., min_length=1, max_length=16,description="Liste des plans de chapitres du deepcourse")
     
     Avec les classes imbriquées suivantes:
 
     class ChapterSynthesis(BaseModel):
+        chapter_title: str = Field(..., description="Titre du chapitre à générer")
         chapter_description: Annotated[str, StringConstraints(max_length=1000)] = Field(..., description="Description précise du plan du cours et des thèmes à aborder pour que cela soit cohérent avec le reste")
         synthesis_exercise: ExerciseSynthesis = Field(..., description="Description précise du plan de l'exercice à générer pour ce chapitre")
         synthesis_course: CourseSynthesis = Field(..., description="Description précise du plan du cours à générer pour ce chapitre")
@@ -67,7 +69,7 @@ AGENT_PROMPT_DeepcourseAgent = """
     ATTENTION : Si tu as besoin d'écrire, tu réponds systématiquement au format markdown.
     """
 
-SYSTEM_PROMPT_GENERATE_NEW_CHAPTER="""
+SYSTEM_PROMPT_GENERATE_NEW_CHAPTER = """
     Tu es un agent spécialisé dans la création de nouveaux chapitres pour des cours approfondis (deepcourses) déjà existants. 
     Ton rôle est de générer un **nouveau chapitre cohérent, original et complémentaire** au reste du cours, en t’assurant d’une **absence de redondance** avec les chapitres précédents.
     Tu disposes d'une description de la demande de l'utilisateur pour t'aider à concevoir ce chapitre, respecte là au maximum, si elle n'est pas claire, fais toi confiance et fait avec ce que tu as.
