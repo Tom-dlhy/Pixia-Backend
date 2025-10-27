@@ -35,6 +35,9 @@ async def generate_courses(is_called_by_agent: bool, course_synthesis: CourseSyn
         CourseOutput.model_dump() avec toutes les parties complètes
     """
 
+    if isinstance(course_synthesis, dict):
+        course_synthesis = CourseSynthesis.model_validate(course_synthesis)
+
     db_session_service = DatabaseSessionService(
         db_url=database_settings.dsn,
     )
@@ -43,9 +46,6 @@ async def generate_courses(is_called_by_agent: bool, course_synthesis: CourseSyn
     agent = None
     redirect_id = None
     completed = False
-
-    if isinstance(course_synthesis, dict):
-        course_synthesis = CourseSynthesis(**course_synthesis)
 
     result = await generate_courses_quad_llm(course_synthesis)
 

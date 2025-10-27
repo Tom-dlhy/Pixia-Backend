@@ -48,7 +48,7 @@ async def fetch_course(
             course_data["id"] = session_id
 
         logger.info(f"✅ Retrieved course for session_id={session_id}")
-        return CourseOutput(**course_data)
+        return CourseOutput.model_validate(course_data)
 
     except (json.JSONDecodeError, ValueError, KeyError, TypeError) as e:
         logger.error(f"❌ Erreur lors du parsing du contenu du cours : {e}")

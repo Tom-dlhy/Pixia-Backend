@@ -28,8 +28,9 @@ async def generate_exercises(is_called_by_agent:bool ,synthesis: ExerciseSynthes
     redirect_id = None
     completed = False
 
+
     if isinstance(synthesis, dict):
-        synthesis = ExerciseSynthesis(**synthesis)
+        synthesis = ExerciseSynthesis.model_validate(synthesis)
 
     with Timer(f"Exercices: {synthesis.title}"):
         # Appeler le planner de manière async avec retry

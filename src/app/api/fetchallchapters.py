@@ -26,7 +26,7 @@ async def fetch_all_chapters(deepcourse_id: str = Form(...)):
     logger.info(f"📖 Fetching all chapters for deep_course_id={deepcourse_id}")
     db_manager = DBManager()
     chapters = await db_manager.fetch_all_chapters(deepcourse_id)
-    listed_chapters = [Chapter(**chapter) for chapter in chapters]
+    listed_chapters = [Chapter.model_validate(chapter) for chapter in chapters]
     logger.info(
         f"✅ Retrieved {len(listed_chapters)} chapters for deep_course_id={deepcourse_id}"
     )

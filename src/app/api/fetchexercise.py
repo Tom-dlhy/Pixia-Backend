@@ -53,7 +53,7 @@ async def fetch_exercise(
                 exercise_data["title"] = ""
 
             logger.info(f"✅ Retrieved exercise for session_id={session_id}")
-            return ExerciseOutput(**exercise_data)
+            return ExerciseOutput.model_validate(exercise_data)
 
     except (json.JSONDecodeError, ValueError, KeyError, TypeError) as e:
         logger.error(f"❌ Erreur lors du parsing du contenu de l'exercice : {e}")
