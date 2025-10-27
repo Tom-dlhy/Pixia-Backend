@@ -32,9 +32,44 @@ async def generate_exercises(is_called_by_agent:bool ,synthesis: ExerciseSynthes
         synthesis = ExerciseSynthesis(**synthesis)
 
     with Timer(f"Exercices: {synthesis.title}"):
-        # Appeler le planner de manière async SANS bloquer
-        with Timer(f"  └─ Planner"):
-            plan_json = await planner_exercises_async(synthesis)
+        # Appeler le planner de manière async avec retry
+        max_retries = 3
+        retry_delay = 2  # secondes
+        timeout_seconds = 30  # Timeout de 30 secondes par tentative
+        plan_json = None
+        
+        for attempt in range(max_retries):
+            try:
+                with Timer(f"  └─ Planner (tentative {attempt + 1}/{max_retries})"):
+                    # Ajouter un timeout pour éviter les blocages
+                    plan_json = await asyncio.wait_for(
+                        planner_exercises_async(synthesis),
+                        timeout=timeout_seconds
+                    )
+                break  # Succès, sortir de la boucle
+            except asyncio.TimeoutError:
+                logger.error(f"⏱️ Timeout après {timeout_seconds}s (tentative {attempt + 1}/{max_retries})")
+                if attempt < max_retries - 1:
+                    wait_time = retry_delay * (2 ** attempt)
+                    logger.info(f"⏳ Attente de {wait_time}s avant retry...")
+                    await asyncio.sleep(wait_time)
+                else:
+                    logger.error(f"❌ Échec après {max_retries} tentatives (timeout)")
+                    return GenerativeToolOutput(agent=agent, redirect_id=redirect_id, completed=completed)
+            except Exception as err:
+                logger.error(f"❌ Tentative {attempt + 1}/{max_retries} échouée: {err}")
+                if attempt < max_retries - 1:
+                    wait_time = retry_delay * (2 ** attempt)  # Exponential backoff
+                    logger.info(f"⏳ Attente de {wait_time}s avant retry...")
+                    await asyncio.sleep(wait_time)
+                else:
+                    logger.error(f"❌ Échec après {max_retries} tentatives")
+                    return GenerativeToolOutput(agent=agent, redirect_id=redirect_id, completed=completed)
+
+        # Vérification finale
+        if plan_json is None:
+            logger.error("❌ plan_json est None après tous les retries")
+            return GenerativeToolOutput(agent=agent, redirect_id=redirect_id, completed=completed)
 
         # Validation du plan
         try:

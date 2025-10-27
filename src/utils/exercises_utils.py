@@ -32,22 +32,39 @@ async def generate_plain(prompt: str, difficulty: str) -> Union[Open, dict, Any]
 
     prompt = f"Description: {prompt}\nDifficulté: {difficulty}"
 
-    response = await gemini_settings.CLIENT.aio.models.generate_content(
-        model=gemini_settings.GEMINI_MODEL_2_5_FLASH_LITE,
-        contents=prompt,
-        config={
-            "system_instruction": SYSTEM_PROMPT_OPEN,
-            "response_mime_type": "application/json",
-            "response_schema": Open,
-        },
-    )
     try:
+        response = await gemini_settings.CLIENT.aio.models.generate_content(
+            model=gemini_settings.GEMINI_MODEL_2_5_FLASH_LITE,
+            contents=prompt,
+            config={
+                "system_instruction": SYSTEM_PROMPT_OPEN,
+                "response_mime_type": "application/json",
+                "response_schema": Open,
+            },
+        )
+        
+        if not response:
+            logging.error(f"[generate_plain] Response est None")
+            return {}
+            
         data = response.parsed
+        if not data:
+            logging.warning(f"[generate_plain] response.parsed est None, tentative avec response.text")
+            if hasattr(response, 'text') and response.text:
+                try:
+                    data = Open.model_validate_json(response.text)
+                except Exception as parse_err:
+                    logging.error(f"[generate_plain] Échec parsing manuel: {parse_err}")
+                    return {}
+            else:
+                logging.error(f"[generate_plain] Aucune donnée valide dans response")
+                return {}
+                
+        return data
+        
     except Exception as err:
-        logging.error(f"Erreur parsing {err}")
-        data = {}
-
-    return data
+        logging.error(f"[generate_plain] Erreur: {err}")
+        return {}
 
 
 async def generate_qcm(prompt: str, difficulty: str) -> Union[QCM, dict, Any]:
@@ -63,22 +80,39 @@ async def generate_qcm(prompt: str, difficulty: str) -> Union[QCM, dict, Any]:
 
     prompt = f"Description: {prompt}\nDifficulté: {difficulty}"
 
-    response = await gemini_settings.CLIENT.aio.models.generate_content(
-        model=gemini_settings.GEMINI_MODEL_2_5_FLASH_LITE,
-        contents=prompt,
-        config={
-            "system_instruction": SYSTEM_PROMPT_QCM,
-            "response_mime_type": "application/json",
-            "response_schema": QCM,
-        },
-    )
     try:
+        response = await gemini_settings.CLIENT.aio.models.generate_content(
+            model=gemini_settings.GEMINI_MODEL_2_5_FLASH_LITE,
+            contents=prompt,
+            config={
+                "system_instruction": SYSTEM_PROMPT_QCM,
+                "response_mime_type": "application/json",
+                "response_schema": QCM,
+            },
+        )
+        
+        if not response:
+            logging.error(f"[generate_qcm] Response est None")
+            return {}
+            
         data = response.parsed
+        if not data:
+            logging.warning(f"[generate_qcm] response.parsed est None, tentative avec response.text")
+            if hasattr(response, 'text') and response.text:
+                try:
+                    data = QCM.model_validate_json(response.text)
+                except Exception as parse_err:
+                    logging.error(f"[generate_qcm] Échec parsing manuel: {parse_err}")
+                    return {}
+            else:
+                logging.error(f"[generate_qcm] Aucune donnée valide dans response")
+                return {}
+                
+        return data
+        
     except Exception as err:
-        logging.error(f"Erreur parsing {err}")
-        data = {}
-
-    return data
+        logging.error(f"[generate_qcm] Erreur: {err}")
+        return {}
 
 
 async def planner_exercises_async(
@@ -89,24 +123,56 @@ async def planner_exercises_async(
 
     Génère un plan d'exercice de manière asynchrone sans bloquer le thread.
     """
-
-    response = await gemini_settings.CLIENT.aio.models.generate_content(
-        model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
-        contents=f"Description: {synthesis.description}\nDifficulté: {synthesis.difficulty}\nNombre d'exercices: {synthesis.number_of_exercises}\nType d'exercice: {synthesis.exercise_type}",
-        config={
-            "system_instruction": SYSTEM_PROMPT_PLANNER_EXERCISES,
-            "response_mime_type": "application/json",
-            "response_schema": ExercisePlan,
-        },
-    )
+    
+    # Log des données d'entrée pour debug
+    logging.info(f"[Planner] Début génération - Title: {synthesis.title}, Difficulté: {synthesis.difficulty}, Nb exercices: {synthesis.number_of_exercises}")
+    
+    try:
+        response = await gemini_settings.CLIENT.aio.models.generate_content(
+            model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
+            contents=f"Description: {synthesis.description}\nDifficulté: {synthesis.difficulty}\nNombre d'exercices: {synthesis.number_of_exercises}\nType d'exercice: {synthesis.exercise_type}",
+            config={
+                "system_instruction": SYSTEM_PROMPT_PLANNER_EXERCISES,
+                "response_mime_type": "application/json",
+                "response_schema": ExercisePlan,
+            },
+        )
+    except Exception as err:
+        logging.error(f"[Planner] Erreur lors de l'appel API Gemini: {err}")
+        raise ValueError(f"Gemini API call failed: {err}")
+    
+    # Vérification de la réponse
+    if not response:
+        logging.error(f"[Planner] Response object est None ou vide")
+        raise ValueError("Gemini returned empty response")
+    
+    # Vérification du parsed
     try:
         data = response.parsed
         if not data:
-            logging.error(f"[Planner] response.parsed est None")
-            raise ValueError("Planner returned None")
+            # Tentative de récupération via response.text
+            logging.warning(f"[Planner] response.parsed est None, tentative avec response.text")
+            if hasattr(response, 'text') and response.text:
+                logging.info(f"[Planner] Tentative de parsing manuel du text")
+                try:
+                    data = ExercisePlan.model_validate_json(response.text)
+                    logging.info(f"[Planner] Parsing manuel réussi")
+                    return data
+                except Exception as parse_err:
+                    logging.error(f"[Planner] Échec du parsing manuel: {parse_err}")
+                    logging.error(f"[Planner] Response text: {response.text[:500]}...")  # Log 500 premiers chars
+            
+            logging.error(f"[Planner] response.parsed est None et aucune alternative valide")
+            raise ValueError("Planner returned None - no valid data in response")
+        
+        logging.info(f"[Planner] Plan généré avec succès")
         return data
+        
     except Exception as err:
-        logging.error(f"[Planner] Erreur parsing {err}")
+        logging.error(f"[Planner] Erreur parsing: {err}")
+        logging.error(f"[Planner] Type de response: {type(response)}")
+        if hasattr(response, '__dict__'):
+            logging.error(f"[Planner] Attributs de response: {list(response.__dict__.keys())}")
         raise
 
 
