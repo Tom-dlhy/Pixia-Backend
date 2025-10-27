@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from .health import router as health_router
 from .chat import router as chat_router
-from .files import router as files_router
 from .fetchallchats import router as fetchallchats_router
 from .fetchchat import router as fetchchat_router
 from .renamechat import router as renamechat_router
@@ -15,19 +14,18 @@ from .changesettings import router as changesettings_router
 from .markcorrectedQCM import router as markcorrectedQCM_router
 from .signup import router as signup_router
 from .login import router as login_router
-from .test import router as test_router
 from .fetchexercise import router as fetch_exercise_router
 from .fetchcourse import router as fetch_course_router
 from .fetchalldeepcourses import router as fetchalldeepcourses_router
 from .fetchallchapters import router as fetchallchapters_router
 from .fetchchapterdocuments import router as fetchchapterdocuments_router
 from .correctallquestions import router as correctallquestions_router
+from .downloadcourse import router as downloadcourse_router
 
 
 api_router = APIRouter()
 api_router.include_router(health_router)
 api_router.include_router(chat_router)
-api_router.include_router(files_router)
 api_router.include_router(fetchallchats_router)
 api_router.include_router(fetchchat_router)
 api_router.include_router(renamechat_router)
@@ -41,19 +39,20 @@ api_router.include_router(changesettings_router)
 api_router.include_router(markcorrectedQCM_router)
 api_router.include_router(signup_router)
 api_router.include_router(login_router)
-api_router.include_router(test_router)
 api_router.include_router(fetch_exercise_router)
 api_router.include_router(fetch_course_router)
 api_router.include_router(fetchalldeepcourses_router)
 api_router.include_router(fetchallchapters_router)
 api_router.include_router(fetchchapterdocuments_router)
 api_router.include_router(correctallquestions_router)
+api_router.include_router(downloadcourse_router)
+
+
 
 __all__ = [
     "health_router",
     "chat_router",
     "api_router",
-    "files_router",
     "fetchallchats_router",
     "fetchchat_router",
     "renamechat_router",
@@ -67,12 +66,12 @@ __all__ = [
     "markcorrectedQCM_router",
     "signup_router",
     "login_router",
-    "test_router",
     "fetch_exercise_router",
     "fetch_course_router",
     "fetchalldeepcourses_router",
     "fetchallchapters_router",
     "fetchchapterdocuments_router",
     "correctallquestions_router",
+    "downloadcourse_router",
 ]
 

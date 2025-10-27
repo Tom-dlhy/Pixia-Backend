@@ -28,8 +28,6 @@ __all__ = [
     "CorrectPlainQuestionResponse",
     "MarkChapterRequest",
     "MarkChapterResponse",
-    "ChangeSettingsRequest",
-    "ChangeSettingsResponse",
     "LoginRequest",
     "LoginResponse",
     "SignupRequest",

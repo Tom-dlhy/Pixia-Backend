@@ -1,3 +1,17 @@
+"""
+Intégration du pipeline Quad LLM dans la génération de cours.
+
+Ce module remplace la génération simple de parties (1 LLM) par un pipeline
+dual-LLM spécialisé avec sélection intelligente du type de diagramme.
+
+Pipeline:
+1. LLM #1: Génère le contenu markdown + sélectionne le type de diagramme (4 types)
+   pour TOUTES les parties d'un coup
+2. LLM #2 (spécialisé) EN PARALLÈLE: Génère le code du diagramme avec retry jusqu'à 3 tentatives
+3. Kroki EN PARALLÈLE: Convertit le code en PNG base64
+4. CourseOutput: Retourne le cours complet avec contenu, diagram_type, diagram_code, img_base64
+"""
+
 import asyncio
 import json
 import logging
@@ -42,10 +56,13 @@ async def generate_courses_quad_llm(
         course_synthesis = CourseSynthesis(**course_synthesis)
 
     try:
+        # Utiliser le pipeline Quad LLM existant (optimisé)
+        # Ce pipeline génère déjà la structure complète du cours
         result = await generate_course_complete(course_synthesis)
 
         if not result:
             logger.error(f"[PIPELINE] Pipeline Quad LLM a échoué - result is None")
+            # Re-lever l'exception pour que le caller la gère
             raise ValueError("Pipeline Quad LLM failed: no result")
 
         if not isinstance(result, CourseOutput):
@@ -57,5 +74,6 @@ async def generate_courses_quad_llm(
         return result
 
     except Exception as e:
-        logger.error(f"[PIPELINE] Erreur: {e}", exc_info=True)
+        logger.error(f"[PIPELINE] ❌ Erreur: {e}", exc_info=True)
+        # Re-lever pour que le caller gère l'erreur proprement
         raise

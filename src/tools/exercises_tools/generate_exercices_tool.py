@@ -1,9 +1,9 @@
 import asyncio
 import logging
 from uuid import uuid4
-from typing import Any, Union
+from typing import Union
 
-from src.models.exercise_models import ExercisePlan, ExerciseOutput, ExerciseSynthesis
+from src.models import ExercisePlan, ExerciseOutput, ExerciseSynthesis, GenerativeToolOutput
 from src.utils import generate_for_topic, planner_exercises_async, get_user_id
 from src.utils.timing import Timer
 
@@ -14,7 +14,7 @@ from src.bdd import DBManager
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from src.models import GenerativeToolOutput
+
 
 
 async def generate_exercises(is_called_by_agent:bool ,synthesis: ExerciseSynthesis) -> Union[GenerativeToolOutput, ExerciseOutput]:
@@ -30,8 +30,48 @@ async def generate_exercises(is_called_by_agent:bool ,synthesis: ExerciseSynthes
 
     if isinstance(synthesis, dict):
         synthesis = ExerciseSynthesis(**synthesis)
-        plan_json = await planner_exercises_async(synthesis)
 
+    with Timer(f"Exercices: {synthesis.title}"):
+        # Appeler le planner de manière async avec retry
+        max_retries = 3
+        retry_delay = 2  # secondes
+        timeout_seconds = 30  # Timeout de 30 secondes par tentative
+        plan_json = None
+        
+        for attempt in range(max_retries):
+            try:
+                with Timer(f"  └─ Planner (tentative {attempt + 1}/{max_retries})"):
+                    # Ajouter un timeout pour éviter les blocages
+                    plan_json = await asyncio.wait_for(
+                        planner_exercises_async(synthesis),
+                        timeout=timeout_seconds
+                    )
+                break  # Succès, sortir de la boucle
+            except asyncio.TimeoutError:
+                logger.error(f"⏱️ Timeout après {timeout_seconds}s (tentative {attempt + 1}/{max_retries})")
+                if attempt < max_retries - 1:
+                    wait_time = retry_delay * (2 ** attempt)
+                    logger.info(f"⏳ Attente de {wait_time}s avant retry...")
+                    await asyncio.sleep(wait_time)
+                else:
+                    logger.error(f"❌ Échec après {max_retries} tentatives (timeout)")
+                    return GenerativeToolOutput(agent=agent, redirect_id=redirect_id, completed=completed)
+            except Exception as err:
+                logger.error(f"❌ Tentative {attempt + 1}/{max_retries} échouée: {err}")
+                if attempt < max_retries - 1:
+                    wait_time = retry_delay * (2 ** attempt)  # Exponential backoff
+                    logger.info(f"⏳ Attente de {wait_time}s avant retry...")
+                    await asyncio.sleep(wait_time)
+                else:
+                    logger.error(f"❌ Échec après {max_retries} tentatives")
+                    return GenerativeToolOutput(agent=agent, redirect_id=redirect_id, completed=completed)
+
+        # Vérification finale
+        if plan_json is None:
+            logger.error("❌ plan_json est None après tous les retries")
+            return GenerativeToolOutput(agent=agent, redirect_id=redirect_id, completed=completed)
+
+        # Validation du plan
         try:
             if isinstance(plan_json, ExercisePlan):
                 plan = plan_json
@@ -46,14 +86,18 @@ async def generate_exercises(is_called_by_agent:bool ,synthesis: ExerciseSynthes
             logger.error(f"Erreur de validation du plan d'exercice: {err}")
             return GenerativeToolOutput(agent=agent, redirect_id=redirect_id, completed=completed)
 
+        # Création des tâches pour tous les exercices du plan
         tasks = [generate_for_topic(ex, synthesis.difficulty) for ex in plan.exercises]
 
-        
-        results = await asyncio.gather(*tasks)
+        # Exécution en parallèle
+        with Timer(f"  └─ Génération ({len(tasks)} exercices)"):
+            results = await asyncio.gather(*tasks)
 
+        # Filtrage et conversion des résultats valides
         generated_exercises = []
         for r in results:
             if r is not None:
+                # Convertir en dict si nécessaire pour la validation
                 if isinstance(r, dict):
                     generated_exercises.append(r)
                 elif hasattr(r, "model_dump"):

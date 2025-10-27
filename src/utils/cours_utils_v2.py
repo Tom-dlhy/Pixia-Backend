@@ -1,7 +1,13 @@
+"""
+Utilitaires pour la génération de cours avec schémas Mermaid intégrés.
+Architecture optimisée: 1 LLM pour générer contenu + Mermaid d'un coup.
+"""
+
 from src.config import gemini_settings
 from src.models.cours_models import (
     CourseSynthesis,
     CourseOutput,
+    Part,
 )
 from src.prompts import SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE
 from src.utils.mermaid_validator import MermaidValidator
@@ -9,12 +15,14 @@ import logging
 import asyncio
 import base64
 from uuid import uuid4
+from google.genai import types
 from typing import Optional, Dict, Any
 import os
 import hashlib
 import subprocess
 import sys
 
+# Setup logging avec output immédiat (flush)
 logging.basicConfig(
     level=logging.DEBUG,
     format="[%(asctime)s] %(levelname)s - %(name)s - %(message)s",
@@ -22,6 +30,28 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+from src.config import gemini_settings
+from src.models.cours_models import (
+    CourseSynthesis,
+    CourseOutput,
+    Part,
+)
+from src.prompts import SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE
+from src.utils.mermaid_validator import MermaidValidator
+import logging
+import asyncio
+import base64
+from uuid import uuid4
+from google.genai import types
+from typing import Optional, Dict, Any
+import os
+import hashlib
+import subprocess
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
     """
@@ -38,6 +68,7 @@ def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
             f"[KROKI-START] Validation du code Mermaid ({len(mermaid_code)} chars)"
         )
 
+        # Valide le code Mermaid avant d'envoyer à Kroki
         is_valid, error_msg = MermaidValidator.validate(mermaid_code)
         if not is_valid:
             logger.error(f"[KROKI-INVALID] Code Mermaid invalide: {error_msg}")
@@ -45,13 +76,16 @@ def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
 
         logger.debug(f"[KROKI-VALID] Code Mermaid validé")
 
+        # Nettoie le code avant envoi
         mermaid_code = MermaidValidator.sanitize(mermaid_code)
 
+        # Crée un hash pour le nommage du fichier
         digest = hashlib.sha256(mermaid_code.encode("utf-8")).hexdigest()[:16]
         out_path = os.path.join(".", f"mermaid_{digest}.png")
 
         logger.debug(f"[KROKI-CALL] Envoi à Kroki avec digest: {digest}")
 
+        # Appel à Kroki
         cmd = [
             "curl",
             "-sS",
@@ -85,6 +119,7 @@ def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
 
         logger.debug(f"[KROKI-SAVE] Sauvegarde et encodage en base64")
 
+        # Sauvegarde et encode en base64
         try:
             with open(out_path, "wb") as f:
                 f.write(proc.stdout)
@@ -98,6 +133,7 @@ def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
             return image_b64
 
         finally:
+            # Nettoyage du fichier temporaire
             try:
                 os.remove(out_path)
             except Exception as e:
@@ -128,6 +164,7 @@ def generate_complete_course(
     try:
         logger.debug(f"[LLM-START] Validation synthèse d'entrée")
 
+        # Validation d'entrée
         if isinstance(synthesis, dict):
             logger.debug(f"[LLM-CONVERT] Conversion dict → CourseSynthesis")
             synthesis = CourseSynthesis(**synthesis)
@@ -136,6 +173,7 @@ def generate_complete_course(
             f"[LLM-CALL] Génération: {synthesis.description[:50]}... (Diff: {synthesis.difficulty})"
         )
 
+        # Appel LLM unique pour générer le cours complet
         logger.debug(f"[LLM-REQUEST] Envoi requête à Gemini avec timeout...")
 
         try:
@@ -158,6 +196,7 @@ def generate_complete_course(
 
         logger.debug(f"[LLM-RESPONSE] Réponse reçue, parsing...")
 
+        # Récupère la réponse parsée
         course_output = (
             response.parsed if hasattr(response, "parsed") else response.text
         )
@@ -171,6 +210,7 @@ def generate_complete_course(
 
         logger.debug(f"[LLM-VALIDATE] Ajout IDs manquants")
 
+        # Ajoute des IDs si nécessaire
         if not course_output.id:
             course_output.id = str(uuid4())
 
@@ -207,18 +247,22 @@ async def generate_all_schemas(
             f"[ASYNC-START] Génération parallèle de {len(course_output.parts)} schémas"
         )
 
+        # Crée les tâches WITHOUT to_thread (c'est un appel réseau, asyncio ne peut pas vraiment paralyser)
+        # La solution: utiliser VRAIMENT de la parallélisation OS
         tasks = []
         for i, part in enumerate(course_output.parts):
             if part.mermaid_syntax:
                 logger.debug(
                     f"[ASYNC-TASK-{i}] Création tâche pour partie: {part.title[:30]}"
                 )
+                # ⚠️  IMPORTANT: Utiliser à_thread pour libérer l'event loop
                 task = asyncio.to_thread(generate_schema_mermaid, part.mermaid_syntax)
                 tasks.append((i, part, task))
 
         logger.debug(f"[ASYNC-GATHER] Attente de {len(tasks)} tâches en parallèle...")
 
         if tasks:
+            # Exécute VRAIMENT en parallèle
             results = await asyncio.gather(
                 *[task for _, _, task in tasks], return_exceptions=True
             )
@@ -232,6 +276,7 @@ async def generate_all_schemas(
                     logger.info(
                         f"[ASYNC-SUCCESS-{i}] Schéma {i+1} généré ({len(result)} chars base64)"
                     )
+                    # Stocke le base64 (adapter selon votre structure)
                 else:
                     logger.warning(
                         f"[ASYNC-EMPTY-{i}] Schéma {i+1} vide (Kroki échoué)"
@@ -242,6 +287,11 @@ async def generate_all_schemas(
     except Exception as e:
         logger.error(f"[ASYNC-EXCEPTION] Erreur parallélisation: {e}", exc_info=True)
         return course_output
+
+
+# ================= HELPERS POUR COMPATIBILITÉ =================
+# Ces fonctions sont conservées pour compatibilité avec l'ancien code
+
 
 def generate_part(title: str, content: str, difficulty: str) -> Dict[str, Any]:
     """DEPRECATED: Utilisé uniquement pour rétrocompatibilité."""

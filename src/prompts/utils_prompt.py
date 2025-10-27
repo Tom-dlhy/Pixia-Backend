@@ -17,7 +17,6 @@ Tu vas suivre un template très précis pour générer ce titre :
 - Si c'est une discussion, sujet de la discussion.
 
 
-
 Requête utilisateur :
 """
 

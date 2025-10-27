@@ -19,7 +19,6 @@ class AppSettings(BaseSettings):
     HOST: str
     PORT: int
     DEBUG: bool
-    FRONT_ORIGINS: str
 
 
 class GeminiSettings(BaseSettings):
@@ -96,7 +95,8 @@ class OAuthSettings(BaseSettings):
         return base64.b64decode(self.GOOGLE_CLIENT_SECRET_B64).decode()
 
 
-app_settings = AppSettings()  
+# Instances des settings
+app_settings = AppSettings()  # type: ignore
 gemini_settings = GeminiSettings()
-database_settings = DatabaseSettings()
-oauth_settings = OAuthSettings()
+database_settings = DatabaseSettings()  # type: ignore
+oauth_settings = OAuthSettings()  # type: ignore

@@ -6,7 +6,6 @@ from src.tools.copilote_tools import fetch_context_tool, fetch_context_deep_cour
 from google.adk.tools.mcp_tool import MCPToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
-
 copilote_exercice_agent = LlmAgent(
     name="CopiloteExerciceAgent",
     model=gemini_settings.GEMINI_MODEL_2_5_FLASH,

@@ -5,7 +5,6 @@ from src.agents.sub_agents import (
     copilote_exercice_agent,
     copilote_cours_agent,
     copilote_new_chapitre_agent,
-    agent_normal,
     course_agent,
     deepcourse_agent,
 )
@@ -22,7 +21,6 @@ root_agent = LlmAgent(
         copilote_exercice_agent,
         copilote_cours_agent,
         copilote_new_chapitre_agent,
-        agent_normal,
         course_agent,
         deepcourse_agent,
     ],

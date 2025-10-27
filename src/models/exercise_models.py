@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field, StringConstraints
 from typing import Annotated, List, Union, Optional, Literal
-import json
 
 ###########################################################################
 ### Modèles Pydantic pour la génération d'exercices de types OpenText ####
@@ -133,31 +132,3 @@ class ExerciseOutput(BaseModel):
         ..., min_length=1, description="Liste des exercices générés."
     )
 
-
-##################################################
-### Fonction de validation de l'ExerciseOutput ###
-##################################################
-
-
-def _validate_exercise_output(data: dict | str | None) -> ExerciseOutput | None:
-    """Valide et parse les données en tant qu'ExerciseOutput."""
-    try:
-        if isinstance(data, ExerciseOutput):
-            return data
-        elif isinstance(data, dict):
-            if "result" in data and isinstance(data["result"], dict):
-                data = data["result"]
-            return ExerciseOutput.model_validate(data)
-        elif isinstance(data, str):
-
-            try:
-                parsed = json.loads(data)
-                if isinstance(parsed, dict) and "result" in parsed:
-                    parsed = parsed["result"]
-                return ExerciseOutput.model_validate(parsed)
-            except (json.JSONDecodeError, ValueError):
-                return ExerciseOutput.model_validate_json(data)
-        else:
-            return None
-    except Exception as e:
-        return None

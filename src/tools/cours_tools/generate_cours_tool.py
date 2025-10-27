@@ -49,6 +49,8 @@ async def generate_courses(is_called_by_agent: bool, course_synthesis: CourseSyn
 
     result = await generate_courses_quad_llm(course_synthesis)
 
+    logger.info(f"[GENERATE_COURSES] ✅ Cours généré avec succès")
+
     ### Storage
 
     
