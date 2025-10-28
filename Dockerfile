@@ -22,6 +22,10 @@ ADD . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
   uv sync --locked --no-editable --compile-bytecode
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8080
 
-CMD ["uv", "run","prod", "--port=8080", "--host=0.0.0.0"]
+CMD ["uv", "run", "prod", "--port=8080", "--host=0.0.0.0"]
