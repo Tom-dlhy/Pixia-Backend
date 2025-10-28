@@ -14,7 +14,8 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 from google.adk.artifacts import InMemoryArtifactService
-from src.utils import set_request_context
+from src.utils import set_request_context, final_context_builder
+import json
 
 load_dotenv()
 
@@ -43,11 +44,13 @@ async def chat(
     files: Optional[List[UploadFile]] = File(None),
     deep_course_id: Optional[str] = Form(None),
     document_id: Optional[str] = Form(None),
+    message_context: Optional[str] = Form(None),
 ):
     """Traite un message utilisateur via une session ADK."""
     start_time = time.monotonic()
 
-    # Initialiser le contexte de la requête avec toutes les infos disponibles
+    print(f"SESSION ID: {session_id}")
+
     set_request_context(
         document_id=document_id,
         session_id=session_id,
@@ -59,8 +62,8 @@ async def chat(
     agent = None
     redirect_id = None
     current_session_service = None
+    is_first_message = False
 
-    # === Étape 1 : création ou récupération de session ===
     try:
         if session_id:
             session = await inmemory_service.get_session(
@@ -70,11 +73,13 @@ async def chat(
             if session:
                 session_id = session.id
                 current_session_service = inmemory_service
+                is_first_message = False  
             else:
                 session = await db_session_service.get_session(
                     app_name=settings.APP_NAME, user_id=user_id, session_id=session_id
                 )
                 current_session_service = db_session_service
+                is_first_message = False  
 
         elif not session_id:
             session = await inmemory_service.create_session(
@@ -82,26 +87,25 @@ async def chat(
             )
             session_id = session.id
             current_session_service = inmemory_service
+            is_first_message = True 
 
     except Exception as e:
         logger.exception("❌ Erreur pendant la gestion de la session")
         raise HTTPException(status_code=500, detail=f"Erreur de session : {e}")
 
-    # === Étape 1.5 : Sauvegarder les files dans artifact_service ===
     if files:
         logger.info(f"📎 {len(files)} fichier(s) reçu(s)")
         for idx, upload_file in enumerate(files):
             try:
-                # Lire le contenu du fichier
+
                 file_bytes = await upload_file.read()
                 file_mime_type = upload_file.content_type or "application/octet-stream"
                 filename = upload_file.filename or f"file_{idx}"
-                # Créer un Part artifact avec les bytes
+
                 artifact_part = types.Part.from_bytes(
                     data=file_bytes, mime_type=file_mime_type
                 )
 
-                # Sauvegarder dans artifact_service
                 version = await artifact_service.save_artifact(
                     app_name=settings.APP_NAME,
                     user_id=user_id,
@@ -110,20 +114,32 @@ async def chat(
                     artifact=artifact_part,
                 )
 
-                logger.info(f"✅ Artifact sauvegardé: {filename} (version {version})")
-
             except Exception as e:
                 logger.error(
                     f"❌ Erreur lors de la sauvegarde du fichier {filename}: {e}"
                 )
-                # Continue avec les autres fichiers même en cas d'erreur
 
-    # === Étape 2 : exécution du runner ADK ===
+
     try:
-        # Attach session files (PDFs uploaded to Gemini) to the user message
+        if current_session_service is None:
+            return ChatResponse(
+                session_id=session_id,
+                answer="Une erreur est survenue lors de la gestion de la session.",
+                agent=agent,
+                redirect_id=redirect_id,
+            )
+
+        if is_first_message:
+            try:
+                message_context = await final_context_builder(
+                    message_context=message_context
+                )
+                message = message_context + message
+            except Exception as e:
+                logger.warning(f"⚠️ Erreur lors de l'enrichissement du contexte: {e}")
+
         parts = [Part(text=message)]
 
-        # Ajouter les artifacts (fichiers uploadés) au message
         try:
             artifact_keys = await artifact_service.list_artifact_keys(
                 app_name=settings.APP_NAME,
@@ -148,24 +164,13 @@ async def chat(
         except Exception as e:
             logger.warning(f"⚠️ Erreur lors du chargement des artifacts: {e}")
 
-        # Ajouter aussi les anciens fichiers Gemini (si ils existent)
         try:
             for fid in get_gemini_files(session_id):  # type: ignore[arg-type]
                 parts.append(Part.from_uri(file_uri=fid, mime_type="application/pdf"))
         except Exception:
-            # Non-fatal: continue without file parts if any issue arises
             pass
 
         typed_message = types.Content(role="user", parts=parts)
-
-        if current_session_service is None:
-            return ChatResponse(
-                session_id=session_id,
-                answer="Une erreur est survenue lors de la gestion de la session.",
-                agent=agent,
-                redirect_id=redirect_id,
-            )
-
         runner = Runner(
             agent=root_agent,
             app_name=settings.APP_NAME,
@@ -177,7 +182,6 @@ async def chat(
             user_id=user_id, session_id=session_id, new_message=typed_message
         ):
 
-            # --- Sortie d'un outil (tool output) ---
             if hasattr(event, "get_function_responses"):
                 func_responses = event.get_function_responses()
                 if func_responses:
@@ -197,7 +201,6 @@ async def chat(
                                     agent = tool_result.agent
                                     redirect_id = tool_result.redirect_id
 
-            # --- Réponse finale ---
             if event.is_final_response():
                 if event.content and event.content.parts:
                     txt_reponse = event.content.parts[0].text
@@ -210,8 +213,7 @@ async def chat(
     if not txt_reponse and (agent is None and redirect_id is None):
         txt_reponse = "Votre document a été généré avec succès."
     elif not txt_reponse:
-        txt_reponse = "une erreur est survenue lors de la génération de la réponse."
-
+        txt_reponse = " "
 
     end_time = time.monotonic()
     duration = end_time - start_time
@@ -226,8 +228,3 @@ async def chat(
     )
 
     return output
-
-
-# =========================================================
-# FIN DE LA ROUTE
-# =========================================================
