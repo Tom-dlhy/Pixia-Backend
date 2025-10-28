@@ -49,8 +49,6 @@ async def chat(
     """Traite un message utilisateur via une session ADK."""
     start_time = time.monotonic()
 
-    print(f"SESSION ID: {session_id}")
-
     set_request_context(
         document_id=document_id,
         session_id=session_id,
@@ -210,7 +208,7 @@ async def chat(
         logger.exception("❌ Erreur pendant l'exécution du runner ADK")
         raise HTTPException(status_code=500, detail=f"Erreur agent : {e}")
 
-    if not txt_reponse and (agent is None and redirect_id is None):
+    if not txt_reponse and (agent is not None and redirect_id is not None):
         txt_reponse = "Votre document a été généré avec succès."
     elif not txt_reponse:
         txt_reponse = " "
