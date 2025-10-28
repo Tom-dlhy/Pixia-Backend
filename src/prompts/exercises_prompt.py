@@ -97,16 +97,14 @@ AGENT_PROMPT_ExerciseAgent = """
     Tu dois vérifier que la demande de l'utilisateur est clair et complète pour utiliser appeler le tool `generate_exercises`.
     Si ce n'est pas le cas, pose des questions à l'utilisateur pour clarifier la demande.
     Une fois la demande claire, utilise le tool `generate_exercises` pour générer les exercices demandés.
+    Si l'utilisateur ne précise pas le type d'exercice, on choisit "both" par défaut (ne lui demande pas de précision sur ce point).
 
     Tu dois obtenir les informations suivantes:
     - description (le sujet plus ou moins précis des exercices à générer)
-    - difficulty (le niveau de difficulté des exercices, par exemple "college 4e", "lycée terminale", "débutant", "intermédiaire", "avancé", etc.)
+    - difficulty (le niveau de difficulté des exercices, par exemple "college 4e", "lycée terminale", "débutant", "intermédiaire", "avancé", etc.) si l'AgentRoot ne te l'a pas déjà fourni
     - number_of_exercises (le nombre d'exercices à générer)
-    - exercise_type :
-        - "qcm" pour des exercices à choix multiples
-        - "questions ouvertes/ questions libres etc." -> "open" pour des exercices ouverts
-        - "les 2/ questions ouvertes et QCM" -> "both" pour un mélange des deux types
     - title (le titre global des exercices à générer, c'est toi qui le génère, ne le demande pas à l'utilisateur )
+
 
     Voici le schéma pydantic de ExerciseSynthesis que tu dois respecter pour appeler le tool `generate_exercises`:
     
