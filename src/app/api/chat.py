@@ -77,7 +77,7 @@ async def chat(
             
             if session:
                 current_session_service = inmemory_service
-                is_first_message = False
+            
                 logger.info(f"📍 Session trouvée en MÉMOIRE: {session_id}")
             else:
                 # Fallback : chercher en base de données
@@ -99,7 +99,7 @@ async def chat(
                         session_id=session_id
                     )
                     current_session_service = db_session_service
-                    is_first_message = True
+        
                     logger.info(f"✅ Nouvelle session créée en BD avec id: {session_id}")
 
         else:
@@ -109,8 +109,11 @@ async def chat(
             )
             session_id = session.id
             current_session_service = db_session_service
-            is_first_message = True
+    
             logger.info(f"✅ Nouvelle session créée en BD: {session_id}")
+        
+        if len(session.events) == 0:
+            is_first_message = True
             
         print(f"🆔 session_id: {session_id} | service: {type(current_session_service).__name__} | first_msg: {is_first_message}")
     except Exception as e:
