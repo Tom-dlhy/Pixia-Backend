@@ -102,13 +102,38 @@ async def generate_deepcourse(synthesis: dict) -> GenerativeToolOutput:
     logger.info(f"⏱️  {len(all_tasks)} tâches créées en {task_creation_time:.2f}s")
 
     logger.info(f"🔄 Lancement de l'exécution parallèle...")
+    logger.info(f"   ⏱️  Timeout par tâche: 180s (3 min)")
+    logger.info(f"   📦 Total tâches: {len(all_tasks)}")
+    
     execution_start = time.time()
     try:
-        all_results = await asyncio.gather(*all_tasks)
-        logger.info(f"✅ Toutes les tâches complétées")
+        # Utiliser asyncio.wait_for pour timeout global sur toutes les tâches
+        # Timeout = 60s par tâche * nb_chapters * 3 + buffer
+        timeout_per_task = 180  # 3 min par tâche (exercice/cours/evaluation)
+        total_timeout = timeout_per_task * num_chapters + 60  # +60s de buffer
+        logger.info(f"   ⏰ Timeout global: {total_timeout}s pour {num_chapters} chapitre(s)")
+        
+        all_results = await asyncio.wait_for(
+            asyncio.gather(*all_tasks, return_exceptions=False),
+            timeout=total_timeout
+        )
+        logger.info(f"✅ Toutes les tâches complétées avec succès")
+    except asyncio.TimeoutError as te:
+        logger.error(
+            f"❌ TIMEOUT lors de l'exécution parallèle après {total_timeout}s"
+        )
+        logger.error(f"   Tâches complétées: {num_chapters * 3} attendues")
+        logger.error(f"   Cette erreur survient généralement avec:")
+        logger.error(f"   - Deepcourses très larges (>8 chapitres)")
+        logger.error(f"   - Contenu très détaillé (level_detail=detailed)")
+        logger.error(f"   - Rate limiting Gemini API")
+        raise RuntimeError(
+            f"Timeout deepcourse: {num_chapters} chapitres trop lourds ou API rate-limitée"
+        )
     except Exception as e:
         logger.error(f"❌ ERREUR lors de l'exécution parallèle: {e}")
         logger.error(f"   Type d'erreur: {type(e).__name__}")
+        logger.error(f"   Cela peut indiquer un problème de credentials ou API limit")
         raise
 
     execution_time = time.time() - execution_start

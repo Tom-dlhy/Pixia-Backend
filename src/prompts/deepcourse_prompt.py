@@ -58,6 +58,7 @@ Le tool `generate_deepcourse` attend cet objet Pydantic:
 
 CONTRAINTES IMPORTANTES:
   • Min 1 chapitre, Max 16 chapitres par deepcourse
+  • Sauf si demandé explicitement, évite de faire plus de 6 chapitres
   • Exercices d'application (synthesis_exercise): 3-8 exercices, type flexible
   • Évaluations (synthesis_evaluation): TOUJOURS 10 exercices, TOUJOURS "both"
 
