@@ -1,5 +1,22 @@
 # Hackathon
 
+## TO DO 
+
+- Install 
+- Test local 
+- Point d'amélioration :
+    - mettre la db dans un conteneurs
+    - Dto plus propres
+    - sécurité réseau
+    - login
+    - foreign key adk
+    - supprimer chapitre
+- Ambition
+- Lien  de l'app en premier
+- cloud run
+- schéma de la db
+- excalidraw
+
 Attention pour l'install vous allez peut-être devoir augmenter la env var
 
 

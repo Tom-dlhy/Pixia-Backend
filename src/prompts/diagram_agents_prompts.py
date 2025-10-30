@@ -1,12 +1,12 @@
-"""
-4 Agents spécialisés pour la génération de diagrammes.
-Chacun avec un prompt expert dédié et sans transformations complexes.
+"""Specialized diagram agent system prompts.
 
-Types supportés:
+Contains 4 specialized agents for diagram generation,
+each with dedicated expert prompt and minimal complex transformations.
+Supported types:
 1. Mermaid: flowcharts, mindmaps, timelines, Gantt, class diagrams, sequence diagrams
 2. PlantUML: UML (class, activity, sequence, use case) + C4 diagrams
-3. GraphViz (DOT): graphes de relations, dépendances, réseaux conceptuels
-4. Vega-Lite: graphiques de données (bar, line, pie, heatmap, etc.)
+3. GraphViz (DOT): relations graphs, dependencies, conceptual networks
+4. Vega-Lite: data visualizations (bar, line, pie, heatmap, etc.)
 """
 
 
@@ -372,7 +372,7 @@ PROMPT_GENERATE_VEGALITE = """Génère une visualisation Vega-Lite SYNTAXIQUEMEN
 """
 
 # ============================================================================
-# MAPPING PROMPT PAR TYPE
+# MAPPING PROMPT BY TYPE
 # ============================================================================
 
 SYSTEM_PROMPTS = {

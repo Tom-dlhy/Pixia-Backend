@@ -1,3 +1,8 @@
+"""
+Defines the database schema using SQLAlchemy ORM models.
+# TODO : Add foreign keys for the relations with ADK tables.
+"""
+
 from sqlalchemy import (
     Column, String, Text, Boolean, TIMESTAMP, JSON, ForeignKey, Enum, text
 )

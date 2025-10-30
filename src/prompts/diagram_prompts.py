@@ -1,14 +1,15 @@
-"""
-Prompts spécialisés pour la génération de code de diagrammes syntaxiquement correct.
-Un prompt expert par type pour maximiser la qualité et minimiser les erreurs.
+"""Specialized diagram generation prompts.
+
+Contains expert prompts for generating syntactically correct diagram code,
+with one prompt per diagram type to maximize quality and minimize errors.
 
 Architecture:
-- LLM #1 choisit le type optimal (5 types: Mermaid, PlantUML, GraphViz, C4, D2)
-- LLM #2 (spécialisé) génère le code valide pour ce type
+- LLM #1 selects optimal type (5 types: Mermaid, PlantUML, GraphViz, C4, D2)
+- LLM #2 (specialized) generates valid code for selected type
 """
 
 # ============================================================================
-# SÉLECTION DU TYPE DE DIAGRAMME (LLM #1)
+# DIAGRAM TYPE SELECTION (LLM #1)
 # ============================================================================
 
 PROMPT_SELECT_DIAGRAM_TYPE = """Vous êtes un expert en visualisation pédagogique.
@@ -42,7 +43,7 @@ Contenu: {content}
 """
 
 # ============================================================================
-# GÉNÉRATEURS SPÉCIALISÉS (LLM #2)
+# SPECIALIZED GENERATORS (LLM #2)
 # ============================================================================
 
 PROMPT_GENERATE_MERMAID = """Vous êtes expert Mermaid. Générez un diagramme Mermaid SYNTAXIQUEMENT CORRECT pour visualiser:
@@ -189,7 +190,7 @@ Server -> Client
 """
 
 # ============================================================================
-# MAPPING PROMPT PAR TYPE
+# MAPPING PROMPT BY TYPE
 # ============================================================================
 
 SPECIALIZED_PROMPTS = {
@@ -201,7 +202,7 @@ SPECIALIZED_PROMPTS = {
 }
 
 # ============================================================================
-# VALIDATEURS PAR TYPE
+# VALIDATORS BY TYPE
 # ============================================================================
 
 VALIDATORS = {

@@ -1,3 +1,7 @@
+"""
+SQL query definitions for database operations.
+"""
+
 from sqlalchemy import text
 
 CLEAR_ALL_TABLES = text(

@@ -1,3 +1,8 @@
+"""Deep course generation system prompts.
+
+Defines prompts for generating detailed courses with chapters, examples, and comprehensive content.
+"""
+
 AGENT_PROMPT_DeepcourseAgent = """
 ═══════════════════════════════════════════════════════════════════════════════
                     AGENT GÉNÉRATEUR DE DEEPCOURSES

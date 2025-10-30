@@ -1,23 +1,31 @@
-from fastapi import APIRouter, HTTPException, UploadFile, Form, File
-from src.dto import ChatResponse
-from src.config import database_settings, app_settings
-from src.agents.root_agent import root_agent
-from src.models import GenerativeToolOutput
+"""Chat endpoint for agent-based conversation with session management.
+
+Handles user messages through the ADK runner with:
+- Session persistence (in-memory or database)
+- File upload and artifact management
+- Retry logic for corrupted sessions
+- Agent routing and tool execution
+"""
+
+import asyncio
+import logging
+import time
 from typing import List, Optional, Union
-from google.adk.sessions import InMemorySessionService
+
+from dotenv import load_dotenv
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from google.adk.artifacts import InMemoryArtifactService
 from google.adk.runners import Runner
-from google.adk.agents import LlmAgent
+from google.adk.sessions import InMemorySessionService
 from google.adk.sessions.database_session_service import DatabaseSessionService
 from google.genai import types
 from google.genai.types import Part
-import logging
-import time
-from datetime import datetime
-from dotenv import load_dotenv
-from google.adk.artifacts import InMemoryArtifactService
-from src.utils import set_request_context, final_context_builder
-import json
-import asyncio
+
+from src.agents.root_agent import root_agent
+from src.config import app_settings, database_settings
+from src.dto import ChatResponse
+from src.models import GenerativeToolOutput
+from src.utils import final_context_builder, set_request_context
 
 load_dotenv()
 
@@ -48,7 +56,7 @@ async def chat(
     document_id: Optional[str] = Form(None),
     message_context: Optional[str] = Form(None),
 ):
-    """Traite un message utilisateur via une session ADK."""
+    """Process a user message through an ADK session."""
     start_time = time.monotonic()
 
     set_request_context(
@@ -65,12 +73,12 @@ async def chat(
     is_first_message = False
 
     try:
-        # 🔍 Chercher la session existante (en mémoire OU en base de données)
+        # Look for existing session (in memory OR in database)
         session = None
         current_session_service = None
         
         if session_id:
-            # Essayer en mémoire D'ABORD
+            # Try in memory FIRST
             session = await inmemory_service.get_session(
                 app_name=settings.APP_NAME, user_id=user_id, session_id=session_id
             )
@@ -78,9 +86,9 @@ async def chat(
             if session:
                 current_session_service = inmemory_service
             
-                logger.info(f"📍 Session trouvée en MÉMOIRE: {session_id}")
+                logger.info(f"Session found in memory: {session_id}")
             else:
-                # Fallback : chercher en base de données
+                # Fallback: search in database
                 session = await db_session_service.get_session(
                     app_name=settings.APP_NAME, user_id=user_id, session_id=session_id
                 )
@@ -88,11 +96,11 @@ async def chat(
                 if session:
                     current_session_service = db_session_service
                     is_first_message = False
-                    logger.info(f"📍 Session trouvée en BASE DE DONNÉES: {session_id}")
+                    logger.info(f"Session found in database: {session_id}")
                 else:
-                    # Session n'existe nulle part
-                    logger.warning(f"⚠️ Session {session_id} introuvable (mémoire et BD)")
-                    # Créer une nouvelle session en BD pour cette session_id
+                    # Session doesn't exist anywhere
+                    logger.warning(f"Session {session_id} not found (memory or database)")
+                    # Create new session in DB for this session_id
                     session = await db_session_service.create_session(
                         app_name=settings.APP_NAME, 
                         user_id=user_id,
@@ -100,28 +108,28 @@ async def chat(
                     )
                     current_session_service = db_session_service
         
-                    logger.info(f"✅ Nouvelle session créée en BD avec id: {session_id}")
+                    logger.info(f"New session created in database: {session_id}")
 
         else:
-            # Pas de session_id fournie, créer une nouvelle en BD
+            # No session_id provided, create new one in DB
             session = await db_session_service.create_session(
                 app_name=settings.APP_NAME, user_id=user_id
             )
             session_id = session.id
             current_session_service = db_session_service
     
-            logger.info(f"✅ Nouvelle session créée en BD: {session_id}")
+            logger.info(f"New session created in database: {session_id}")
         
         if len(session.events) == 0:
             is_first_message = True
             
-        print(f"🆔 session_id: {session_id} | service: {type(current_session_service).__name__} | first_msg: {is_first_message}")
+        print(f"Session ID: {session_id} | service: {type(current_session_service).__name__} | first_msg: {is_first_message}")
     except Exception as e:
-        logger.exception("❌ Erreur pendant la gestion de la session")
-        raise HTTPException(status_code=500, detail=f"Erreur de session : {e}")
+        logger.exception("Error during session management")
+        raise HTTPException(status_code=500, detail=f"Session error: {e}")
 
     if files:
-        logger.info(f"📎 {len(files)} fichier(s) reçu(s)")
+        logger.info(f"Received {len(files)} file(s)")
         for idx, upload_file in enumerate(files):
             try:
 
@@ -143,7 +151,7 @@ async def chat(
 
             except Exception as e:
                 logger.error(
-                    f"❌ Erreur lors de la sauvegarde du fichier {filename}: {e}"
+                    f"Error saving file {filename}: {e}"
                 )
 
 
@@ -151,7 +159,7 @@ async def chat(
         if current_session_service is None:
             return ChatResponse(
                 session_id=session_id,
-                answer="Une erreur est survenue lors de la gestion de la session.",
+                answer="An error occurred during session management.",
                 agent=agent,
                 redirect_id=redirect_id,
             )
@@ -163,7 +171,7 @@ async def chat(
                 )
                 message = message_context + message
             except Exception as e:
-                logger.warning(f"⚠️ Erreur lors de l'enrichissement du contexte: {e}")
+                logger.warning(f"Error enriching context: {e}")
 
         parts = [Part(text=message)]
 
@@ -176,7 +184,7 @@ async def chat(
 
             if artifact_keys:
                 logger.info(
-                    f"📂 Chargement de {len(artifact_keys)} artifact(s) pour le contexte"
+                    f"Loading {len(artifact_keys)} artifact(s) for context"
                 )
                 for artifact_key in artifact_keys:
                     artifact_part = await artifact_service.load_artifact(
@@ -187,9 +195,9 @@ async def chat(
                     )
                     if artifact_part:
                         parts.append(artifact_part)
-                        logger.info(f"✅ Artifact ajouté au contexte: {artifact_key}")
+                        logger.info(f"Artifact added to context: {artifact_key}")
         except Exception as e:
-            logger.warning(f"⚠️ Erreur lors du chargement des artifacts: {e}")
+            logger.warning(f"Error loading artifacts: {e}")
 
         try:
             for fid in get_gemini_files(session_id):  # type: ignore[arg-type]
@@ -199,7 +207,7 @@ async def chat(
 
         typed_message = types.Content(role="user", parts=parts)
 
-        # 🔄 BOUCLE DE RETRY - Max 3 tentatives pour gérer les sessions corrompues
+        # RETRY LOOP - Max 3 attempts to handle corrupted sessions
         max_retries = 3
         retry_count = 0
         execution_session_id = session_id
@@ -209,8 +217,8 @@ async def chat(
             try:
                 retry_count += 1
                 logger.info(
-                    f"🔄 [ATTEMPT {retry_count}/{max_retries}] "
-                    f"Exécution du runner avec session_id={execution_session_id}"
+                    f"[ATTEMPT {retry_count}/{max_retries}] "
+                    f"Running agent with session_id={execution_session_id}"
                 )
 
                 runner = Runner(
@@ -221,40 +229,40 @@ async def chat(
                 )
             
 
-                # Flag pour vérifier si on a au moins une réponse valide
+                # Flag to track if we received at least one valid event
                 received_valid_event = False
                 null_event_count = 0
 
                 async for event in runner.run_async(
                     user_id=user_id, session_id=execution_session_id, new_message=typed_message
                 ):
-                    # 🔍 Détection d'événements corrompus
+                    # Detection of corrupted events
                     if event.content is None:
                         null_event_count += 1
                         logger.warning(
-                            f"⚠️ [EVENT-NULL #{null_event_count}] Événement reçu avec content=None | "
+                            f"[EVENT-NULL #{null_event_count}] Event received with content=None | "
                             f"type={type(event).__name__}"
                         )
-                        # Si trop d'événements NULL d'affilée, c'est suspect
+                        # If too many NULL events in a row, suspicious
                         if null_event_count > 2:
                             logger.error(
-                                f"❌ Trop d'événements NULL ({null_event_count}), "
-                                f"session probablement corrompue"
+                                f"Too many NULL events ({null_event_count}), "
+                                f"session probably corrupted"
                             )
                             raise RuntimeError(
-                                f"Session corrompue: {null_event_count} événements NULL consécutifs"
+                                f"Corrupted session: {null_event_count} consecutive NULL events"
                             )
                         continue
 
-                    # ✅ Au moins un événement valide reçu
+                    # At least one valid event received
                     received_valid_event = True
-                    null_event_count = 0  # Réinitialiser le compteur
+                    null_event_count = 0  # Reset counter
                     logger.debug(
-                        f"📩 Event reçu: type={type(event).__name__} | has_content={event.content is not None}"
+                        f"Event received: type={type(event).__name__} | has_content={event.content is not None}"
                     )
-                    print(f"Event reçu: {event}")
+                    print(f"Event received: {event}")
 
-                    # 🔧 Extraction des réponses de tools
+                    # Extract tool responses
                     if hasattr(event, "get_function_responses"):
                         func_responses = event.get_function_responses()
                         if func_responses:
@@ -264,7 +272,7 @@ async def chat(
                                 if tool_name and tool_resp:
                                     tool_result = tool_resp.get("result")
                                     logger.info(
-                                        f"🛠️  Tool exécuté: {tool_name} | "
+                                        f"Tool executed: {tool_name} | "
                                         f"result_type={type(tool_result).__name__}"
                                     )
 
@@ -278,125 +286,125 @@ async def chat(
                                             agent = tool_result.agent
                                             redirect_id = tool_result.redirect_id
                                             logger.info(
-                                                f"✅ Générateur complété: agent={agent}, "
+                                                f"Generator completed: agent={agent}, "
                                                 f"redirect_id={redirect_id}"
                                             )
 
-                    # ✅ Détection de réponse finale
+                    # Detection of final response
                     if event.is_final_response():
-                        logger.info("🎯 Événement final détecté")
+                        logger.info("Final event detected")
                         if event.content and event.content.parts:
                             txt_reponse = event.content.parts[0].text
                             agent = event.author
                             
                         else:
-                            logger.warning("⚠️ Événement final mais pas de contenu textuel")
+                            logger.warning("Final event but no text content")
                         break
 
-                # ✅ Exécution réussie, sortir de la boucle de retry
+                # Execution successful, exit retry loop
                 if received_valid_event:
-                    logger.info(f"✅ [ATTEMPT {retry_count}] Succès - Au moins un événement valide reçu")
+                    logger.info(f"[ATTEMPT {retry_count}] Success - At least one valid event received")
                     break
                 else:
-                    raise RuntimeError("Aucun événement valide reçu du runner")
+                    raise RuntimeError("No valid event received from runner")
 
             except (asyncio.TimeoutError, RuntimeError) as e:
                 last_error = e
                 logger.error(
-                    f"❌ [ATTEMPT {retry_count}/{max_retries}] Erreur détectée: {type(e).__name__}: {e}"
+                    f"[ATTEMPT {retry_count}/{max_retries}] Error detected: {type(e).__name__}: {e}"
                 )
 
-                # Si ce n'est pas la dernière tentative, supprimer l'ancienne session corrompue et réessayer
+                # If not last attempt, delete old corrupted session and retry
                 if retry_count < max_retries:
-                    logger.info(f"🔁 Suppression session corrompue et retry...")
+                    logger.info(f"Deleting corrupted session and retrying...")
                     try:
-                        # Récupérer la session courante (potentiellement corrompue) du MÊME service
+                        # Get current (potentially corrupted) session from SAME service
                         old_session = await current_session_service.get_session(
                             app_name=settings.APP_NAME,
                             user_id=user_id,
                             session_id=execution_session_id
                         )
                         
-                        # Extraire les events valides
+                        # Extract valid events
                         valid_events = []
                         if old_session:
                             if hasattr(old_session, 'events') and old_session.events:
-                                # Filtrer les events: garder seulement ceux avec du contenu
+                                # Filter events: keep only those with content
                                 valid_events = [e for e in old_session.events if e.content is not None]
                                 logger.info(
-                                    f"📋 {len(valid_events)}/{len(old_session.events)} events valides récupérés "
-                                    f"(filtré {len(old_session.events) - len(valid_events)} events NULL)"
+                                    f"{len(valid_events)}/{len(old_session.events)} valid events recovered "
+                                    f"(filtered {len(old_session.events) - len(valid_events)} NULL events)"
                                 )
                             else:
-                                logger.warning(f"⚠️ Aucun attribut 'events' ou vide")
+                                logger.warning(f"No 'events' attribute or empty")
                         else:
-                            logger.error(f"❌ Ancienne session non trouvée")
+                            logger.error(f"Old session not found")
 
-                        # 🔒 CRITICAL: Étapes pour dupliquer les events
-                        # 1. Récupérer les events valides (déjà fait plus haut)
-                        # 2. Supprimer l'ancienne session (CASCADE supprime ses events)
-                        # 3. Créer nouvelle session
-                        # 4. Re-insérer les events valides → pas de conflit car anciens IDs libérés
+                        # CRITICAL: Steps to duplicate events
+                        # 1. Get valid events (already done above)
+                        # 2. Delete old session (CASCADE deletes its events)
+                        # 3. Create new session
+                        # 4. Re-insert valid events -> no conflict since old IDs are freed
                         
                         await current_session_service.delete_session(
                             app_name=settings.APP_NAME,
                             user_id=user_id,
                             session_id=execution_session_id
                         )
-                        logger.info(f"🗑️  Session corrompue supprimée: {execution_session_id}")
-                        logger.info(f"   → Les {len(valid_events)} events supprimés aussi (CASCADE)")
+                        logger.info(f"Corrupted session deleted: {execution_session_id}")
+                        logger.info(f"   -> {len(valid_events)} events also deleted (CASCADE)")
 
-                        # Créer une NOUVELLE session propre
+                        # Create NEW clean session
                         new_session = await current_session_service.create_session(
                             app_name=settings.APP_NAME, user_id=user_id
                         )
                         new_session_id = new_session.id
-                        logger.info(f"✅ Nouvelle session créée: {new_session_id}")
+                        logger.info(f"New session created: {new_session_id}")
                         
-                        # 🔄 RE-INSÉRER les events valides dans la nouvelle session
-                        # Maintenant qu'ancienne session est supprimée, les IDs d'events sont libres
+                        # RE-INSERT valid events into new session
+                        # Now that old session is deleted, event IDs are freed
                         if valid_events:
                             for event in valid_events:
                                 await current_session_service.append_event(
                                     session=new_session,
                                     event=event
                                 )
-                            logger.info(f"✅ {len(valid_events)} events dupliqués dans nouvelle session")
+                            logger.info(f"{len(valid_events)} events duplicated to new session")
                         else:
-                            logger.warning(f"⚠️ Aucun event valide à dupliquer")
+                            logger.warning(f"No valid event to duplicate")
                         
-                        # Utiliser la nouvelle session pour le retry
+                        # Use new session for retry
                         execution_session_id = new_session_id
-                        logger.info(f"🔄 Switch vers nouvelle session avec events restaurés: {execution_session_id}")
+                        logger.info(f"Switched to new session with restored events: {execution_session_id}")
 
-                        # Attendre avant retry (backoff exponentiel)
+                        # Wait before retry (exponential backoff)
                         wait_time = 2 ** (retry_count - 1)
-                        logger.info(f"⏳ Attente de {wait_time}s avant retry...")
+                        logger.info(f"Waiting {wait_time}s before retry...")
                         await asyncio.sleep(wait_time)
                         
                     except Exception as session_err:
-                        logger.error(f"❌ Erreur lors du nettoyage/création de session: {session_err}")
+                        logger.error(f"Error during session cleanup/creation: {session_err}")
                         logger.debug(f"   Traceback: ", exc_info=True)
                         raise
                 else:
-                    logger.error(f"❌ Échec après {max_retries} tentatives")
+                    logger.error(f"Failed after {max_retries} attempts")
                     raise HTTPException(
                         status_code=500,
-                        detail=f"Erreur agent persistante après {max_retries} tentatives: {str(last_error)}",
+                        detail=f"Persistent agent error after {max_retries} attempts: {str(last_error)}",
                     )
 
     except Exception as e:
-        logger.exception("❌ Erreur pendant l'exécution du runner ADK")
-        raise HTTPException(status_code=500, detail=f"Erreur agent : {e}")
+        logger.exception("Error during ADK runner execution")
+        raise HTTPException(status_code=500, detail=f"Agent error: {e}")
 
     if not txt_reponse and (agent is not None and redirect_id is not None):
-        txt_reponse = "Votre document a été généré avec succès."
+        txt_reponse = "Your document was generated successfully."
     elif not txt_reponse:
         txt_reponse = " "
 
     end_time = time.monotonic()
     duration = end_time - start_time
-    print(f"Durée totale: {duration:.2f} secondes")
+    print(f"Total duration: {duration:.2f} seconds")
 
     logger.info(f"agent={agent}")
     logger.info(f"redirect_id={redirect_id}")

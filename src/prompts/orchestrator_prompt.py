@@ -1,3 +1,8 @@
+"""Orchestrator agent system prompt.
+
+Defines the root agent's behavior for routing user requests to appropriate sub-agents.
+"""
+
 AGENT_PROMPT_ORCHESTRATOR = """
     Tu es l'agent principal (root_agent) chargé d'orchestrer les interactions entre l'utilisateur et les sous-agents spécialisés.
 

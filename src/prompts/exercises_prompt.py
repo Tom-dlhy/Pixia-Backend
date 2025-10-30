@@ -1,3 +1,8 @@
+"""Exercise generation system prompts.
+
+Defines prompts for generating open-ended questions, QCM exercises, and exercise planning.
+"""
+
 SYSTEM_PROMPT_OPEN = """
 Tu es un assistant pédagogique spécialisé dans la génération de questions à réponse ouverte pour des quiz éducatifs.
 

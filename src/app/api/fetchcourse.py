@@ -1,8 +1,12 @@
+"""Endpoint to fetch a course for a session."""
+
+import json
+import logging
+
 from fastapi import APIRouter, Form
+
 from src.bdd import DBManager
 from src.models import CourseOutput
-import logging
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -13,43 +17,45 @@ router = APIRouter(prefix="/fetchcourse", tags=["FetchCourse"])
 async def fetch_course(
     session_id: str = Form(...),
 ):
-    """
-    Récupère un cours pour une session donnée.
-    Charge les données depuis la base de données.
-    """
+    """Fetch a course for a given session from the database."""
     bdd_manager = DBManager()
 
-    logger.info(f"🏋️ Fetching course for session_id={session_id}")
+    logger.info(f"Fetching course for session_id={session_id}")
 
-    # Récupérer le document de la base de données
+    # Retrieve document from database
     try:
         course_object = await bdd_manager.get_document_by_session_id(session_id)
     except Exception as e:
-        logger.error(f"❌ Erreur lors de la récupération du document : {e}")
+        logger.error(f"Error retrieving document: {e}")
         return CourseOutput(id=session_id, title="", parts=[])
 
-    # Vérifier que le document existe
+    # Check if document exists
     if not course_object:
-        logger.warning(f"⚠️  Aucun document trouvé pour session_id={session_id}")
+        logger.warning(f"No document found for session_id={session_id}")
         return CourseOutput(id=session_id, title="", parts=[])
 
-    # Extraire le contenu JSON stocké
+    # Extract stored JSON content
     try:
         contenu = course_object.get("contenu")
 
-        # Si le contenu est une string JSON, le parser
+        # If content is a JSON string, parse it
         if isinstance(contenu, str):
             course_data = json.loads(contenu)
         else:
             course_data = contenu
 
-        # Ajouter l'ID si absent
+        # Ensure course_data is a dict before processing
+        if not isinstance(course_data, dict):
+            logger.warning(f"Invalid course data format for session_id={session_id}")
+            return CourseOutput(id=session_id, title="", parts=[])
+
+        # Add ID if missing
         if "id" not in course_data:
             course_data["id"] = session_id
 
-        logger.info(f"✅ Retrieved course for session_id={session_id}")
+        logger.info(f"Retrieved course for session_id={session_id}")
         return CourseOutput.model_validate(course_data)
 
     except (json.JSONDecodeError, ValueError, KeyError, TypeError) as e:
-        logger.error(f"❌ Erreur lors du parsing du contenu du cours : {e}")
+        logger.error(f"Error parsing course content: {e}")
         return CourseOutput(id=session_id, title="", parts=[])

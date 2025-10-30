@@ -1,12 +1,20 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
+"""FastAPI application factory and server configuration.
+
+Handles app initialization, CORS setup, database connection management,
+and both development and production server modes.
+"""
+
+import asyncio
 import logging
 import os
-import asyncio
+
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from src.app.api import api_router
 from src.config import app_settings
 from src.utils import create_db_pool
-from src.app.api import api_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -14,7 +22,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Désactiver les loggers verbeux des dépendances
+# Disable verbose logs from dependencies
 logging.getLogger("google.genai").setLevel(logging.WARNING)
 logging.getLogger("google.genai.models").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -22,7 +30,7 @@ logging.getLogger("google.adk").setLevel(logging.WARNING)
 
 
 def create_app() -> FastAPI:
-    """Crée et configure l'application FastAPI."""
+    """Create and configure the FastAPI application."""
     app = FastAPI(
         title=app_settings.APP_NAME,
         debug=app_settings.DEBUG,
@@ -49,15 +57,9 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router, prefix="/api")
 
-    # @app.on_event("startup")
-    # async def on_startup():
-    #     """Initialise les ressources au démarrage de l'application."""
-    #     logger.info("Starting FastAPI application...")
-    #     app.state.db_pool = await create_db_pool()
-    #     logger.info("Database pool initialized and ready.")
-
     @app.on_event("startup")
     async def on_startup():
+        """Initialize database connection on application startup."""
         logger.info("Starting FastAPI application...")
 
         if os.getenv("SKIP_DB_INIT", "false").lower() == "true":
@@ -77,7 +79,7 @@ def create_app() -> FastAPI:
 
     @app.on_event("shutdown")
     async def on_shutdown():
-        """Ferme proprement les ressources avant l'arrêt."""
+        """Close database connections on application shutdown."""
         logger.info("Shutting down FastAPI application...")
         await app.state.db_pool.close()
         logger.info("Database pool closed successfully.")
@@ -89,27 +91,27 @@ app = create_app()
 
 
 def dev_server():
-    """Lance le serveur en mode développement (reload activé)."""
+    """Start server in development mode with auto-reload."""
     uvicorn.run(
         "src.app.main:app",
         host=app_settings.HOST,
         port=app_settings.PORT,
         reload=True,
         log_level="info",
-        timeout_keep_alive=65,  # ✅ Keep-alive timeout
+        timeout_keep_alive=65,
     )
 
 
 def prod_server():
-    """Lance le serveur en mode production (sans reload)."""
+    """Start server in production mode without auto-reload."""
     uvicorn.run(
         "src.app.main:app",
         host=app_settings.HOST,
         port=app_settings.PORT,
         reload=False,
         log_level="info",
-        timeout_keep_alive=240,  # ✅ 4 min keep-alive (pour les requêtes longues)
-        timeout_graceful_shutdown=240,  # ✅ 4 min graceful shutdown (pour les requêtes longues)
+        timeout_keep_alive=240,
+        timeout_graceful_shutdown=240,
     )
 
 

@@ -1,3 +1,8 @@
+"""Utility system prompts.
+
+Defines prompts for generating conversation titles and correcting plain text questions.
+"""
+
 GENERATE_TITLE_PROMPT = """
 À partir uniquement de la première requête utilisateur ci-dessous, génère un titre court (5 à 7 mots maximum) dans le style des titres générés par Gemini pour nommer les conversations. 
 

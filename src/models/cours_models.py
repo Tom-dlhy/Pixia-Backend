@@ -1,13 +1,23 @@
+"""Course output models.
+
+Pydantic models for course synthesis, planning, and complete course output
+with sections, diagrams, and schema representations.
+"""
+
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
 from typing import Literal, List, Optional
 
 
 ##################################################
-### Modèle Pydantic pour la Synthèse de Cours ####
+### Pydantic Models for Course Synthesis #########
 ##################################################
 
 
 class CourseSynthesis(BaseModel):
+    """Synthesis of course content for generation planning."""
+
     description: str = Field(
         ..., description="Description détaillée du sujet du cours à générer."
     )
@@ -18,16 +28,20 @@ class CourseSynthesis(BaseModel):
 
 
 #############################################################
-### Modèles Pydantic pour la Génération du Plan du Cours ####
+### Pydantic Models for Course Plan Generation ##############
 #############################################################
 
 
 class PartPlanItem(BaseModel):
+    """Single part item in course plan."""
+
     title: str = Field(..., description="Titre de la partie générée.")
     content: str = Field(..., description="Explication du contenu de la partie.")
 
 
 class CoursePlan(BaseModel):
+    """Plan of course parts to generate."""
+
     title: str = Field(..., description="Titre du cours généré.")
     parts: List[PartPlanItem] = Field(
         ...,
@@ -36,12 +50,12 @@ class CoursePlan(BaseModel):
 
 
 ##########################################
-### Modèles Pydantic pour une partie ####
+### Pydantic Models for Course Part #####
 ##########################################
 
 
 class Part(BaseModel):
-    """Partie de cours avec contenu markdown, diagramme intelligent et PNG généré."""
+    """Course section with markdown content, diagram, and PNG schema."""
 
     id_part: Optional[str] = Field(None, description="Identifiant unique de la partie")
     id_schema: Optional[str] = Field(
@@ -65,17 +79,17 @@ class Part(BaseModel):
     )
 
 
-# Alias pour compatibilité rétroactive (legacy)
+# Legacy alias for backward compatibility
 PartSchema = Part
 
 
 ###############################################
-### Modèle Pydantic pour l'Output du Cours ####
+### Pydantic Models for Course Output   #######
 ###############################################
 
 
 class CourseOutput(BaseModel):
-    """Sortie complète du cours avec toutes les parties et diagrammes générés."""
+    """Complete course output with all parts and diagrams."""
 
     id: Optional[str] = Field(
         None, description="Identifiant unique de la sortie de cours"

@@ -1,10 +1,13 @@
+"""Fetch exercise response DTO."""
+
+from typing import Optional
+
 from pydantic import BaseModel
-from typing import Optional, List, Literal, Union
-from src.models import ExerciseOutput, CourseOutput, DeepCourseOutput
 
 
-# ---- 2️⃣ Structure principale renvoyée au frontend ----
 class FetchExerciseResponse(BaseModel):
+    """Response returned after fetching exercise from agent."""
+
     session_id: str
     answer: str
     agent: Optional[str] = None
