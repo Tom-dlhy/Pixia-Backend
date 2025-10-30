@@ -23,8 +23,8 @@ async def final_context_builder(message_context: Optional[str]) -> str:
             contextText += "- Redirige la demande vers le CopiloteCoursAgent.\n"
         case "copiloteExercice":
             contextText += "- Redirige la demande vers le CopiloteExerciceAgent.\n"
-        case "copiloteNouveauChapitre":
-            contextText += "- Redirige la demande vers le CopiloteNouveauChapitreAgent.\n"
+        case "copiloteNouveauCours":
+            contextText += "- Redirige la demande vers le CopiloteNewChapitreAgent.\n"
         case "deepCourse":
             contextText += "- Redirige la demande vers le DeepCourseAgent.\n"
 
