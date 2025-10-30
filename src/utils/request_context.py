@@ -1,11 +1,16 @@
 """
-Gestionnaire centralisé des contextes de requête pour l'application.
-Utilise ContextVar pour l'isolation thread-safe et async-safe des données de requête.
+Centralized request context management.
+
+Uses ContextVar for thread-safe and async-safe request data isolation.
+Enables access to request-scoped variables across the application without
+passing them through function parameters.
+It is used especially to pass vars to tools used by the agents.
 """
+
 from contextvars import ContextVar
 from typing import Optional
 
-# Context variables pour stocker les informations de la requête
+# Request context variables
 _document_id_context: ContextVar[Optional[str]] = ContextVar('document_id', default=None)
 _session_id_context: ContextVar[Optional[str]] = ContextVar('session_id', default=None)
 _user_id_context: ContextVar[Optional[str]] = ContextVar('user_id', default=None)
@@ -14,23 +19,24 @@ _deep_course_id_context: ContextVar[Optional[str]] = ContextVar('deep_course_id'
 
 # ===== SETTERS =====
 
+
 def set_document_id(document_id: str) -> None:
-    """Définit le document_id dans le contexte de la requête."""
+    """Set document_id in request context."""
     _document_id_context.set(document_id)
 
 
 def set_session_id(session_id: str) -> None:
-    """Définit le session_id dans le contexte de la requête."""
+    """Set session_id in request context."""
     _session_id_context.set(session_id)
 
 
 def set_user_id(user_id: str) -> None:
-    """Définit le user_id dans le contexte de la requête."""
+    """Set user_id in request context."""
     _user_id_context.set(user_id)
 
 
 def set_deep_course_id(deep_course_id: str) -> None:
-    """Définit le deep_course_id dans le contexte de la requête."""
+    """Set deep_course_id in request context."""
     _deep_course_id_context.set(deep_course_id)
 
 
@@ -41,8 +47,15 @@ def set_request_context(
     deep_course_id: Optional[str] = None,
 ) -> None:
     """
-    Définit tous les contextes de requête en une seule fois.
-    Pratique pour initialiser le contexte au début d'une requête.
+    Set all request context variables at once.
+
+    Convenience function to initialize context at request start.
+
+    Args:
+        document_id: Document identifier
+        session_id: Session identifier
+        user_id: User identifier
+        deep_course_id: Deep course identifier
     """
     if document_id:
         set_document_id(document_id)
@@ -56,36 +69,39 @@ def set_request_context(
 
 # ===== GETTERS =====
 
+
 def get_document_id() -> Optional[str]:
-    """Récupère le document_id depuis le contexte de la requête."""
+    """Get document_id from request context."""
     return _document_id_context.get()
 
 
 def get_session_id() -> Optional[str]:
-    """Récupère le session_id depuis le contexte de la requête."""
+    """Get session_id from request context."""
     return _session_id_context.get()
 
 
 def get_user_id() -> Optional[str]:
-    """Récupère le user_id depuis le contexte de la requête."""
+    """Get user_id from request context."""
     return _user_id_context.get()
 
 
 def get_deep_course_id() -> Optional[str]:
-    """Récupère le deep_course_id depuis le contexte de la requête."""
+    """Get deep_course_id from request context."""
     return _deep_course_id_context.get()
 
 
 # ===== CLEANUP =====
 
+
 def clear_request_context() -> None:
     """
-    Nettoie tous les contextes de requête.
-    Note: En pratique, Python nettoie automatiquement les ContextVar 
-    à la fin de chaque tâche async, mais cette fonction peut être 
-    utile pour les tests ou le debugging.
+    Clear all request context variables.
+
+    Note: Python automatically cleans up ContextVar at the end of each async task,
+    but this function is useful for manual cleanup in tests or debugging scenarios.
     """
     _document_id_context.set(None)
     _session_id_context.set(None)
     _user_id_context.set(None)
     _deep_course_id_context.set(None)
+
