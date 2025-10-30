@@ -1,5 +1,7 @@
 # Pixia — Multi‑agent AI study copilot
 
+<p align="right"><img src="src/assets/logo.png" alt="Logo" width="50">
+
 Live app (hosted frontend):
 https://hackathon-frontend-356001158171.europe-west9.run.app/
 
@@ -7,6 +9,10 @@ Associated frontend repository :
 https://github.com/Tom-dlhy/Hackathon-Frontend
 
 Pixia is our submission to GCPU AI for Impact 2025. We focused on education and a familiar pain point: reviewing effectively before an exam with a personal, on‑demand helper. Pixia centralizes this with a multi‑agent architecture (Google ADK), specialized tools (MCP, course/exercise generation), and a FastAPI backend connected to PostgreSQL (Cloud SQL), deployed on Cloud Run.
+
+<details>
+    <summary><strong>Full documentation (click to expand)</strong></summary>
+
 
 ## Features
 
@@ -38,8 +44,6 @@ Pixia is our submission to GCPU AI for Impact 2025. We focused on education and 
 
 ### Data flow: DB → DTO → API → Frontend
 
-[TODO: Add an Excalidraw sequence diagram of the flow]
-
 1) The frontend sends a request (often `multipart/form-data`) to `/api/chat` or another business route.
 2) The FastAPI route:
      - initializes request context (document_id, session_id, user_id, deep_course_id)
@@ -62,6 +66,7 @@ Pixia is our submission to GCPU AI for Impact 2025. We focused on education and 
 Prompts live under `src/prompts/`.
 
 ![Global Workflow](src/assets/workflow.png)
+
 
 ### Graph
 
@@ -267,4 +272,4 @@ We are five M2 students in Data & AI at ESILV.
 
 ## License
 
-[TODO: Specify license]
+</details>
