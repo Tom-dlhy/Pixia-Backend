@@ -1,8 +1,13 @@
-from fastapi import APIRouter, Form
-from src.bdd import DBManager
+"""Endpoint to update user settings."""
+
 from typing import Optional
 
+from fastapi import APIRouter, Form
+
+from src.bdd import DBManager
+
 router = APIRouter(prefix="/changesettings", tags=["ChangeSettings"])
+
 
 @router.put("")
 async def change_settings(
@@ -11,6 +16,7 @@ async def change_settings(
     new_notion_token: Optional[str] = Form(None),
     new_niveau_etude: Optional[str] = Form(None),
 ):
+    """Update user settings (name, Notion token, study level)."""
     db_manager = DBManager()
     await db_manager.change_settings(
         user_id, 
@@ -19,5 +25,3 @@ async def change_settings(
         new_notion_token
     )
     return {"user_id": user_id, "is_changed": True}
-
-    

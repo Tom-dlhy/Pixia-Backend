@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Form
-from src.bdd import DBManager
-from pydantic import BaseModel
-from typing import List
+"""Endpoint to fetch all deep courses for a user."""
+
 import logging
+from typing import List
+
+from fastapi import APIRouter, Form
+from pydantic import BaseModel
+
+from src.bdd import DBManager
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +26,9 @@ class FetchAllChatDeepCoursesResponse(BaseModel):
 
 @router.post("", response_model=FetchAllChatDeepCoursesResponse)
 async def fetch_all_deepcourses(user_id: str = Form(...)):
-    """
-    Récupère tous les deep courses pour un utilisateur avec leur taux de complétion.
-    """
+    """Fetch all deep courses for a user with their completion rate."""
     db_manager = DBManager()
-    logger.info(f"📚 Fetching all deepcourses for user_id={user_id}")
+    logger.info(f"Fetching all deepcourses for user_id={user_id}")
     
     deep_courses_data = await db_manager.fetch_all_deepcourses(user_id)
 
@@ -39,6 +41,6 @@ async def fetch_all_deepcourses(user_id: str = Form(...)):
         for deepcourse in deep_courses_data
     ]
 
-    logger.info(f"✅ {len(all_deepcourses)} deepcourses récupérés")
+    logger.info(f"Retrieved {len(all_deepcourses)} deepcourses")
     return FetchAllChatDeepCoursesResponse(sessions=all_deepcourses)
 

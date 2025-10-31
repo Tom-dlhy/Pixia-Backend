@@ -1,3 +1,8 @@
+"""Course generation system prompts.
+
+Defines prompts for generating course content, parts, mermaid diagrams, and planning.
+"""
+
 SYSTEM_PROMPT_GENERATE_PART = """
     Tu es un assistant pédagogique spécialisé dans la rédaction structurée des parties de cours.
 

@@ -1,3 +1,8 @@
+"""Copilot assistant system prompts.
+
+Defines prompts for copilot agents assisting users with exercises, courses, and new chapters.
+"""
+
 AGENT_PROMPT_CopiloteExerciceAgent_base = """
 
     Tu es un agent copilote conçu pour assister l’utilisateur dans un **exercice en cours** au sein d’une plateforme de cours interactive.

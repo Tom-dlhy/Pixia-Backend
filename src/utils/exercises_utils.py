@@ -1,31 +1,47 @@
+"""
+Exercise generation utilities using Google Gemini API.
+
+Provides functions to generate different types of exercises (open-ended questions,
+MCQ, and exercise plans) using Gemini models with JSON schema validation.
+"""
+
+import json
+import logging
+import re
+from typing import Any, Union
+
 from src.config import gemini_settings
 from src.models import (
-    Open,
-    QCM,
+    ExerciseOutput,
     ExercisePlan,
     ExercicePlanItem,
-    ExerciseOutput,
     ExerciseSynthesis,
+    Open,
+    QCM,
 )
 from src.prompts import (
     SYSTEM_PROMPT_OPEN,
     SYSTEM_PROMPT_QCM,
     SYSTEM_PROMPT_PLANNER_EXERCISES,
 )
-import logging, asyncio, uuid, re
-from typing import Any, Union
-from pydantic import BaseModel
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def _truncate_json_explanations(json_text: str, max_length: int = 1500) -> str:
-    """Tronque les explications JSON trop longues pour éviter les corruptions.
+    """
+    Truncate overly long JSON explanation fields to prevent corruption.
 
-    Cherche les champs 'explanation' et les tronque s'ils dépassent max_length.
+    Finds and truncates 'explanation' fields that exceed max_length limit.
+
+    Args:
+        json_text: JSON string to process
+        max_length: Maximum length for explanations (default: 1500)
+
+    Returns:
+        JSON string with truncated explanations
     """
     try:
-        # Pattern pour trouver "explanation": "..."
         pattern = r'"explanation"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"'
 
         def truncate_match(match):
@@ -39,22 +55,25 @@ def _truncate_json_explanations(json_text: str, max_length: int = 1500) -> str:
         truncated_json = re.sub(pattern, truncate_match, json_text)
         return truncated_json
     except Exception as e:
-        logging.warning(f"Erreur lors de la troncature JSON: {e}")
+        logger.warning(f"Error truncating JSON explanations: {e}")
         return json_text
 
 
 async def generate_plain(prompt: str, difficulty: str) -> Union[Open, dict, Any]:
-    """Génère des questions à réponse ouverte basées sur la description de l'exercice fournie.
+    """
+    Generate open-ended exercise questions.
+
+    Creates open-response questions based on provided topic description using
+    Gemini API with Open schema validation.
 
     Args:
-        prompt (str): Description détaillée du sujet des exercices à générer.
-        difficulty (str): Niveau de difficulté de l'exercice.
+        prompt: Detailed description of exercise topic
+        difficulty: Difficulty level
 
     Returns:
-        dict: Dictionnaire représentant les questions générées.
+        Open model instance or dict representing generated questions
     """
-
-    prompt = f"Description: {prompt}\nDifficulté: {difficulty}"
+    prompt = f"Description: {prompt}\nDifficulty: {difficulty}"
 
     try:
         response = await gemini_settings.CLIENT.aio.models.generate_content(
@@ -68,57 +87,51 @@ async def generate_plain(prompt: str, difficulty: str) -> Union[Open, dict, Any]
         )
 
         if not response:
-            logging.error(f"[generate_plain] Response est None")
+            logger.error("[generate_plain] Response is None")
             return {}
 
         data = response.parsed
         if not data:
-            logging.warning(
-                f"[generate_plain] response.parsed est None, tentative avec response.text"
-            )
+            logger.warning("[generate_plain] response.parsed is None, trying response.text")
             if hasattr(response, "text") and response.text:
                 try:
-                    import json
-
                     raw_text = response.text
-
-                    # Tronquer les explications TRÈS longues AVANT de parser le JSON
-                    # pour éviter les corruptions
                     raw_text = _truncate_json_explanations(raw_text, max_length=1500)
-
-                    # Tenter de parser le JSON nettoyé
                     raw_data = json.loads(raw_text)
                     data = Open.model_validate(raw_data)
 
                 except json.JSONDecodeError as json_err:
-                    logging.error(f"[generate_plain] JSON invalide: {json_err}")
+                    logger.error(f"[generate_plain] Invalid JSON: {json_err}")
                     return None
                 except Exception as parse_err:
-                    logging.error(f"[generate_plain] Échec parsing manuel: {parse_err}")
+                    logger.error(f"[generate_plain] Manual parsing failed: {parse_err}")
                     return None
             else:
-                logging.error(f"[generate_plain] Aucune donnée valide dans response")
+                logger.error("[generate_plain] No valid data in response")
                 return None
 
         return data
 
     except Exception as err:
-        logging.error(f"[generate_plain] Erreur: {err}")
+        logger.error(f"[generate_plain] Error: {err}")
         return None
 
 
 async def generate_qcm(prompt: str, difficulty: str) -> Union[QCM, dict, Any]:
-    """Génère un QCM basé sur la description de l'exercice fournie.
+    """
+    Generate multiple-choice question (MCQ) exercises.
+
+    Creates MCQ-format exercises based on provided topic description using
+    Gemini API with QCM schema validation.
 
     Args:
-        prompt (str): Description détaillée du sujet des exercices à générer.
-        difficulty (str): Niveau de difficulté de l'exercice.
+        prompt: Detailed description of exercise topic
+        difficulty: Difficulty level 
 
     Returns:
-        dict: Dictionnaire représentant le QCM généré.
+        QCM model instance or dict representing generated questions
     """
-
-    prompt = f"Description: {prompt}\nDifficulté: {difficulty}"
+    prompt = f"Description: {prompt}\nDifficulty: {difficulty}"
 
     try:
         response = await gemini_settings.CLIENT.aio.models.generate_content(
@@ -132,41 +145,33 @@ async def generate_qcm(prompt: str, difficulty: str) -> Union[QCM, dict, Any]:
         )
 
         if not response:
-            logging.error(f"[generate_qcm] Response est None")
+            logger.error("[generate_qcm] Response is None")
             return {}
 
         data = response.parsed
         if not data:
-            logging.warning(
-                f"[generate_qcm] response.parsed est None, tentative avec response.text"
-            )
+            logger.warning("[generate_qcm] response.parsed is None, trying response.text")
             if hasattr(response, "text") and response.text:
                 try:
-                    import json
-
                     raw_text = response.text
-
-                    # Tronquer les explications TRÈS longues AVANT de parser le JSON
                     raw_text = _truncate_json_explanations(raw_text, max_length=1500)
-
-                    # Tenter de parser le JSON nettoyé
                     raw_data = json.loads(raw_text)
                     data = QCM.model_validate(raw_data)
 
                 except json.JSONDecodeError as json_err:
-                    logging.error(f"[generate_qcm] JSON invalide: {json_err}")
+                    logger.error(f"[generate_qcm] Invalid JSON: {json_err}")
                     return None
                 except Exception as parse_err:
-                    logging.error(f"[generate_qcm] Échec parsing manuel: {parse_err}")
+                    logger.error(f"[generate_qcm] Manual parsing failed: {parse_err}")
                     return None
             else:
-                logging.error(f"[generate_qcm] Aucune donnée valide dans response")
+                logger.error("[generate_qcm] No valid data in response")
                 return None
 
         return data
 
     except Exception as err:
-        logging.error(f"[generate_qcm] Erreur: {err}")
+        logger.error(f"[generate_qcm] Error: {err}")
         return None
 
 
@@ -174,14 +179,23 @@ async def planner_exercises_async(
     synthesis: ExerciseSynthesis,
 ) -> Union[ExercisePlan, dict, Any]:
     """
-    Version async de planner_exercises - utilise le client async de Google.
+    Generate exercise plan asynchronously using Gemini API.
 
-    Génère un plan d'exercice de manière asynchrone sans bloquer le thread.
+    Creates a structured exercise plan without blocking the event loop.
+
+    Args:
+        synthesis: ExerciseSynthesis containing title, description,
+                   difficulty, number of exercises, and exercise type
+
+    Returns:
+        ExercisePlan model instance with structured exercise plan
+
+    Raises:
+        ValueError: If Gemini API call fails or returns invalid response
     """
-
-    # Log des données d'entrée pour debug
-    logging.info(
-        f"[Planner] Début génération - Title: {synthesis.title}, Difficulté: {synthesis.difficulty}, Nb exercices: {synthesis.number_of_exercises}"
+    logger.info(
+        f"[Planner] Starting plan generation - Title: {synthesis.title}, "
+        f"Difficulty: {synthesis.difficulty}, Count: {synthesis.number_of_exercises}"
     )
 
     try:
@@ -195,77 +209,73 @@ async def planner_exercises_async(
             },
         )
     except Exception as err:
-        logging.error(f"[Planner] Erreur lors de l'appel API Gemini: {err}")
+        logger.error(f"[Planner] Gemini API call failed: {err}")
         raise ValueError(f"Gemini API call failed: {err}")
 
-    # Vérification de la réponse
     if not response:
-        logging.error(f"[Planner] Response object est None ou vide")
+        logger.error("[Planner] Response object is None or empty")
         raise ValueError("Gemini returned empty response")
 
-    # Vérification du parsed
     try:
         data = response.parsed
         if not data:
-            # Tentative de récupération via response.text
-            logging.warning(
-                f"[Planner] response.parsed est None, tentative avec response.text"
-            )
+            logger.warning("[Planner] response.parsed is None, trying response.text")
             if hasattr(response, "text") and response.text:
-                logging.info(f"[Planner] Tentative de parsing manuel du text")
+                logger.info("[Planner] Attempting manual text parsing")
                 try:
                     data = ExercisePlan.model_validate_json(response.text)
-                    logging.info(f"[Planner] Parsing manuel réussi")
+                    logger.info("[Planner] Manual parsing succeeded")
                     return data
                 except Exception as parse_err:
-                    logging.error(f"[Planner] Échec du parsing manuel: {parse_err}")
-                    logging.error(
-                        f"[Planner] Response text: {response.text[:500]}..."
-                    )  # Log 500 premiers chars
+                    logger.error(f"[Planner] Manual parsing failed: {parse_err}")
+                    logger.error(f"[Planner] Response text: {response.text[:500]}...")
 
-            logging.error(
-                f"[Planner] response.parsed est None et aucune alternative valide"
-            )
+            logger.error("[Planner] response.parsed is None and no valid alternative found")
             raise ValueError("Planner returned None - no valid data in response")
 
-        logging.info(f"[Planner] Plan généré avec succès")
+        logger.info("[Planner] Plan generated successfully")
         return data
 
     except Exception as err:
-        logging.error(f"[Planner] Erreur parsing: {err}")
-        logging.error(f"[Planner] Type de response: {type(response)}")
+        logger.error(f"[Planner] Parsing error: {err}")
+        logger.error(f"[Planner] Response type: {type(response)}")
         if hasattr(response, "__dict__"):
-            logging.error(
-                f"[Planner] Attributs de response: {list(response.__dict__.keys())}"
-            )
+            logger.error(f"[Planner] Response attributes: {list(response.__dict__.keys())}")
         raise
 
 
 async def generate_for_topic(
     item: ExercicePlanItem, difficulty: str
 ) -> Union[ExerciseOutput, dict, Any, None]:
-    """Génère un exercice (QCM ou Open) pour un sujet donné."""
+    """
+    Generate exercise (MCQ or open-ended) for given topic.
+
+    Routes to appropriate generator based on exercise type.
+
+    Args:
+        item: ExercicePlanItem with topic and exercise type
+        difficulty: Difficulty level for generated exercise
+
+    Returns:
+        ExerciseOutput instance or None if generation fails
+    """
     try:
         if item.type == "qcm":
             result = await generate_qcm(item.topic, difficulty)
         else:
             result = await generate_plain(item.topic, difficulty)
 
-        # Vérifier que le résultat est valide
         if result is None:
-            logging.error(
-                f"❌ [{item.type}] Génération échouée pour: {item.topic[:50]}"
-            )
+            logger.error(f"❌ [{item.type}] Generation failed for: {item.topic[:50]}")
             return None
 
-        # Vérifier que le résultat a un champ 'type'
         if isinstance(result, dict) and "type" not in result:
-            logging.error(
-                f"❌ [{item.type}] Résultat sans 'type' pour: {item.topic[:50]}"
-            )
+            logger.error(f"❌ [{item.type}] Result missing 'type' field: {item.topic[:50]}")
             return None
 
         return result
+
     except Exception as e:
-        logging.error(f"❌ Erreur lors de la génération de '{item.topic[:50]}...': {e}")
+        logger.error(f"❌ Error generating exercise '{item.topic[:50]}...': {e}")
         return None
+

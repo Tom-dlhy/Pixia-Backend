@@ -1,12 +1,31 @@
+"""Context building utilities for agent orchestration.
+
+This module provides utilities to construct agent context from JSON message data,
+including agent indication, user information, and study difficulty level.
+"""
+
 import json
 from typing import Optional
 
+
 async def final_context_builder(message_context: Optional[str]) -> str:
-    """Construit un dictionnaire de contexte à partir d'une chaîne JSON."""
+    """Build agent context string from JSON message data.
+
+    Constructs a context string containing:
+    - Agent indication (routing information)
+    - User full name
+    - Study difficulty level
+
+    Args:
+        message_context: Optional JSON string containing context data
+
+    Returns:
+        Formatted context string for agent orchestration
+    """
     context_dict = {}
     if message_context:
         context_dict = json.loads(message_context)
-    
+
     agent_indication = context_dict.get("agentIndication")
     user_full_name = context_dict.get("userFullName")
     user_study = context_dict.get("userStudy")

@@ -1,11 +1,16 @@
-from fastapi import APIRouter, Form
-from src.dto import CorrectPlainQuestionResponse, CorrectMultipleQuestionsRequest
+"""Endpoint to correct multiple plain text questions."""
+
+from fastapi import APIRouter
+
+from src.dto import CorrectMultipleQuestionsRequest, CorrectPlainQuestionResponse
 from src.utils import agent_correct_plain_question
 
 router = APIRouter(prefix="/correctallquestions", tags=["CorrectAllQuestions"])
 
+
 @router.post("", response_model=list[CorrectPlainQuestionResponse])
 async def correct_multiple_plain_questions(request: CorrectMultipleQuestionsRequest):
+    """Evaluate multiple user answers and return correctness for each."""
     results = []
     for q in request.questions:
         is_correct = await agent_correct_plain_question(
