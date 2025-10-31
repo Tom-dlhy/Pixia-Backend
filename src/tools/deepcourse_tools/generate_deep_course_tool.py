@@ -7,7 +7,7 @@ using parallel execution and database persistence.
 import asyncio
 import logging
 import time
-from typing import Dict, List, Union
+from typing import Dict, List
 from uuid import uuid4
 
 from google.adk.sessions.database_session_service import DatabaseSessionService
@@ -20,6 +20,7 @@ from src.models import (
     DeepCourseOutput,
     DeepCourseSynthesis,
     ExerciseOutput,
+    GenerativeToolOutput
 )
 from src.tools.cours_tools import generate_courses
 from src.tools.exercises_tools import generate_exercises
@@ -29,7 +30,7 @@ from src.utils.timing import Timer
 logger = logging.getLogger(__name__)
 
 
-async def generate_deepcourse(synthesis: Union[dict, DeepCourseSynthesis]) -> GenerativeToolOutput: # type: ignore
+async def generate_deepcourse(synthesis: dict) -> GenerativeToolOutput:
     """
     Génère un deepcourse complet avec tous ses chapitres, exercices et évaluations.
 
@@ -49,11 +50,11 @@ async def generate_deepcourse(synthesis: Union[dict, DeepCourseSynthesis]) -> Ge
 
     if isinstance(synthesis, dict):
         logger.info("Converting dict → DeepCourseSynthesis...")
-        synthesis = DeepCourseSynthesis.model_validate(synthesis)
+        synthesis = DeepCourseSynthesis.model_validate(synthesis) # type: ignore
         logger.info("DeepCourseSynthesis validated from dict")
 
-        logger.info(f"Title: {synthesis.title}")
-        logger.info(f"Chapters: {len(synthesis.synthesis_chapters)}")
+        logger.info(f"Title: {synthesis.title}") # type: ignore
+        logger.info(f"Chapters: {len(synthesis.synthesis_chapters)}") # type: ignore
 
     db_session_service = DatabaseSessionService(
         db_url=database_settings.dsn,
@@ -66,7 +67,7 @@ async def generate_deepcourse(synthesis: Union[dict, DeepCourseSynthesis]) -> Ge
 
     start_time = time.time()
 
-    synthesis_chapters = synthesis.synthesis_chapters
+    synthesis_chapters = synthesis.synthesis_chapters # type: ignore
     num_chapters = len(synthesis_chapters)
 
     task_creation_start = time.time()
@@ -192,7 +193,7 @@ async def generate_deepcourse(synthesis: Union[dict, DeepCourseSynthesis]) -> Ge
     # Create and return DeepCourseOutput
     final_start = time.time()
     deepcourse_output = DeepCourseOutput(
-        id=str(uuid4()), title=synthesis.title, chapters=chapters
+        id=str(uuid4()), title=synthesis.title, chapters=chapters # type: ignore
     )
     final_time = time.time() - final_start
 
@@ -256,9 +257,6 @@ async def generate_deepcourse(synthesis: Union[dict, DeepCourseSynthesis]) -> Ge
         except Exception as e:
             logger.error(f"Error storing deepcourse: {e}")
             raise
-
-    # Import here to avoid circular imports
-    from src.models import GenerativeToolOutput
 
     return GenerativeToolOutput(
         agent=agent, completed=completed, redirect_id=redirect_id
