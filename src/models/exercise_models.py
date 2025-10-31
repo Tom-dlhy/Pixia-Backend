@@ -1,13 +1,21 @@
+"""Exercise output models.
+
+Pydantic models for exercise types (QCM and open questions), exercise
+synthesis, planning, and complete exercise output.
+"""
+
+from typing import Annotated, List, Literal, Optional, Union
+
 from pydantic import BaseModel, Field, StringConstraints
-from typing import Annotated, List, Union, Optional, Literal
-import json
 
 ###########################################################################
-### Modèles Pydantic pour la génération d'exercices de types OpenText ####
+### Pydantic Models for Open Questions ####################################
 ###########################################################################
 
 
 class OpenQuestion(BaseModel):
+    """Single open-ended question."""
+
     id: Optional[str] = Field(None, description="Identifiant unique de la question")
     question: Annotated[str, StringConstraints(max_length=1000)]
     answers: str = Field(
@@ -26,6 +34,8 @@ class OpenQuestion(BaseModel):
 
 
 class Open(BaseModel):
+    """Block of open-ended questions."""
+
     id: Optional[str] = Field(
         None, description="Identifiant unique du bloc de questions"
     )
@@ -36,12 +46,14 @@ class Open(BaseModel):
     questions: List[OpenQuestion] = Field(..., min_length=1, max_length=3)
 
 
-#####################################################################
-### Modèles Pydantic pour la génération d'exercices de types QCM ####
-#####################################################################
+################################################################
+### Pydantic Models for QCM                       ##############
+################################################################
 
 
 class QCMAnswer(BaseModel):
+    """Single answer option in a QCM question."""
+
     id: Optional[str] = Field(None)
     text: str
     is_correct: bool
@@ -52,6 +64,8 @@ class QCMAnswer(BaseModel):
 
 
 class QCMQuestion(BaseModel):
+    """Single multiple choice question."""
+
     id: Optional[str] = Field(None, description="Identifiant unique de la question")
     question: str
     answers: List[QCMAnswer] = Field(..., max_length=5)
@@ -66,6 +80,8 @@ class QCMQuestion(BaseModel):
 
 
 class QCM(BaseModel):
+    """Block of multiple choice questions."""
+
     id: Optional[str] = Field(
         None, description="Identifiant unique du bloc de questions"
     )
@@ -75,16 +91,20 @@ class QCM(BaseModel):
 
 
 ################################################################
-### Modèles Pydantic pour la génération du plan d'exercices ####
+### Pydantic Models for Exercise Plan Generation  ##############
 ################################################################
 
 
 class ExercicePlanItem(BaseModel):
+    """Single exercise item in exercise plan."""
+
     type: Literal["qcm", "open"]
     topic: Annotated[str, StringConstraints(max_length=200)]
 
 
 class ExercisePlan(BaseModel):
+    """Plan of exercises to generate."""
+
     difficulty: Annotated[str, StringConstraints(max_length=100)]
     exercises: List[ExercicePlanItem] = Field(
         ..., min_length=1, max_length=20, description="Liste des exercices à générer."
@@ -97,11 +117,13 @@ class ClassifiedPlan(BaseModel):
 
 
 ############################################################################
-### Modèle Pydantic pour la synthèse pour générer le plan des exercices ####
+### Pydantic Models for Exercise Synthesis Planning #######################
 ############################################################################
 
 
 class ExerciseSynthesis(BaseModel):
+    """Synthesis for exercise generation planning."""
+
     description: str = Field(
         ..., description="Description détaillé du sujet des exercices à générer."
     )
@@ -120,11 +142,13 @@ class ExerciseSynthesis(BaseModel):
 
 
 ############################################################
-### Modèle Pydantic pour la sortie des exercices générés ###
+### Pydantic Models for Exercise Output   ##################
 ############################################################
 
 
 class ExerciseOutput(BaseModel):
+    """Complete exercise output with all generated exercises."""
+
     id: Optional[str] = Field(
         None, description="Identifiant unique de la sortie d'exercice"
     )
@@ -133,31 +157,3 @@ class ExerciseOutput(BaseModel):
         ..., min_length=1, description="Liste des exercices générés."
     )
 
-
-##################################################
-### Fonction de validation de l'ExerciseOutput ###
-##################################################
-
-
-def _validate_exercise_output(data: dict | str | None) -> ExerciseOutput | None:
-    """Valide et parse les données en tant qu'ExerciseOutput."""
-    try:
-        if isinstance(data, ExerciseOutput):
-            return data
-        elif isinstance(data, dict):
-            if "result" in data and isinstance(data["result"], dict):
-                data = data["result"]
-            return ExerciseOutput.model_validate(data)
-        elif isinstance(data, str):
-
-            try:
-                parsed = json.loads(data)
-                if isinstance(parsed, dict) and "result" in parsed:
-                    parsed = parsed["result"]
-                return ExerciseOutput.model_validate(parsed)
-            except (json.JSONDecodeError, ValueError):
-                return ExerciseOutput.model_validate_json(data)
-        else:
-            return None
-    except Exception as e:
-        return None

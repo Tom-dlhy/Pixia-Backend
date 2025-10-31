@@ -1,17 +1,33 @@
+"""
+Application configuration management.
+
+This module handles all configuration settings for the application.
+"""
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from google import genai
-import logging
 from urllib.parse import quote_plus
 import base64
 
-logger = logging.getLogger(__name__)
-
 
 class AppSettings(BaseSettings):
-    """Configuration de l'application."""
+    """
+    Application environment settings.
+
+    Loads configuration from .env file with strict validation.
+    Settings:
+        - APP_NAME: Application name
+        - ENV: Environment (dev, prod, staging)
+        - HOST: Server host address
+        - PORT: Server port number
+        - DEBUG: Debug mode flag
+    """
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
     )
 
     APP_NAME: str
@@ -19,14 +35,21 @@ class AppSettings(BaseSettings):
     HOST: str
     PORT: int
     DEBUG: bool
-    FRONT_ORIGINS: str
 
 
 class GeminiSettings(BaseSettings):
-    """Configuration pour Google Generative AI."""
+    """
+    Google Generative AI (Gemini) API configuration.
+
+    Configures API keys and model identifiers for Google's AI services.
+    Initializes the Genai client on instantiation.
+    """
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="allow"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="allow"
     )
 
     GOOGLE_API_KEY: str
@@ -37,12 +60,16 @@ class GeminiSettings(BaseSettings):
 
     def __init__(self, **data):
         super().__init__(**data)
-
         self.CLIENT = genai.Client(api_key=self.GOOGLE_API_KEY)
 
 
 class DatabaseSettings(BaseSettings):
-    """Configuration de la base de données PostgreSQL / Cloud SQL."""
+    """
+    PostgreSQL / Cloud SQL database configuration.
+
+    Manages connection parameters for the PostgreSQL database and constructs
+    the DSN (Data Source Name) string for asyncpg connections.
+    """
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -59,23 +86,28 @@ class DatabaseSettings(BaseSettings):
 
     @property
     def dsn(self) -> str:
-        """Construit le DSN PostgreSQL complet (format asyncpg)."""
+        """
+        Construct the complete PostgreSQL DSN string (asyncpg format).
+        Returns:
+            str: PostgreSQL connection string
+        """
         encoded_password = quote_plus(self.DB_PASSWORD_SQL)
 
         if self.DB_HOST_SQL.startswith("/"):
             dsn = f"postgresql://{self.DB_USER_SQL}:{encoded_password}@/{self.DB_NAME_SQL}?host={self.DB_HOST_SQL}"
-            logger.info(f"Database DSN generated for Unix socket {self.DB_HOST_SQL}")
         else:
             dsn = f"postgresql://{self.DB_USER_SQL}:{encoded_password}@{self.DB_HOST_SQL}:{self.DB_PORT_SQL}/{self.DB_NAME_SQL}"
-            logger.info(
-                f"Database DSN generated for host {self.DB_HOST_SQL}:{self.DB_PORT_SQL}"
-            )
 
         return dsn
 
 
 class OAuthSettings(BaseSettings):
-    """Configuration OAuth pour l'authentification."""
+    """
+    OAuth and JWT authentication configuration.
+
+    Manages OAuth2/OpenID Connect settings for Google authentication and JWT
+    token configuration for secure API communication.
+    """
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -92,11 +124,18 @@ class OAuthSettings(BaseSettings):
 
     @property
     def GOOGLE_CLIENT_SECRET(self) -> str:
-        """Retourne le client_secret décodé depuis Base64."""
+        """
+        Decode and return the Google client secret from Base64.
+
+        Returns:
+            str: Decoded client secret
+        """
         return base64.b64decode(self.GOOGLE_CLIENT_SECRET_B64).decode()
 
 
-app_settings = AppSettings()  
+# Settings instances - initialized on module load
+app_settings = AppSettings()  # type: ignore
 gemini_settings = GeminiSettings()
-database_settings = DatabaseSettings()
-oauth_settings = OAuthSettings()
+database_settings = DatabaseSettings()  # type: ignore
+oauth_settings = OAuthSettings()  # type: ignore
+

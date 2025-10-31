@@ -1,56 +1,58 @@
+"""
+Course generation utilities with integrated Mermaid diagrams.
+
+Optimized architecture: single LLM call generates complete course content
+with Mermaid schemas in one pass, then generates diagrams asynchronously.
+"""
+
+import asyncio
+import base64
+import hashlib
+import logging
+import os
+import subprocess
+import sys
+from typing import Any, Dict, Optional
+from uuid import uuid4
+
 from src.config import gemini_settings
 from src.models.cours_models import (
-    CourseSynthesis,
     CourseOutput,
+    CourseSynthesis,
+    Part,
 )
 from src.prompts import SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE
 from src.utils.mermaid_validator import MermaidValidator
-import logging
-import asyncio
-import base64
-from uuid import uuid4
-from typing import Optional, Dict, Any
-import os
-import hashlib
-import subprocess
-import sys
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="[%(asctime)s] %(levelname)s - %(name)s - %(message)s",
-    stream=sys.stdout,
-)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 
 def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
     """
-    Envoie le code Mermaid à Kroki via curl, récupère le SVG et le retourne en base64.
+    Send Mermaid code to Kroki API, retrieve PNG and return as base64.
+
+    Validates Mermaid syntax before sending, sanitizes code, and handles
+    temporary file cleanup automatically.
 
     Args:
-        mermaid_code: Code Mermaid validé
+        mermaid_code: Validated Mermaid code
 
     Returns:
-        Optional[str]: Image SVG encodée en base64, ou None en cas d'erreur
+        PNG image encoded as base64 string, or None on failure
+
+    Raises:
+        No exceptions raised; all errors logged and None returned
     """
     try:
-        logger.debug(
-            f"[KROKI-START] Validation du code Mermaid ({len(mermaid_code)} chars)"
-        )
 
         is_valid, error_msg = MermaidValidator.validate(mermaid_code)
         if not is_valid:
-            logger.error(f"[KROKI-INVALID] Code Mermaid invalide: {error_msg}")
+            logger.error(f"[KROKI-INVALID] Invalid Mermaid code: {error_msg}")
             return None
 
-        logger.debug(f"[KROKI-VALID] Code Mermaid validé")
-
         mermaid_code = MermaidValidator.sanitize(mermaid_code)
-
         digest = hashlib.sha256(mermaid_code.encode("utf-8")).hexdigest()[:16]
         out_path = os.path.join(".", f"mermaid_{digest}.png")
-
-        logger.debug(f"[KROKI-CALL] Envoi à Kroki avec digest: {digest}")
 
         cmd = [
             "curl",
@@ -65,7 +67,6 @@ def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
             "@-",
         ]
 
-        logger.debug(f"[KROKI-EXECUTE] Exécution curl (timeout=10s)")
         proc = subprocess.run(
             cmd,
             input=mermaid_code.encode("utf-8"),
@@ -74,16 +75,12 @@ def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
             timeout=10,
         )
 
-        logger.debug(f"[KROKI-RESPONSE] Code de retour: {proc.returncode}")
+        logger.debug(f"[KROKI-RESPONSE] Return code: {proc.returncode}")
 
         if proc.returncode != 0:
             err = proc.stderr.decode("utf-8", errors="ignore")
-            logger.error(
-                f"[KROKI-ERROR] Kroki error (exit {proc.returncode}): {err or 'unknown'}"
-            )
+            logger.error(f"[KROKI-ERROR] Kroki error (exit {proc.returncode}): {err or 'unknown'}")
             return None
-
-        logger.debug(f"[KROKI-SAVE] Sauvegarde et encodage en base64")
 
         try:
             with open(out_path, "wb") as f:
@@ -92,24 +89,19 @@ def generate_schema_mermaid(mermaid_code: str) -> Optional[str]:
             with open(out_path, "rb") as f:
                 image_b64 = base64.b64encode(f.read()).decode("ascii")
 
-            logger.info(
-                f"[KROKI-SUCCESS] Schéma généré: {digest} ({len(image_b64)} chars base64)"
-            )
             return image_b64
 
         finally:
             try:
                 os.remove(out_path)
             except Exception as e:
-                logger.warning(
-                    f"[KROKI-CLEANUP] Impossible de supprimer {out_path}: {e}"
-                )
+                logger.warning(f"[KROKI-CLEANUP] Could not remove {out_path}: {e}")
 
     except subprocess.TimeoutExpired:
-        logger.error("[KROKI-TIMEOUT] Timeout (10s) lors de l'appel à Kroki")
+        logger.error("[KROKI-TIMEOUT] Timeout (10s) on Kroki call")
         return None
     except Exception as e:
-        logger.error(f"[KROKI-EXCEPTION] Erreur: {e}", exc_info=True)
+        logger.error(f"[KROKI-EXCEPTION] Error: {e}", exc_info=True)
         return None
 
 
@@ -117,33 +109,29 @@ def generate_complete_course(
     synthesis: CourseSynthesis,
 ) -> Optional[CourseOutput]:
     """
-    Génère un cours COMPLET avec contenu + Mermaid d'un seul appel LLM.
+    Generate complete course with content and Mermaid diagrams in single LLM call.
+
+    Calls Gemini once to generate all course parts with diagram specifications,
+    then generates diagrams asynchronously.
 
     Args:
-        synthesis: Synthèse contenant description, difficulté, niveau de détail
+        synthesis: CourseSynthesis with description, difficulty, detail level
 
     Returns:
-        Optional[CourseOutput]: Cours généré avec tous les Mermaid, ou None en cas d'erreur
+        Generated CourseOutput with all parts and Mermaid schemas, or None on failure
     """
     try:
-        logger.debug(f"[LLM-START] Validation synthèse d'entrée")
-
         if isinstance(synthesis, dict):
-            logger.debug(f"[LLM-CONVERT] Conversion dict → CourseSynthesis")
-            synthesis = CourseSynthesis(**synthesis)
-
-        logger.info(
-            f"[LLM-CALL] Génération: {synthesis.description[:50]}... (Diff: {synthesis.difficulty})"
-        )
-
-        logger.debug(f"[LLM-REQUEST] Envoi requête à Gemini avec timeout...")
+            synthesis = CourseSynthesis.model_validate(synthesis)
 
         try:
             response = gemini_settings.CLIENT.models.generate_content(
                 model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
-                contents=f"""Description: {synthesis.description}
-    Difficulté: {synthesis.difficulty}
-    Niveau de détail: {synthesis.level_detail}""",
+                contents=f"""
+                        Description: {synthesis.description}
+                        Difficulté: {synthesis.difficulty}
+                        Niveau de détail: {synthesis.level_detail}
+                    """,
                 config={
                     "system_instruction": SYSTEM_PROMPT_GENERATE_COMPLETE_COURSE,
                     "response_mime_type": "application/json",
@@ -151,25 +139,20 @@ def generate_complete_course(
                 },
             )
         except Exception as gemini_err:
-            logger.error(
-                f"[LLM-GEMINI-ERROR] Erreur Gemini API: {gemini_err}", exc_info=True
-            )
+            logger.error(f"[LLM-GEMINI-ERROR] Gemini API error: {gemini_err}", exc_info=True)
             raise
-
-        logger.debug(f"[LLM-RESPONSE] Réponse reçue, parsing...")
 
         course_output = (
             response.parsed if hasattr(response, "parsed") else response.text
         )
 
         if isinstance(course_output, str):
-            logger.debug(f"[LLM-PARSE] Parsing JSON string...")
             course_output = CourseOutput.model_validate_json(course_output)
         elif isinstance(course_output, dict):
-            logger.debug(f"[LLM-PARSE] Validation dict...")
             course_output = CourseOutput.model_validate(course_output)
 
-        logger.debug(f"[LLM-VALIDATE] Ajout IDs manquants")
+        if not isinstance(course_output, CourseOutput):
+            raise ValueError(f"Invalid response type: {type(course_output)}")
 
         if not course_output.id:
             course_output.id = str(uuid4())
@@ -180,13 +163,10 @@ def generate_complete_course(
             if not part.id_schema:
                 part.id_schema = str(uuid4())
 
-        logger.info(
-            f"[LLM-SUCCESS] Cours généré: {len(course_output.parts)} parties (Mermaid: {sum(1 for p in course_output.parts if p.mermaid_syntax)})"
-        )
         return course_output
 
     except Exception as e:
-        logger.error(f"[LLM-ERROR] Erreur fatale: {e}", exc_info=True)
+        logger.error(f"[LLM-ERROR] Fatal error: {e}", exc_info=True)
         return None
 
 
@@ -194,66 +174,82 @@ async def generate_all_schemas(
     course_output: CourseOutput,
 ) -> CourseOutput:
     """
-    Génère tous les schémas Mermaid en parallèle (VRAIMENT async).
+    Generate all Mermaid diagrams in parallel.
+
+    Asynchronously generates diagrams for all course parts using thread pool
+    to avoid blocking the event loop.
 
     Args:
-        course_output: Cours avec code Mermaid (texte)
+        course_output: Course with Mermaid code (text) to generate from
 
     Returns:
-        CourseOutput: Cours avec schémas générés (base64)
+        CourseOutput with generated diagram base64 strings
     """
     try:
-        logger.info(
-            f"[ASYNC-START] Génération parallèle de {len(course_output.parts)} schémas"
-        )
 
-        tasks = []
+        tasks: list[tuple[int, Part, Any]] = []
         for i, part in enumerate(course_output.parts):
-            if part.mermaid_syntax:
-                logger.debug(
-                    f"[ASYNC-TASK-{i}] Création tâche pour partie: {part.title[:30]}"
-                )
-                task = asyncio.to_thread(generate_schema_mermaid, part.mermaid_syntax)
+            if hasattr(part, 'content') and part.content:
+                logger.debug(f"[ASYNC-TASK-{i}] Creating task for: {part.title[:30]}")
+                task = asyncio.to_thread(generate_schema_mermaid, part.content)
                 tasks.append((i, part, task))
-
-        logger.debug(f"[ASYNC-GATHER] Attente de {len(tasks)} tâches en parallèle...")
 
         if tasks:
             results = await asyncio.gather(
                 *[task for _, _, task in tasks], return_exceptions=True
             )
 
-            logger.debug(f"[ASYNC-RESULTS] Résultats reçus: {len(results)} schémas")
-
             for (i, part, _), result in zip(tasks, results):
                 if isinstance(result, Exception):
-                    logger.warning(f"[ASYNC-ERROR-{i}] Erreur partie {i+1}: {result}")
-                elif result:
-                    logger.info(
-                        f"[ASYNC-SUCCESS-{i}] Schéma {i+1} généré ({len(result)} chars base64)"
-                    )
+                    logger.warning(f"[ASYNC-ERROR-{i}] Error for part {i+1}: {result}")
+                elif result and isinstance(result, str):
+                    logger.info(f"[ASYNC-SUCCESS-{i}] Diagram {i+1} generated ({len(result)} chars)")
                 else:
-                    logger.warning(
-                        f"[ASYNC-EMPTY-{i}] Schéma {i+1} vide (Kroki échoué)"
-                    )
+                    logger.warning(f"[ASYNC-EMPTY-{i}] Diagram {i+1} empty (Kroki failed)")
 
         return course_output
 
     except Exception as e:
-        logger.error(f"[ASYNC-EXCEPTION] Erreur parallélisation: {e}", exc_info=True)
+        logger.error(f"[ASYNC-EXCEPTION] Parallelization error: {e}", exc_info=True)
         return course_output
 
+
+# ===== COMPATIBILITY HELPERS =====
+# Kept for backwards compatibility with legacy code
+
+
 def generate_part(title: str, content: str, difficulty: str) -> Dict[str, Any]:
-    """DEPRECATED: Utilisé uniquement pour rétrocompatibilité."""
-    logger.warning(
-        "generate_part() is deprecated. Use generate_complete_course() instead."
-    )
+    """
+    DEPRECATED: Use generate_complete_course() instead.
+
+    Legacy function kept for backward compatibility.
+
+    Args:
+        title: Section title
+        content: Section content
+        difficulty: Difficulty level
+
+    Returns:
+        Empty dict (deprecated)
+    """
+    logger.warning("generate_part() is deprecated. Use generate_complete_course() instead.")
     return {}
 
 
-def generate_mermaid_schema_description(course_part) -> Optional[Dict[str, Any]]:
-    """DEPRECATED: Utilisé uniquement pour rétrocompatibilité."""
+def generate_mermaid_schema_description(course_part: Any) -> Optional[Dict[str, Any]]:
+    """
+    DEPRECATED: Use generate_complete_course() instead.
+
+    Legacy function kept for backward compatibility.
+
+    Args:
+        course_part: Course part object
+
+    Returns:
+        None (deprecated)
+    """
     logger.warning(
         "generate_mermaid_schema_description() is deprecated. Use generate_complete_course() instead."
     )
     return None
+

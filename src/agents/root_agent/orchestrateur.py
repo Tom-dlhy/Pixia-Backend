@@ -1,11 +1,13 @@
+"""Root orchestrator agent that coordinates all sub-agents using Gemini 2.5 Flash."""
+
 from google.adk.agents import LlmAgent
+
 from src.config import gemini_settings
 from src.agents.sub_agents import (
     exercise_agent,
     copilote_exercice_agent,
     copilote_cours_agent,
     copilote_new_chapitre_agent,
-    agent_normal,
     course_agent,
     deepcourse_agent,
 )
@@ -22,7 +24,6 @@ root_agent = LlmAgent(
         copilote_exercice_agent,
         copilote_cours_agent,
         copilote_new_chapitre_agent,
-        agent_normal,
         course_agent,
         deepcourse_agent,
     ],

@@ -1,3 +1,7 @@
+"""
+SQL query definitions for database operations.
+"""
+
 from sqlalchemy import text
 
 CLEAR_ALL_TABLES = text(
@@ -386,7 +390,7 @@ SELECT
     END AS parsed_content
 
 FROM document d
-WHERE d.id = :document_id;
+WHERE d.session_id = :session_id;
 
 """
 )

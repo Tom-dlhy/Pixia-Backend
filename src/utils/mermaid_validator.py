@@ -1,13 +1,19 @@
-import re
+"""
+Mermaid diagram code validator.
+
+Validates Mermaid syntax before sending to Kroki to prevent rendering errors.
+Provides sanitization and structural validation for various diagram types.
+"""
+
 import logging
+import re
 from typing import Tuple
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class MermaidValidator:
-    """Valide la syntaxe du code Mermaid."""
+    """Validates Mermaid diagram syntax."""
 
     VALID_DIAGRAM_TYPES = {
         "graph": r"^graph\s+(TD|LR|BT|RL)",
@@ -22,19 +28,20 @@ class MermaidValidator:
     @staticmethod
     def validate(mermaid_code: str) -> Tuple[bool, str]:
         """
-        Valide le code Mermaid.
+        Validate Mermaid code syntax.
 
         Args:
-            mermaid_code: Code Mermaid à valider
+            mermaid_code: Mermaid code to validate
 
         Returns:
-            Tuple[bool, str]: (is_valid, error_message)
+            Tuple with (is_valid, error_message)
         """
         if not mermaid_code or not mermaid_code.strip():
-            return False, "Le code Mermaid est vide."
+            return False, "Mermaid code is empty."
 
         code_stripped = mermaid_code.strip()
 
+        # Check for valid diagram type
         has_valid_start = any(
             re.match(pattern, code_stripped)
             for pattern in MermaidValidator.VALID_DIAGRAM_TYPES.values()
@@ -43,32 +50,44 @@ class MermaidValidator:
         if not has_valid_start:
             return (
                 False,
-                f"Le code doit commencer par un type de diagramme valide: {', '.join(MermaidValidator.VALID_DIAGRAM_TYPES.keys())}",
+                f"Code must start with valid diagram type: {', '.join(MermaidValidator.VALID_DIAGRAM_TYPES.keys())}",
             )
 
+        # Check for backticks
         if "```" in code_stripped:
             return (
                 False,
-                "Le code ne doit pas contenir de backticks (```). Code brut uniquement.",
+                "Code must not contain backticks (```). Raw code only.",
             )
 
+        # Warn about Mermaid comments
         if "%%" in code_stripped:
-            logger.warning("Code Mermaid avec commentaires (%%) détectés. Suppression.")
+            logger.warning("Mermaid comments (%%) detected and will be removed.")
 
+        # Check bracket balance
         if not MermaidValidator._check_brackets_balance(code_stripped):
-            return False, "Les accolades/parenthèses ne sont pas équilibrées."
+            return False, "Unbalanced brackets or parentheses."
 
+        # Warn about complex diagrams
         node_count = MermaidValidator._count_nodes(code_stripped)
         if node_count > 50:
             logger.warning(
-                f"Diagramme complexe: {node_count} nœuds (limite recommandée: 50)"
+                f"Complex diagram: {node_count} nodes (recommended limit: 50)"
             )
 
         return True, ""
 
     @staticmethod
     def _check_brackets_balance(code: str) -> bool:
-        """Vérifie que les accolades et crochets sont équilibrés."""
+        """
+        Check if brackets and parentheses are balanced.
+
+        Args:
+            code: Code to check
+
+        Returns:
+            True if balanced, False otherwise
+        """
         brackets = {"[": "]", "{": "}", "(": ")"}
         stack = []
 
@@ -83,23 +102,34 @@ class MermaidValidator:
 
     @staticmethod
     def _count_nodes(code: str) -> int:
-        """Compte approximativement le nombre de nœuds."""
+        """
+        Estimate node count using simple pattern matching.
+
+        Args:
+            code: Mermaid code
+
+        Returns:
+            Approximate number of nodes
+        """
         matches = re.findall(r"\w+\s*(?:\[|\()", code)
         return len(set(matches))
 
     @staticmethod
     def sanitize(mermaid_code: str) -> str:
         """
-        Nettoie le code Mermaid pour le rendre valide.
+        Clean Mermaid code for valid rendering.
+
+        Removes backticks, comments, and excess whitespace.
 
         Args:
-            mermaid_code: Code brut
+            mermaid_code: Raw code
 
         Returns:
-            str: Code Mermaid nettoyé
+            Cleaned Mermaid code
         """
         code = mermaid_code.replace("```", "").replace("`", "")
         code = re.sub(r"%%.*", "", code)
         code = code.strip()
 
         return code
+

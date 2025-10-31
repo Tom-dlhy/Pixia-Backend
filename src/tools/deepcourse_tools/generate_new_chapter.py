@@ -1,31 +1,47 @@
-from pydantic import BaseModel, Field
+"""New chapter generation tool for existing deepcourses.
+
+Generates a new chapter (with course, exercises, and evaluation) for an existing
+deepcourse using Gemini API and parallel task orchestration.
+"""
+
 import asyncio
 import logging
+from typing import Any, Dict, List, cast
 from uuid import uuid4
-from typing import Dict, List, Union, Any, cast
 
+from google.adk.sessions.database_session_service import DatabaseSessionService
+
+from src.bdd import DBManager
+from src.config import app_settings, database_settings, gemini_settings
 from src.models import (
     Chapter,
     ChapterSynthesis,
     CourseOutput,
-    DeepCourseSynthesis,
     ExerciseOutput,
-    DeepCourseOutput,
+    GenerativeToolOutput,
 )
-from src.config import gemini_settings
 from src.prompts import SYSTEM_PROMPT_GENERATE_NEW_CHAPTER
-from src.bdd import DBManager
-from src.models import GenerativeToolOutput
-from src.config import database_settings, app_settings
-from google.adk.sessions.database_session_service import DatabaseSessionService
-from src.bdd import DBManager
-from src.utils import get_deep_course_id,get_user_id
+from src.utils import get_deep_course_id, get_user_id
 
 logger = logging.getLogger(__name__)
 
 
 async def generate_new_chapter(description_user: str) -> GenerativeToolOutput:
-    """Generate a Chapter from a DeepCourse synthesis description."""
+    """Génère un nouveau chapitre à partir d'une description de synthèse DeepCourse.
+
+    Processus:
+    1. Récupérer les informations existantes sur le deepcourse et les chapitres
+    2. Appeler Gemini pour générer ChapterSynthesis en fonction de la description de l'utilisateur
+    3. Générer des exercices, un cours et une évaluation en parallèle
+    4. Stocker le chapitre dans la base de données avec gestion de session
+    5. Retourner GenerativeToolOutput avec les informations du chapitre
+
+    Args:
+        description_user: Description de l'utilisateur pour le nouveau chapitre
+
+    Returns:
+        GenerativeToolOutput avec agent, redirect_id, completed
+    """
     deepcourse_id = get_deep_course_id()
     user_id = get_user_id()
 
@@ -35,31 +51,29 @@ async def generate_new_chapter(description_user: str) -> GenerativeToolOutput:
 
     db_manager = DBManager()
 
-    logger.info(
-        f"🔄 Génération d'un nouveau chapitre pour deepcourse_id={deepcourse_id}"
-    )
+    logger.info(f"Generating new chapter for deepcourse_id={deepcourse_id}")
 
-    # Récupérer les informations du deepcourse et des chapitres existants
+    # Fetch deepcourse and existing chapters information
     try:
         deepcourse_data_list: List[Dict[str, Any]] = (
             await db_manager.get_deepcourse_and_chapter_with_id(deepcourse_id)
         )
     except Exception as e:
-        logger.error(f"❌ Erreur lors de la récupération du deepcourse: {e}")
+        logger.error(f"Error retrieving deepcourse: {e}")
         raise
 
     if not deepcourse_data_list:
-        logger.error(f"❌ Aucun deepcourse trouvé pour l'ID: {deepcourse_id}")
+        logger.error(f"No deepcourse found for ID: {deepcourse_id}")
         raise ValueError(f"DeepCourse {deepcourse_id} not found")
 
-    # Extraire le titre du deepcourse (premier élément) et tous les chapitres
+    # Extract deepcourse title (first element) and all chapters
     first_item = deepcourse_data_list[0]
     deepcourse_title = (
         first_item.get("deepcourse_title", "") if isinstance(first_item, dict) else ""
     )
 
-    # Construire le contexte pour Gemini
-    lines = [f"Titre du Deepcourse : {deepcourse_title}"]
+    # Build context for Gemini
+    lines = [f"Titre du deepcourse: {deepcourse_title}"]
     for idx, chapter_data in enumerate(deepcourse_data_list, start=1):
         chapter_title = (
             chapter_data.get("chapter_title", "")
@@ -70,9 +84,9 @@ async def generate_new_chapter(description_user: str) -> GenerativeToolOutput:
 
     context_text = "\n".join(lines)
 
-    logger.debug(f"📋 Contexte généré:\n{context_text}")
+    logger.debug(f"📋 Generated Context:\n{context_text}")
 
-    # Appel à Gemini pour générer la synthèse du chapitre
+    # Call Gemini to generate chapter synthesis
     try:
         response = await gemini_settings.CLIENT.aio.models.generate_content(
             model=gemini_settings.GEMINI_MODEL_2_5_FLASH,
@@ -101,36 +115,47 @@ async def generate_new_chapter(description_user: str) -> GenerativeToolOutput:
             else:
                 synthesis_chapter = ChapterSynthesis.model_validate(payload)
 
-        logger.info(
-            f"✅ Synthèse du chapitre générée: {synthesis_chapter.chapter_title}"
-        )
+        logger.info(f"Chapter synthesis generated: {synthesis_chapter.chapter_title}")
     except Exception as err:
-        logger.error(f"❌ Erreur lors de la génération de la synthèse: {err}")
+        logger.error(f"Error generating synthesis: {err}")
         raise
 
-    # Générer les trois composantes du chapitre
-    logger.info("⏳ Génération des exercices, cours et évaluation...")
+    # Generate the three chapter components
+    logger.info("Generating exercises, course, and evaluation...")
     try:
-        # Import local pour éviter les cycles d'importation
-        from src.tools.exercises_tools import generate_exercises
+        # Import locally to avoid circular imports
         from src.tools.cours_tools import generate_courses
+        from src.tools.exercises_tools import generate_exercises
 
-        # Paralléliser les 3 générations
+        # Parallelize the 3 generations
         exercise_result, course_result, evaluation_result = await asyncio.gather(
-            generate_exercises(is_called_by_agent=False,synthesis= synthesis_chapter.synthesis_exercise),
-            generate_courses(is_called_by_agent=False,course_synthesis= synthesis_chapter.synthesis_course),
-            generate_exercises(is_called_by_agent=False,synthesis= synthesis_chapter.synthesis_evaluation),
+            generate_exercises(
+                is_called_by_agent=False,
+                synthesis=synthesis_chapter.synthesis_exercise,
+            ),
+            generate_courses(
+                is_called_by_agent=False,
+                course_synthesis=synthesis_chapter.synthesis_course,
+            ),
+            generate_exercises(
+                is_called_by_agent=False,
+                synthesis=synthesis_chapter.synthesis_evaluation,
+            ),
         )
     except Exception as e:
-        logger.error(f"❌ Erreur lors de la génération des composantes: {e}")
+        logger.error(f"Error generating components: {e}")
         raise
 
-    if isinstance(exercise_result, ExerciseOutput) and isinstance(course_result, CourseOutput) and isinstance(evaluation_result, ExerciseOutput):
+    if (
+        isinstance(exercise_result, ExerciseOutput)
+        and isinstance(course_result, CourseOutput)
+        and isinstance(evaluation_result, ExerciseOutput)
+    ):
         exercice = exercise_result
         course = course_result
         evaluation = evaluation_result
 
-    # Créer et retourner le Chapter
+    # Create and return Chapter
     chapter_id = str(uuid4())
     chapter = Chapter(
         id_chapter=chapter_id,
@@ -140,29 +165,27 @@ async def generate_new_chapter(description_user: str) -> GenerativeToolOutput:
         evaluation=evaluation,
     )
 
-    agent = "deep-course"
+    agent = "deep-course-chapter"
     redirect_id = None
     completed = False
 
-    if isinstance(chapter, Chapter) and user_id is not None and deepcourse_id is not None:
+    if (
+        isinstance(chapter, Chapter)
+        and user_id is not None
+        and deepcourse_id is not None
+    ):
         try:
-            session_exercise = (
-                await db_session_service.create_session(
-                    app_name=app_settings.APP_NAME,
-                    user_id=user_id,
-                )
+            session_exercise = await db_session_service.create_session(
+                app_name=app_settings.APP_NAME,
+                user_id=user_id,
             )
-            session_course = (
-                await db_session_service.create_session(
-                    app_name=app_settings.APP_NAME,
-                    user_id=user_id,
-                )
+            session_course = await db_session_service.create_session(
+                app_name=app_settings.APP_NAME,
+                user_id=user_id,
             )
-            session_evaluation = (
-                await db_session_service.create_session(
-                    app_name=app_settings.APP_NAME,
-                    user_id=user_id,
-                )
+            session_evaluation = await db_session_service.create_session(
+                app_name=app_settings.APP_NAME,
+                user_id=user_id,
             )
             await db_manager.store_chapter(
                 title=chapter.title,
@@ -179,23 +202,13 @@ async def generate_new_chapter(description_user: str) -> GenerativeToolOutput:
             agent = "deep-course"
             redirect_id = chapter.id_chapter
             completed = True
-            logger.info(
-                f"✅ Chapter stocké avec succès : {chapter.id_chapter}"
-            )
+            logger.info(f"Chapter stored successfully: {chapter.id_chapter}")
         except Exception as e:
-            logger.error(
-                f"❌ Erreur lors du stockage du chapitre: {e}"
-            )
+            logger.error(f"Error storing chapter: {e}")
             raise
     else:
-        logger.warning(
-            f"⚠️ Chapter validé mais pas une instance de Chapter"
-        )
+        logger.warning("Chapter validated but not a Chapter instance")
 
-    logger.info(f"✅ Chapitre créé avec succès: {chapter_id}")
+    logger.info(f"Chapter created successfully: {chapter_id}")
 
-    return GenerativeToolOutput(
-        agent=agent,
-        redirect_id=redirect_id,
-        completed=completed
-    )
+    return GenerativeToolOutput(agent=agent, redirect_id=redirect_id, completed=completed)

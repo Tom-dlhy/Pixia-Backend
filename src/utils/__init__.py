@@ -1,71 +1,55 @@
-from .exercises_utils import (
-    generate_plain,
-    generate_qcm,
-    generate_for_topic,
-    planner_exercises_async
-)
+"""Utility functions and helpers for the hackathon backend.
 
-from .get_db_url import create_db_pool, get_connection
+This package provides core utilities for:
+- Database connection management
+- Course and exercise generation
+- Request context handling
+- File operations and validation
+"""
 
+from .context_builder import final_context_builder
+from .correct_plain_question import agent_correct_plain_question
+from .cours_utils_quad_llm_integration import generate_courses_quad_llm
 from .cours_utils_v2 import (
-    generate_complete_course,
     generate_all_schemas,
+    generate_complete_course,
     generate_schema_mermaid,
 )
-
-from .cours_utils_quad_llm_integration import (
-    generate_courses_quad_llm,
+from .exercises_utils import (
+    generate_for_topic,
+    generate_plain,
+    generate_qcm,
+    planner_exercises_async,
 )
-
+from .get_db_url import create_db_pool, get_connection
 from .mermaid_validator import MermaidValidator
-
-from .gemini_files import (
-    upload_file,
-    delete_file,
-)
-
-from .session_context import (
-    add_gemini_file,
-    add_gemini_file_name,
-    get_gemini_files,
-    get_gemini_file_names,
-    clear_session,
-)
-
-from .correct_plain_question import agent_correct_plain_question
-
 from .request_context import (
-    set_request_context,
-    get_document_id,
-    get_user_id,
     get_deep_course_id,
+    get_document_id,
     get_session_id,
+    get_user_id,
+    set_request_context,
 )
-
+from .save_files import save_course_as_pdf
 
 __all__ = [
+    "agent_correct_plain_question",
+    "create_db_pool",
+    "final_context_builder",
+    "generate_all_schemas",
+    "generate_complete_course",
+    "generate_courses_quad_llm",
+    "generate_for_topic",
     "generate_plain",
     "generate_qcm",
-    "generate_for_topic",
-    "create_db_pool",
-    "get_connection",
-    "generate_complete_course",
-    "generate_all_schemas",
     "generate_schema_mermaid",
-    "generate_courses_quad_llm",
-    "MermaidValidator",
-    "upload_file",
-    "delete_file",
-    "add_gemini_file",
-    "add_gemini_file_name",
-    "get_gemini_files",
-    "get_gemini_file_names",
-    "clear_session",
-    "agent_correct_plain_question",
-    "planner_exercises_async",
-    "set_request_context",
-    "get_document_id",
-    "get_user_id",
+    "get_connection",
     "get_deep_course_id",
+    "get_document_id",
     "get_session_id",
+    "get_user_id",
+    "MermaidValidator",
+    "planner_exercises_async",
+    "save_course_as_pdf",
+    "set_request_context",
 ]

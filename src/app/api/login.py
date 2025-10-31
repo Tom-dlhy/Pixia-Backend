@@ -1,7 +1,12 @@
+"""Login endpoint for user authentication."""
+
+from logging import getLogger
+
 from fastapi import APIRouter
+
 from src.bdd import DBManager
 from src.dto import LoginRequest, LoginResponse
-from logging import getLogger
+
 logger = getLogger(__name__)
 
 router = APIRouter(prefix="/login", tags=["Login"])

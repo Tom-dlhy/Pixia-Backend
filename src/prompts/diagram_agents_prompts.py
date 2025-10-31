@@ -1,54 +1,15 @@
-"""
-4 Agents spécialisés pour la génération de diagrammes.
-Chacun avec un prompt expert dédié et sans transformations complexes.
+"""Specialized diagram agent system prompts.
 
-Types supportés:
+Contains 4 specialized agents for diagram generation,
+each with dedicated expert prompt and minimal complex transformations.
+Supported types:
 1. Mermaid: flowcharts, mindmaps, timelines, Gantt, class diagrams, sequence diagrams
 2. PlantUML: UML (class, activity, sequence, use case) + C4 diagrams
-3. GraphViz (DOT): graphes de relations, dépendances, réseaux conceptuels
-4. Vega-Lite: graphiques de données (bar, line, pie, heatmap, etc.)
+3. GraphViz (DOT): relations graphs, dependencies, conceptual networks
+4. Vega-Lite: data visualizations (bar, line, pie, heatmap, etc.)
 """
 
-# ============================================================================
-# SÉLECTION DU TYPE DE DIAGRAMME (4 types seulement)
-# ============================================================================
 
-PROMPT_SELECT_DIAGRAM_TYPE_V2 = """Vous êtes un expert en visualisation pédagogique avec une expertise égale dans tous les types de diagrammes.
-
-Analysez ATTENTIVEMENT le contenu pédagogique et sélectionnez LE TYPE DE DIAGRAMME LE PLUS PERTINENT parmi les 4 suivants:
-
-1. **Mermaid**: Pour flowcharts, mindmaps, timelines, diagrammes de Gantt, class diagrams, sequence diagrams
-   - Meilleur pour: algorithmes, processus pas à pas, états, séquences temporelles, relations de classe
-   - Exemple: flux d'algorithme, timeline d'événements, séquence d'interactions
-   - ⚠️ Ne pas choisir si le contenu implique des données numériques, graphes complexes ou architecture UML avancée
-
-2. **PlantUML**: Pour UML complet (class diagram, activity diagram, sequence diagram, use case) et C4 architecture diagrams
-   - Meilleur pour: design patterns, hiérarchie de classes, interactions d'objets, architecture système, diagrammes d'activité complexes
-   - Exemple: diagramme de classe, flux d'activité métier, diagramme C4, cas d'usage
-   - ✓ À PRIVILÉGIER pour: architecture logicielle, patterns de conception, relations objet-orientées
-
-3. **GraphViz (DOT)**: Pour graphes de relations, dépendances, réseaux conceptuels et structures hiérarchiques
-   - Meilleur pour: dépendances complexes, arbres, graphes de relations, structure organisationnelle, corrélations multiples
-   - Exemple: arbre binaire, graphe de dépendances, réseau de concepts, matrice de corrélation
-   - ✓ À PRIVILÉGIER pour: structures hiérarchiques, réseaux géopolitiques, relations complexes
-
-4. **Vega-Lite**: Pour graphiques de données (barres, lignes, camemberts, heatmaps, distributions, scatter plots)
-   - Meilleur pour: visualisation de données numériques, statistiques, tendances, distributions, comparaisons
-   - Exemple: histogramme de notes, graphique en lignes de croissance, camembert de répartition, scatter plot corrélation
-   - ✓ À PRIVILÉGIER pour: données économiques, statistiques, analyses quantitatives, séries temporelles
-
-**DIRECTIVE IMPORTANTE: Évitez Mermaid si le contenu mentionne explicitement graphiques, statistiques, données numériques, architecture ou corrélations.**
-
-**CONTENU À ANALYSER:**
-Titre: %%TITLE_PLACEHOLDER%%
-Contenu: %%CONTENT_PLACEHOLDER%%
-
-**RÉPONDEZ UNIQUEMENT EN JSON VALIDE (sans backticks):**
-{
-  "type": "<mermaid|plantuml|graphviz|vegalite>",
-  "reasoning": "1-2 phrases expliquant le choix, montrant que vous avez bien analysé le contenu"
-}
-"""
 
 # ============================================================================
 # AGENT 1: MERMAID EXPERT
@@ -411,7 +372,7 @@ PROMPT_GENERATE_VEGALITE = """Génère une visualisation Vega-Lite SYNTAXIQUEMEN
 """
 
 # ============================================================================
-# MAPPING PROMPT PAR TYPE
+# MAPPING PROMPT BY TYPE
 # ============================================================================
 
 SYSTEM_PROMPTS = {

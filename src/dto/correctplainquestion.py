@@ -1,15 +1,25 @@
+"""Question correction DTOs."""
+
+from typing import List
+
 from pydantic import BaseModel
-from typing import Optional
-
-
-class CorrectPlainQuestionRequest(BaseModel):
-    question: str
-    user_answer: str
-    expected_answer: str
-    doc_id: Optional[str] = None
-    id_question: Optional[str] = None
 
 
 class CorrectPlainQuestionResponse(BaseModel):
+    """Response indicating if a question answer is correct."""
+
     is_correct: bool
-    feedback: Optional[str] = None
+
+
+class CorrectQuestionRequest(BaseModel):
+    """Request to correct a single question."""
+
+    question: str
+    user_answer: str
+    expected_answer: str
+
+
+class CorrectMultipleQuestionsRequest(BaseModel):
+    """Request to correct multiple questions."""
+
+    questions: List[CorrectQuestionRequest]

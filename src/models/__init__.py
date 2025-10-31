@@ -1,78 +1,51 @@
-from .exercise_models import (
-    QCM,
-    Open,
-    ExercicePlanItem,
-    ExercisePlan,
-    ClassifiedPlan,
-    ExerciseSynthesis,
-    ExerciseOutput,
-    _validate_exercise_output,
-)
+"""Output models for agents and API responses.
+
+This package contains Pydantic models representing the outputs of various
+agents (exercise, course, deep course) and tool results.
+"""
 
 from .cours_models import (
-    CourseSynthesis,
     CoursePlan,
+    CourseOutput,
+    CourseSynthesis,
+    Part,
     PartPlanItem,
-    Part,
-    CourseOutput,
     PartSchema,
-    Part,
-    Part,
-    CourseOutput,
-    CourseOutput,
-    _validate_course_output,
-)
-from .import_fichier_model import EntreeRecevoirEtLirePDF, SortieRecevoirEtLirePDF
-from .pdf_qa_models import (
-    EntreeQuestionPDF,
-    SortieQuestionPDF,
-)
-from .pdf_summary_models import (
-    EntreeResumerPDFs,
-    SortieResumerPDFs,
 )
 from .deepcourse_models import (
     Chapter,
     ChapterSynthesis,
-    DeepCourseSynthesis,
     DeepCourseOutput,
-    _validate_chapter_output,
-    _validate_deepcourse_output,
+    DeepCourseSynthesis,
 )
-
+from .exercise_models import (
+    ClassifiedPlan,
+    ExercicePlanItem,
+    ExercisePlan,
+    ExerciseSynthesis,
+    ExerciseOutput,
+    Open,
+    QCM,
+)
 from .tool_models import GenerativeToolOutput
 
 __all__ = [
-    "QCM",
-    "Open",
-    "ExercicePlanItem",
-    "ExercisePlan",
-    "ClassifiedPlan",
-    "ExerciseSynthesis",
-    "ExerciseOutput",
-    "_validate_exercise_output",
-    "EntreeRecevoirEtLirePDF",
-    "SortieRecevoirEtLirePDF",
-    "EntreeQuestionPDF",
-    "SortieQuestionPDF",
-    "EntreeResumerPDFs",
-    "SortieResumerPDFs",
-    "CourseSynthesis",
-    "CoursePlan",
-    "PartPlanItem",
-    "Part",
-    "CourseOutput",
-    "PartSchema",
-    "Part",
-    "Part",
-    "CourseOutput",
-    "CourseOutput",
-    "_validate_course_output",
     "Chapter",
     "ChapterSynthesis",
-    "DeepCourseSynthesis",
+    "ClassifiedPlan",
+    "CourseOutput",
+    "CoursePlan",
+    "CourseSynthesis",
     "DeepCourseOutput",
-    "_validate_chapter_output",
-    "_validate_deepcourse_output",
+    "DeepCourseSynthesis",
+    "ExercicePlanItem",
+    "ExercisePlan",
+    "ExerciseSynthesis",
+    "ExerciseOutput",
     "GenerativeToolOutput",
+    "Open",
+    "Part",
+    "PartPlanItem",
+    "PartSchema",
+    "QCM",
 ]

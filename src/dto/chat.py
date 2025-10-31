@@ -1,18 +1,20 @@
-from pydantic import BaseModel
-from typing import Optional, Literal, Union
+"""Chat response DTOs."""
 
-class LoadFile(BaseModel):
-    filename: str
-    size: int
-    content_type: str
+from typing import Literal, Optional, Union
+
+from pydantic import BaseModel
+
 
 class AgentAnswer(BaseModel):
-    """Représente la réponse brute de l'agent avant formatage final."""
+    """Raw agent response before final formatting."""
 
     type: Literal["text", "json", "speech"]
     content: Union[str, dict]
 
+
 class ChatResponse(BaseModel):
+    """Main response returned to frontend after agent processing."""
+
     session_id: str
     answer: str
     agent: Optional[str] = None
