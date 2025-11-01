@@ -294,7 +294,6 @@ async def chat(
                     if event.is_final_response():
                         logger.info("Final event detected")
                         if event.content and event.content.parts:
-                            # Récupère tous les parts avec du texte et les concatène
                             text_parts = []
                             for part in event.content.parts:
                                 if hasattr(part, 'text') and part.text:
