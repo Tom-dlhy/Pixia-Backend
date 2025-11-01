@@ -294,9 +294,17 @@ async def chat(
                     if event.is_final_response():
                         logger.info("Final event detected")
                         if event.content and event.content.parts:
-                            txt_reponse = event.content.parts[0].text
-                            agent = event.author
+                            # Récupère tous les parts avec du texte et les concatène
+                            text_parts = []
+                            for part in event.content.parts:
+                                if hasattr(part, 'text') and part.text:
+                                    text_parts.append(part.text)
                             
+                            if text_parts:
+                                txt_reponse = ''.join(text_parts)
+                                agent = event.author
+                            else:
+                                logger.warning("Final event but no text content in any part")
                         else:
                             logger.warning("Final event but no text content")
                         break
