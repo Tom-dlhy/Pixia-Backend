@@ -178,7 +178,9 @@ GEMINI_MODEL_2_5_FLASH_LITE=models/gemini-2.5-flash-lite
 GEMINI_MODEL_2_5_FLASH_LIVE=models/gemini-2.5-flash-live
 GEMINI_MODEL_2_5_FLASH_IMAGE=models/gemini-2.5-flash-image
 
-# Auth (optional for PoC)
+# Auth (experimental — currently mocked)
+# Authentication is temporarily disabled. Only email matching is used,
+# passwords are ignored, and no real token validation occurs.
 OIDC_GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET_B64=...
 JWT_SECRET_KEY=...
@@ -202,26 +204,7 @@ uv sync
 uv run dev
 ```
 
-3) Create a `.env`, a `.env.production` and a `.env.local` in the frontend folder and set them up as followed :
-
-`.env` :
-
-```
-API_BASE=http://localhost:8000/api
-```
-`.env.local` and `.env.production` :
-
-```
-API_BASE=http://localhost:8000/api
-```
-
-
-4) From the frontend folder
-
-```bash
-npm install
-npm run dev
-```
+3. Follow the setup instructions in the [Pixia Frontend](https://github.com/Tom-dlhy/Pixia-Frontend) repository
 
 
 ### Local production run
@@ -249,21 +232,22 @@ uv run prod
 
 We are five M2 students in Data & AI at ESILV.
 
-- Alexandre Laroudie
-    - https://github.com/AlexLaroudie
-    - https://www.linkedin.com/in/alexandre-laroudie/
+
 - Tom Delahaye
     - https://github.com/Tom-dlhy
     - https://www.linkedin.com/in/tom-delahaye4/
-- Pierre Briand
-    - https://github.com/PierreB33
-    - https://www.linkedin.com/in/pierre-briand-40a08126b/
-- Kentin Guillemot
-    - https://github.com/KentinGuillemot
-    - https://www.linkedin.com/in/kentin-guillemot-818651233/
 - Gabriel Carlotti
     - https://github.com/GabrielCarlotti
     - https://www.linkedin.com/in/gabriel-carlotti-7b3087279/
+- Pierre Briand
+    - https://github.com/PierreB33
+    - https://www.linkedin.com/in/pierre-briand-40a08126b/
+- Alexandre Laroudie
+    - https://github.com/AlexLaroudie
+    - https://www.linkedin.com/in/alexandre-laroudie/
+- Kentin Guillemot
+    - https://github.com/KentinGuillemot
+    - https://www.linkedin.com/in/kentin-guillemot-818651233/
 
 ## Resources & links
 
