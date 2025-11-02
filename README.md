@@ -150,7 +150,23 @@ All routes are prefixed by `/api`.
 
 - Python 3.12+
 - `uv` installed: https://docs.astral.sh/uv/
-- Reachable PostgreSQL (Cloud SQL or local)
+- Reachable PostgreSQL (Cloud SQL or local) with the full config infos
+- Google ai api key
+- Creating the db using the `src.bdd.dbmanager` **create_db(self)** function in a test file at the root of the project. The test file could look like this :
+
+```python
+from src.bdd import DBManager
+
+if __name__ == "__main__":
+    import asyncio
+
+    async def main():
+        db_manager = DBManager()
+        await db_manager.test_db()
+        await db_manager.create_db()
+
+    asyncio.run(main())
+```
 
 ## Configuration (.env)
 
